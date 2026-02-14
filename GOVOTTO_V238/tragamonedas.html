@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoVotto Slots | Dashboard V238</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* --- PALETA --- */
+        :root { 
+            --bg-deep: #050505; 
+            --brand-cyan: #00ffff; 
+            --brand-gold: #FFD700; 
+            --risk-red: #FF0044;
+            --money-green: #2ecc71;
+            --lemon-yellow: #dbff33;
+            --silver-plate: #bdc3c7;
+            
+            /* VARIABLES DINÁMICAS */
+            --border-color: var(--brand-cyan);
+            --glow-color: rgba(0, 255, 255, 0.4);
+            --btn-bg: rgba(0, 20, 20, 0.9);
+            --text-color: var(--brand-cyan);
+            --lever-color: var(--risk-red);
+            --question-bg: linear-gradient(180deg, rgba(0, 255, 255, 0.15) 0%, rgba(0,0,0,0.8) 100%);
+        }
+
+        .gold-mode-active {
+            --border-color: var(--brand-gold) !important;
+            --glow-color: rgba(255, 215, 0, 0.6) !important;
+            --text-color: var(--brand-gold) !important;
+            --btn-bg: rgba(20, 15, 0, 0.9) !important;
+            --question-bg: linear-gradient(180deg, rgba(255, 215, 0, 0.2) 0%, rgba(0,0,0,0.9) 100%) !important;
+        }
+
+        .silver-mode-active {
+            --border-color: var(--silver-plate) !important;
+            --glow-color: rgba(189, 195, 199, 0.5) !important;
+            --text-color: var(--silver-plate) !important;
+            --question-bg: linear-gradient(180deg, rgba(189, 195, 199, 0.2) 0%, rgba(0,0,0,0.9) 100%) !important;
+        }
+
+        .system-overload {
+            --border-color: var(--risk-red) !important;
+            --glow-color: rgba(255, 0, 68, 0.8) !important;
+            animation: circuit-glitch 0.1s infinite !important;
+        }
+        @keyframes circuit-glitch { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+        #overload-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.5s;
+            backdrop-filter: blur(10px);
+        }
+        #overload-overlay.active { opacity: 1; pointer-events: auto; }
+        .glitch-msg { color: var(--risk-red); font-weight: 900; text-align: center; animation: text-shake 0.2s infinite; }
+        @keyframes text-shake { 0% { transform: translate(0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: white; font-family: 'Outfit', sans-serif; margin: 0; padding: 0;
+            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background-image: linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px; transition: background 0.5s; overflow: hidden; 
+        }
+        
+        body.gold-bg { background-image: radial-gradient(circle at center, rgba(255, 215, 0, 0.15) 0%, transparent 90%); }
+
+        /* BOTON CERRAR REDISEÑADO - MEJOR VISIBILIDAD */
+        .general-close-btn {
+            position: absolute; top: 20px; left: 20px; padding: 12px 18px;
+            background: #000; border: 1px solid #444; color: #fff;
+            font-size: 10px; font-weight: 900; letter-spacing: 2px;
+            border-radius: 4px; cursor: pointer; z-index: 1001; transition: 0.3s;
+            font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0,0,0,1);
+        }
+        .general-close-btn:hover { border-color: var(--risk-red); color: var(--risk-red); box-shadow: 0 0 15px rgba(255,0,68,0.3); }
+
+        .power-off-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: #000; border: 1px solid #333; color: #555; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 100; transition: 0.3s; }
+
+        .console-wrapper { display: flex; align-items: flex-start; justify-content: center; gap: 0; transform: scale(0.90); position: relative; margin-top: 20px; }
+        .machine-column { display: flex; flex-direction: column; align-items: center; width: 350px; z-index: 10; }
+
+        .vegas-topper { width: 100%; height: 80px; background: linear-gradient(180deg, #1a1a1a 0%, #050505 100%); border: 2px solid #333; border-bottom: none; border-radius: 40px 40px 0 0; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); z-index: 20; transition: border-color 0.5s; }
+        .marquee-lights { position: absolute; top: 5px; left: 10px; right: 10px; height: 100%; pointer-events: none; }
+        .bulb { width: 8px; height: 8px; border-radius: 50%; background: #444; position: absolute; box-shadow: 0 0 2px #000; }
+        .bulb:nth-child(1) { top: 30px; left: 0; animation: blink 1s infinite alternate; }
+        .bulb:nth-child(2) { top: 10px; left: 20px; animation: blink 1s 0.2s infinite alternate; }
+        .bulb:nth-child(3) { top: 0px; left: 50%; transform: translateX(-50%); animation: blink 1s 0.4s infinite alternate; }
+        .bulb:nth-child(4) { top: 10px; right: 20px; animation: blink 1s 0.6s infinite alternate; }
+        .bulb:nth-child(5) { top: 30px; right: 0; animation: blink 1s 0.8s infinite alternate; }
+        @keyframes blink { 0% { background: #444; } 100% { background: #fff; box-shadow: 0 0 10px #fff; } }
+        .topper-brand { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 28px; letter-spacing: -1px; color: #fff; text-transform: uppercase; text-shadow: 0 0 10px var(--border-color), 0 0 20px var(--border-color); margin-top: 10px; }
+        .topper-sub { font-size: 8px; color: #888; letter-spacing: 4px; text-transform: uppercase; margin-top: -5px; }
+
+        .machine-chassis { width: 100%; background: #0a0a0a; border: 2px solid #333; border-top: 1px solid #222; border-radius: 0 0 15px 15px; padding: 15px; position: relative; box-shadow: -10px 10px 50px rgba(0,0,0,0.9); display: flex; flex-direction: column; gap: 8px; transition: all 0.5s ease; z-index: 10; }
+        .gold-mode-active.machine-chassis { box-shadow: -10px 10px 80px rgba(255, 215, 0, 0.3); }
+
+        .paytable-wrapper { background: rgba(0,0,0,0.6); border: 1px solid #333; border-radius: 6px; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
+        .pay-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 4px; border: 1px solid transparent; }
+        .pay-icons { display: flex; gap: 2px; font-size: 14px; color: #555; transition: all 0.3s; }
+        .pay-price { font-family: 'JetBrains Mono'; font-size: 12px; color: #888; font-weight: bold; transition: all 0.3s; }
+        .pay-row .pay-icons { color: #fff; text-shadow: 0 0 5px var(--border-color); }
+        .pay-row .pay-price { color: var(--border-color); }
+        .pay-row.winner { background: var(--border-color); box-shadow: 0 0 15px var(--glow-color); transform: scale(1.02); }
+        .pay-row.winner .pay-icons { color: #000; text-shadow: none; }
+        .pay-row.winner .pay-price { color: #000; font-weight: 900; }
+
+        .question-deck { background: var(--question-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; min-height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05); margin-top: 5px; position: relative; overflow: hidden; transition: background 0.5s, border-color 0.5s; }
+        .question-deck::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(0deg, transparent 50%, rgba(255,255,255,0.02) 50%); background-size: 100% 4px; pointer-events: none; }
+        .question-label { position: absolute; top: 4px; left: 8px; font-size: 8px; color: rgba(255,255,255,0.6); letter-spacing: 1px; font-weight: 700; text-transform: uppercase; }
+        .question-text { color: #fff; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; text-align: center; line-height: 1.2; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px var(--border-color); animation: breatheText 4s infinite ease-in-out; }
+        @keyframes breatheText { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 15px var(--glow-color); } }
+
+        .reels-wrapper { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; height: 120px; position: relative; }
+        .payline { position: absolute; top: 50%; left: -10px; right: -10px; height: 2px; background: rgba(255, 0, 0, 0.5); z-index: 20; pointer-events: none; opacity: 0; transform: translateY(-50%); }
+        .reel { flex: 1; background: #000; border: 2px solid var(--border-color); border-radius: 8px; overflow: hidden; position: relative; box-shadow: 0 0 10px var(--glow-color), inset 0 0 30px #000; transition: all 0.3s ease; }
+        .reel-strip { position: absolute; top: 0; left: 0; width: 100%; transform: translateY(0); display: flex; flex-direction: column; align-items: center; }
+        .reel.spinning .reel-strip { animation: infiniteSpin 0.25s linear infinite; filter: blur(0px); opacity: 0.8; }
+        @keyframes infiniteSpin { 0% { transform: translateY(0); } 100% { transform: translateY(-2000px); } }
+        .symbol { height: 100px; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 42px; filter: drop-shadow(0 0 5px currentColor); }
+        .reel.win-border { border-color: #fff; box-shadow: 0 0 60px var(--border-color), inset 0 0 30px var(--border-color); background: #fff; z-index: 50; animation: pulseWin 0.4s infinite alternate; }
+        .reel.win-border .symbol { color: #000; filter: none; }
+        @keyframes pulseWin { from { transform: scale(1); } to { transform: scale(1.05); } }
+        .reel.loss-border { border-color: var(--risk-red) !important; box-shadow: 0 0 20px var(--risk-red), inset 0 0 10px var(--risk-red) !important; opacity: 0.7; }
+
+        .dashboard-bar { display: flex; justify-content: space-between; align-items: center; background: #111; border: 1px solid #333; border-radius: 6px; padding: 5px 10px; margin-bottom: 5px; box-shadow: inset 0 0 15px rgba(0,0,0,1); }
+        .db-label { font-size: 9px; color: #666; letter-spacing: 1px; font-weight: 700; }
+        .db-screen { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 900; color: var(--money-green); text-shadow: 0 0 10px rgba(46, 204, 113, 0.3); letter-spacing: -1px; transition: color 0.2s; }
+        .db-screen.loss { color: var(--risk-red); text-shadow: 0 0 15px var(--risk-red); animation: shake 0.3s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+
+        .input-deck { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 80px; }
+        .holo-btn { background: var(--btn-bg); border: 1px solid #333; color: #fff; padding: 15px 5px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; display: flex; align-items: center; justify-content: center; opacity: 0.7; animation: btnBreathe 3s infinite ease-in-out; }
+        @keyframes btnBreathe { 0%, 100% { border-color: #333; transform: scale(1); box-shadow: 0 0 0 transparent; } 50% { border-color: var(--border-color); transform: scale(1.01); box-shadow: 0 0 15px var(--glow-color); } }
+        .holo-btn:hover { border-color: var(--border-color); color: var(--border-color); opacity: 1; animation: heartbeat 0.6s infinite; box-shadow: 0 0 20px var(--glow-color); }
+        @keyframes heartbeat { 0% { transform: scale(1); } 15% { transform: scale(1.05); } 30% { transform: scale(1); } 45% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .holo-btn.selected { background: var(--border-color); color: black; border-color: white; opacity: 1; box-shadow: 0 0 20px var(--border-color); transform: scale(1.02); z-index: 10; animation: none; }
+        .deck-locked .holo-btn { opacity: 0.3; pointer-events: none; filter: grayscale(1); animation: none; }
+        .deck-locked .holo-btn.selected { opacity: 1; filter: none; }
+
+        .coin-tray { margin-top: 10px; height: 50px; background: linear-gradient(180deg, #151515 0%, #050505 100%); border: 1px solid #333; border-top: none; border-radius: 0 0 10px 10px; position: relative; box-shadow: inset 0 5px 15px rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: flex-end; overflow: hidden; }
+        .tray-label { position: absolute; top: 3px; font-size: 6px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
+        .tray-grille { width: 80%; height: 8px; margin-bottom: 8px; background: repeating-linear-gradient(90deg, #222 0, #222 2px, transparent 2px, transparent 8px); opacity: 0.5; }
+        .tray-glow-fx { position: absolute; bottom: -20px; left: 0; width: 100%; height: 60px; background: radial-gradient(ellipse at bottom, #FFD700 0%, #FF8C00 40%, transparent 80%); opacity: 0; transition: opacity 0.3s; filter: blur(10px); }
+        .coin-tray.payout-active .tray-glow-fx { opacity: 0.9; animation: pulseTray 0.5s infinite alternate; }
+        @keyframes pulseTray { from { opacity: 0.6; } to { opacity: 1; } }
+
+        .lever-housing { width: 60px; height: 500px; background: linear-gradient(90deg, #111 0%, #080808 100%); border: 1px solid #333; border-left: none; border-radius: 0 20px 20px 0; display: flex; justify-content: center; align-items: flex-start; padding-top: 100px; position: relative; box-shadow: 10px 0 30px rgba(0,0,0,0.5); margin-top: 40px; }
+        .lever-track { width: 10px; height: 320px; background: #000; border-radius: 5px; box-shadow: inset 0 0 5px #000; position: relative; }
+        .lever-stick { width: 14px; height: 80px; background: linear-gradient(90deg, #444, #888, #444); position: absolute; top: 0; left: 50%; transform: translateX(-50%); border-radius: 4px; transition: height 0.3s cubic-bezier(0.5, 0, 0.5, 1); transform-origin: top; }
+        .lever-knob { width: 60px; height: 60px; background: #222; border-radius: 50%; position: absolute; top: -30px; left: 50%; transform: translateX(-50%); box-shadow: 0 5px 15px rgba(0,0,0,0.6); cursor: not-allowed; transition: all 0.3s; z-index: 20; display: flex; align-items: center; justify-content: center; color: #555; }
+        .lever-active .lever-knob { background: var(--lever-color); color: #fff; box-shadow: 0 0 30px var(--lever-color), inset 0 -5px 10px rgba(0,0,0,0.5); cursor: pointer; animation: knobPulse 0.8s infinite; }
+        @keyframes knobPulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.1); } 100% { transform: translateX(-50%) scale(1); } }
+        .lever-pulled .lever-knob { top: 290px; animation: none; }
+        .lever-pulled .lever-stick { height: 320px; }
+
+        #mega-win { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        #mega-win.active { opacity: 1; pointer-events: auto; }
+        .mega-text { font-size: 50px; color: var(--brand-gold); font-weight: 900; text-shadow: 0 0 30px var(--brand-gold); text-align: center; line-height: 1; transform: scale(0); animation: popMega 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .mega-sub { color: white; font-family: 'JetBrains Mono'; margin-top: 10px; font-size: 18px; animation: slideUp 0.5s 0.3s forwards; opacity: 0; }
+        @keyframes popMega { to { transform: scale(1); } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        #gold-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(5px); }
+        #gold-overlay.active { opacity: 1; pointer-events: auto; }
+        .gold-msg-title { font-size: 40px; font-weight: 900; color: var(--brand-gold); text-shadow: 0 0 20px var(--brand-gold); transform: scale(0.5); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .gold-msg-sub { font-family: 'JetBrains Mono'; font-size: 14px; color: white; letter-spacing: 2px; margin-top: 10px; opacity: 0; animation: fadeIn 0.5s 0.3s forwards; }
+
+        .particle { position: fixed; top: -10px; width: 5px; height: 5px; background: var(--brand-gold); z-index: 1000; pointer-events: none; animation: fall linear forwards; box-shadow: 0 0 10px var(--brand-gold); }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <button class="general-close-btn" onclick="closeMachine()"><i class="fas fa-power-off mr-2"></i>CERRAR TERMINAL</button>
+
+    <div id="overload-overlay">
+        <div class="glitch-msg" style="font-size: 44px;">FATAL ERROR</div>
+        <div class="glitch-msg" style="font-size: 18px; color: white; margin-top: 10px;">MÁQUINA SOBRECARGADA</div>
+        <div id="final-stats" style="margin-top: 20px; font-family: 'JetBrains Mono'; color: var(--money-green); font-size: 20px;">TOTAL GANADO: $0</div>
+        <div style="font-family: 'JetBrains Mono'; color: #444; font-size: 10px; margin-top: 30px; letter-spacing: 2px;">SEGURIDAD ACTIVADA - REGRESA MAÑANA</div>
+    </div>
+
+    <div id="mega-win"><div class="mega-text">CRITICAL<br>DATA ACQUIRED</div><div class="mega-sub">RECOMPENSA LEGENDARIA</div></div>
+    <div class="power-off-btn" onclick="closeMachine()"><i class="fas fa-power-off"></i></div>
+
+    <div class="console-wrapper">
+        <div class="machine-column">
+            <div class="vegas-topper">
+                <div class="marquee-lights"><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div></div>
+                <div class="topper-brand">GOVOTTO</div>
+                <div class="topper-sub">SLOTS SYSTEM V2.38</div>
+            </div>
+
+            <div class="machine-chassis" id="chassis">
+                <div id="gold-overlay"><div class="gold-msg-title">¡X2 BONUS!</div><div class="gold-msg-sub">HIGH STAKES ACTIVATED</div></div>
+
+                <div class="paytable-wrapper">
+                    <div class="pay-row" id="row-core"><div class="pay-icons"><i class="fas fa-gem"></i><i class="fas fa-gem"></i><i class="fas fa-gem"></i></div><div class="pay-price" id="pay-core">$1000</div></div>
+                    <div class="pay-row" id="row-seven"><div class="pay-icons"><i class="fas fa-7"></i><i class="fas fa-7"></i><i class="fas fa-7"></i></div><div class="pay-price" id="pay-seven">$500</div></div>
+                    <div class="pay-row" id="row-bar"><div class="pay-icons"><i class="fas fa-barcode"></i><i class="fas fa-barcode"></i><i class="fas fa-barcode"></i></div><div class="pay-price" id="pay-bar">$250</div></div>
+                </div>
+
+                <div class="question-deck">
+                    <div class="question-label">INPUT REQUERIDO</div>
+                    <div class="question-text" id="screen-text">CONECTANDO...</div>
+                </div>
+
+                <div class="reels-wrapper">
+                    <div class="payline"></div>
+                    <div class="reel" id="reel-1"><div class="reel-strip" id="strip-1"></div></div>
+                    <div class="reel" id="reel-2"><div class="reel-strip" id="strip-2"></div></div>
+                    <div class="reel" id="reel-3"><div class="reel-strip" id="strip-3"></div></div>
+                </div>
+
+                <div class="dashboard-bar">
+                    <div class="db-label">BALANCE</div>
+                    <div class="db-screen" id="credit-val">$0</div>
+                </div>
+
+                <div class="input-deck" id="controls"></div>
+
+                <div class="coin-tray" id="coin-tray">
+                    <div class="tray-label">BANDEJA DE SALIDA</div>
+                    <div class="tray-glow-fx"></div>
+                    <div class="tray-grille"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lever-housing" id="lever-housing">
+            <div class="lever-track"><div class="lever-stick"></div><div class="lever-knob" id="lever-knob" onclick="pullLever()"><i class="fas fa-chevron-down text-[16px]"></i></div></div>
+        </div>
+    </div>
+
+    <script>
+        const AudioEngine = {
+            ctx: null,
+            init: function() { window.AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); },
+            playTone: function(freq, type, duration, vol = 0.1) {
+                if(!this.ctx) this.init();
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            click: function() { this.playTone(1200, 'sine', 0.05, 0.05); },
+            select: function() { this.playTone(800, 'square', 0.1, 0.1); },
+            lever: function() { this.playTone(100, 'sawtooth', 0.4, 0.3); },
+            coin: function() { this.playTone(1500 + Math.random()*500, 'triangle', 0.1, 0.05); },
+            win: function() {
+                let now = this.ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = 'square'; osc.frequency.value = f;
+                    gain.gain.setValueAtTime(0.1, now + i*0.05); gain.gain.exponentialRampToValueAtTime(0.01, now + i*0.05 + 0.6);
+                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(now + i*0.05); osc.stop(now + i*0.05 + 0.6);
+                });
+            },
+            loss: function() {
+                if(!this.ctx) this.init(); let now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(now + 0.4);
+            },
+            reset: function() { this.playTone(600, 'sine', 0.1, 0.2); setTimeout(() => this.playTone(1200, 'sine', 0.1, 0.2), 100); },
+            glitch: function() { 
+                setInterval(() => {
+                    if(document.getElementById('chassis').classList.contains('system-overload'))
+                        this.playTone(Math.random()*150 + 40, 'sawtooth', 0.1, 0.05);
+                }, 120);
+            }
+        };
+
+        const QUESTIONS = [
+            { q: "¿PRESUPUESTO MENSUAL OCIO?", a: ["< $200k", "$200k-$500k", "$500k-$1M", "> $1M"], gold: false },
+            { q: "¿QUÉ RED USAS PARA COMPRAR?", a: ["INSTAGRAM", "TIKTOK", "GOOGLE", "FACEBOOK"], gold: false },
+            { q: "¿MÉTODO PAGO FAVORITO?", a: ["T. CRÉDITO", "EFECTIVO", "PSE/DÉBITO", "CRIPTO"], gold: false },
+            { q: "¿QUÉ TE MOTIVA A COMPRAR?", a: ["DESCUENTOS", "EXCLUSIVIDAD", "CALIDAD", "RAPIDEZ"], gold: false },
+            { q: "¿FUMAS O BEBES REGULARMENTE?", a: ["SOLO BEBO", "AMBOS", "SOLO FUMO", "NINGUNO"], gold: false },
+            { q: "¿ERES DUEÑO DE TU VIVIENDA?", a: ["SÍ, PROPIA", "ARRIENDO", "FAMILIAR", "PAGÁNDOLA"], gold: false },
+            { q: "¿VIAJAS A JÚPITER FRECUENCIA?", a: ["2 VECES/AÑO", "1 VEZ/AÑO", "CASI NUNCA", "NO EXISTEN VIAJES"], gold: false, trap: true, correct: "NO EXISTEN VIAJES" },
+            { q: "¿VIAJAS FUERA DEL PAÍS?", a: ["CADA MES", "CADA AÑO", "RARA VEZ", "NUNCA"], gold: true },
+            { q: "¿COMPRARÍAS UN AUTO ESTE AÑO?", a: ["SÍ, NUEVO", "SÍ, USADO", "QUIZÁS", "NO"], gold: true },
+            { q: "¿INVERTIRÍAS EN PROPIEDAD?", a: ["SÍ, AHORA", "EN 12 MESES", "SOLO INFO", "NO INTERESA"], gold: true }
+        ];
+
+        const ICONS = [{ id: 'lemon', char: 'fa-lemon', color: '#dbff33', val: 0 }, { id: 'cherry', char: 'fa-circle-nodes', color: '#ff00ff', val: 100 }, { id: 'bar', char: 'fa-barcode', color: '#00ff41', val: 250 }, { id: 'seven', char: 'fa-7', color: '#FFD700', val: 500 }, { id: 'core', char: 'fa-gem', color: '#00ffff', val: 1000 }];
+        const SYMBOL_HEIGHT = 100;
+        const REPEAT_COUNT = 30; 
+// --- CALIBRACIÓN DE BÓVEDA RYZEN ---
+        let savedVault = localStorage.getItem('govotto_vault');
+        let currentCredits = savedVault ? parseInt(savedVault) : 0; 
+        
+        let displayCredits = currentCredits;
+        let questionsAnswered = 0, trapStrikes = 0, cycleCount = 1;
+        let isSpinning = false, isGoldMode = false, currentSelection = null, usedQuestionIndexes = [];
+        let winPhase1 = false, winPhase2 = false;
+        // --- MOTOR DE SUERTE ERRÁTICA ---
+        // Turno aleatorio entre 3 y 5 (índices 2, 3 o 4)
+        let targetWinTurn1 = Math.floor(Math.random() * 3) + 2; 
+        // Turno aleatorio entre 8 y 10 (índices 7, 8 o 9)
+        let targetWinTurn2 = Math.floor(Math.random() * 3) + 7;
+
+        window.onload = function() {
+            let saved = localStorage.getItem('govotto_vault');
+            if(saved) { currentCredits = parseInt(saved); displayCredits = currentCredits; updateDisplay(); }
+            initReels(); setInitialPosition(1, 3); setInitialPosition(2, 4); setInitialPosition(3, 0); loadNextQuestion(); 
+            document.body.addEventListener('click', () => { if(!AudioEngine.ctx) AudioEngine.init(); }, {once:true});
+        };
+
+        function setInitialPosition(id, index) { document.getElementById(`strip-${id}`).style.transform = `translateY(-${(10 * ICONS.length + index) * SYMBOL_HEIGHT}px)`; }
+        function initReels() { [1, 2, 3].forEach(i => { const strip = document.getElementById(`strip-${i}`); let html = ''; for(let k=0; k<REPEAT_COUNT; k++) { ICONS.forEach(icon => { html += `<div class="symbol"><i class="fas ${icon.char}" style="color:${icon.color}"></i></div>`; }); } strip.innerHTML = html; }); }
+
+        function loadNextQuestion() {
+            if(questionsAnswered >= 10 || trapStrikes >= 3) { triggerSystemFailure(); return; }
+            const screen = document.getElementById('screen-text'), chassis = document.getElementById('chassis'), overlay = document.getElementById('gold-overlay');
+            document.getElementById('lever-housing').classList.remove('lever-pulled', 'lever-active');
+            document.getElementById('coin-tray').classList.remove('payout-active');
+            chassis.classList.remove('silver-mode-active', 'system-overload');
+            isLeverActive = false; currentSelection = null; 
+            isGoldMode = (cycleCount % 3 === 0);
+            if (isGoldMode) { overlay.classList.add('active'); AudioEngine.win(); setTimeout(() => { overlay.classList.remove('active'); chassis.classList.add('gold-mode-active'); }, 2000); }
+            else { chassis.classList.remove('gold-mode-active'); }
+            updatePaytableUI();
+            [1, 2, 3].forEach(i => { let reel = document.getElementById(`reel-${i}`); reel.classList.remove('win-border', 'loss-border'); });
+            let randomIndex;
+            if (questionsAnswered === 1) { randomIndex = QUESTIONS.findIndex(q => q.trap === true); } 
+            else { let availableIndexes = QUESTIONS.map((q, i) => i).filter(i => !usedQuestionIndexes.includes(i) && (QUESTIONS[i].trap !== true)); randomIndex = availableIndexes[Math.floor(Math.random() * availableIndexes.length)]; }
+            usedQuestionIndexes.push(randomIndex);
+            const data = QUESTIONS[randomIndex];
+            if(data.trap) chassis.classList.add('silver-mode-active');
+            screen.innerText = data.q; 
+            const deck = document.getElementById('controls'); deck.innerHTML = '';
+            data.a.forEach(opt => {
+                let btn = document.createElement('div'); btn.className = 'holo-btn'; btn.innerText = opt;
+                btn.onclick = () => { if(data.trap && opt !== data.correct) { handleTrapFail(); return; } selectOption(opt, btn); };
+                deck.appendChild(btn);
+            });
+        }
+
+        function handleTrapFail() {
+            trapStrikes++; AudioEngine.loss(); const chassis = document.getElementById('chassis'); chassis.classList.add('system-overload');
+            document.getElementById('screen-text').innerHTML = "<span style='color:red'>DATO ERRÓNEO<br>FALLO DE SISTEMA</span>";
+            setTimeout(() => { if(trapStrikes >= 3) { triggerSystemFailure(); } else { chassis.classList.remove('system-overload'); loadNextQuestion(); } }, 1200);
+        }
+
+        function triggerSystemFailure() {
+            const chassis = document.getElementById('chassis'), overlay = document.getElementById('overload-overlay');
+            chassis.classList.add('system-overload'); AudioEngine.glitch();
+            [1, 2, 3].forEach(i => document.getElementById(`reel-${i}`).classList.add('spinning'));
+            document.getElementById('final-stats').innerText = "TOTAL GANADO: $" + currentCredits.toLocaleString();
+            setTimeout(() => overlay.classList.add('active'), 1500);
+        }
+
+        function selectOption(choice, btnElement) { if(isSpinning) return; AudioEngine.select ? AudioEngine.select() : AudioEngine.click(); currentSelection = choice; document.querySelectorAll('.holo-btn').forEach(b => b.classList.remove('selected')); btnElement.classList.add('selected'); isLeverActive = true; document.getElementById('lever-housing').classList.add('lever-active'); }
+
+        function pullLever() {
+            if(!isLeverActive || isSpinning || !currentSelection) return;
+            isSpinning = true; isLeverActive = false; document.getElementById('controls').classList.add('deck-locked'); AudioEngine.lever(); document.getElementById('lever-housing').classList.add('lever-pulled');
+            
+            setTimeout(() => {
+                [1, 2, 3].forEach(i => document.getElementById(`reel-${i}`).classList.add('spinning'));
+                
+                let res = [Math.floor(Math.random()*5), Math.floor(Math.random()*5), Math.floor(Math.random()*5)];
+                
+                // --- MOTOR DE VICTORIAS CONTROLADO ---
+                if (questionsAnswered === targetWinTurn1 && !winPhase1) { res = [3, 3, 3]; } 
+                else if (questionsAnswered === targetWinTurn2 && !winPhase2) { res = [4, 4, 4]; }
+                else if (Math.random() < 0.4) { res[1] = res[0]; }
+
+                setTimeout(() => stopReel(1, res[0]), 2000);
+                setTimeout(() => stopReel(2, res[1]), 3000);
+                setTimeout(() => stopReel(3, res[2], () => finishSpin(res)), 4500);
+            }, 300);
+        }
+
+        function stopReel(id, symbolIndex, callback) { const reel = document.getElementById(`reel-${id}`), strip = document.getElementById(`strip-${id}`); reel.classList.remove('spinning'); AudioEngine.click(); const offset = (10 * ICONS.length + symbolIndex) * SYMBOL_HEIGHT; strip.style.transition = 'transform 1.5s cubic-bezier(0.1, 0.9, 0.2, 1.05)'; strip.style.transform = `translateY(-${offset}px)`; if(callback) setTimeout(callback, 1500); }
+
+        function finishSpin(res) {
+            isSpinning = false; const reels = [document.getElementById('reel-1'), document.getElementById('reel-2'), document.getElementById('reel-3')];
+            if(res[0] === res[1] && res[1] === res[2] && ICONS[res[0]].val > 0) {
+                AudioEngine.win(); let prize = ICONS[res[0]].val * (isGoldMode ? 2 : 1);
+                reels.forEach(r => r.classList.add('win-border')); animateCredits(prize);
+                document.getElementById('coin-tray').classList.add('payout-active');
+                if (questionsAnswered <= 5) winPhase1 = true;
+                else winPhase2 = true;
+            } else {
+                AudioEngine.loss(); reels.forEach(r => r.classList.add('loss-border')); animateCredits(-50);
+                const walletEl = document.querySelector('.db-screen'); walletEl.classList.add('loss'); setTimeout(() => walletEl.classList.remove('loss'), 1000);
+            }
+            questionsAnswered++; cycleCount++; document.getElementById('controls').classList.remove('deck-locked'); setTimeout(loadNextQuestion, 2000);
+        }
+
+function animateCredits(amountToAdd) { 
+    currentCredits = Math.max(0, currentCredits + amountToAdd); 
+    // AGREGA ESTA LÍNEA AQUÍ PARA BLINDAR EL SALDO EN EL PC RYZEN
+    localStorage.setItem('govotto_vault', currentCredits); 
+
+    const step = amountToAdd / 20; 
+    let interval = setInterval(() => { 
+        displayCredits += step; 
+        if((amountToAdd > 0 && displayCredits >= currentCredits) || (amountToAdd < 0 && displayCredits <= currentCredits)) { 
+            displayCredits = currentCredits; 
+            clearInterval(interval); 
+        } 
+        updateDisplay(); 
+        if(amountToAdd > 0) AudioEngine.coin(); 
+    }, 50); 
+}        function updateDisplay() { document.getElementById('credit-val').innerText = "$" + Math.floor(displayCredits).toLocaleString(); }
+        function updatePaytableUI() { const m = isGoldMode ? 2 : 1; document.getElementById('pay-core').innerText = "$"+(1000*m); document.getElementById('pay-seven').innerText = "$"+(500*m); document.getElementById('pay-bar').innerText = "$"+(250*m); }
+        function closeMachine() { window.parent.postMessage({ action: 'close_turbine', balance: currentCredits }, '*'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VISUALIZADOR V11: TURBINA SENSORIAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* --- ESTILOS VISUALES (MISMOS DE V10) --- */
+        :root { 
+            --bg: #050505; 
+            --accent: #00ffff;   
+            --risk: #FF0044;     
+            --terminal: #10b981; 
+            --gold: #FFD700;     
+        }
+
+        body { 
+            background: var(--bg); height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; 
+            font-family: 'Outfit', sans-serif; 
+            color: white; user-select: none; overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.5s ease;
+        }
+
+        .ambient-glow {
+            position: absolute; inset: 0; pointer-events: none; z-index: -1;
+            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.04) 0%, transparent 60%);
+            transition: all 0.5s ease;
+        }
+
+        .reactor-box {
+            width: 360px; max-width: 95vw; padding: 30px 20px; 
+            background: #080808; border: 1px solid #333; border-radius: 24px;
+            text-align: center; position: relative;
+            box-shadow: 0 0 80px rgba(0,0,0,0.9);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* ESTADOS */
+        .mode-error { background: #1a0005; }
+        .mode-error .reactor-box { 
+            border-color: var(--risk); 
+            box-shadow: 0 0 60px rgba(255,0,68,0.4); 
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
+        }
+        .mode-error .ambient-glow { background: radial-gradient(circle at center, rgba(255,0,68,0.2) 0%, transparent 80%); }
+        .mode-error .turbine-brand { color: var(--risk); }
+
+        .mode-golden .reactor-box { 
+            border-color: var(--gold); 
+            background: linear-gradient(180deg, #1a1200 0%, #050505 100%);
+            box-shadow: 0 0 80px rgba(255, 215, 0, 0.3), inset 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+        .mode-golden .ambient-glow { background: radial-gradient(circle at center, rgba(255, 215, 0, 0.15) 0%, transparent 70%); }
+        .mode-golden .turbine-brand span { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+        .mode-golden .monitor-screen { border-left-color: var(--gold); background: rgba(20, 15, 0, 0.7); }
+        .mode-golden .q-text { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .mode-golden .core { color: var(--gold); border-color: var(--gold); box-shadow: 0 0 40px var(--gold); }
+
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .turbine-brand { 
+            font-family: 'Outfit', sans-serif; font-weight: 900; font-style: italic; 
+            font-size: 1.4rem; letter-spacing: -0.5px; color: white; 
+            display: flex; align-items: center; gap: 8px; text-shadow: 0 0 20px rgba(0,0,0,1);
+        }
+        .turbine-brand span { color: var(--accent); transition: 0.3s; }
+        
+        .close-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #555; border-radius: 50%; border: 1px solid #222; cursor: pointer; background: #050505; transition: 0.2s; }
+        .close-btn:active { background: white; color: black; }
+
+        .vault-pill { 
+            background: #111; border: 1px solid #333; border-radius: 50px; 
+            padding: 8px 16px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 10px; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #888; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        .vault-val { color: var(--terminal); font-weight: 700; transition: color 0.2s; }
+        
+        .monitor-screen { 
+            background: rgba(0, 15, 15, 0.6); border: 1px solid #222; border-left: 3px solid var(--accent); 
+            padding: 15px; margin-bottom: 30px; border-radius: 6px; min-height: 90px; 
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s; 
+        }
+        .q-text { 
+            font-family: 'JetBrains Mono', monospace; font-size: 1.0rem; color: #ddd; 
+            text-transform: uppercase; line-height: 1.3; font-weight: 700; transition: color 0.3s; 
+        }
+
+        .reactor-stage { position: relative; width: 160px; height: 160px; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center; }
+        .ring-outer { position: absolute; inset: 0; border: 4px dashed #333; border-radius: 50%; transition: 0.3s; }
+        .ring-inner { position: absolute; inset: 15px; border: 2px solid transparent; border-top: 3px solid var(--accent); border-bottom: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); transition: 0.3s; }
+        .core { width: 70px; height: 70px; background: radial-gradient(circle, #222, #050505); border: 1px solid #555; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 2rem; color: var(--accent); box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); transition: 0.3s; }
+
+        .idle-breath .core { animation: breath 3s infinite ease-in-out; }
+        @keyframes breath { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); box-shadow: 0 0 30px currentColor; } }
+        
+        .state-spinning .ring-outer { border-color: #fff; animation: spin 0.6s linear infinite; opacity: 0.5; }
+        .state-spinning .ring-inner { animation: spin 0.3s linear infinite reverse; }
+
+        .state-win .core { background: white; color: var(--terminal) !important; box-shadow: 0 0 80px var(--terminal); transform: scale(1.1); animation: none; }
+        .state-win .ring-outer { border-color: var(--terminal); animation: pulse 0.5s infinite; }
+
+        .state-error .core { background: var(--risk); color: black !important; box-shadow: 0 0 50px var(--risk); transform: scale(0.9); }
+        .state-error .ring-outer { border-color: var(--risk); border-style: solid; animation: glitch-anim 0.1s infinite; }
+        
+        .state-glitch .core { background: var(--risk); color: black !important; box-shadow: 0 0 50px var(--risk); animation: shake 0.1s infinite; }
+        .state-glitch .ring-outer { border-color: var(--risk); border-style: dotted; animation: glitch-anim 0.2s infinite; }
+
+        .state-gold-win .core { background: var(--gold); color: black !important; box-shadow: 0 0 100px var(--gold); transform: scale(1.2); animation: shake 0.2s infinite; }
+        .state-gold-win .ring-outer { border-color: var(--gold); border-width: 8px; border-style: double; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-3px, 3px); } 75% { transform: translate(3px, -3px); } }
+        @keyframes glitch-anim { 0% { clip-path: inset(0 0 0 0); transform: translate(0); } 20% { clip-path: inset(20% 0 0 0); transform: translate(-3px, 3px); } 100% { clip-path: inset(0 0 0 0); transform: translate(0); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
+
+        .controls { display: flex; gap: 15px; width: 100%; margin-bottom: 25px; }
+        .btn { 
+            flex: 1; padding: 20px 5px; border: 2px solid; border-radius: 12px; 
+            font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            font-weight: 800; font-family: 'Outfit', sans-serif; transition: 0.1s; 
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        
+        .btn-left { border-color: rgba(255, 0, 68, 0.3); color: var(--risk); background: rgba(255, 0, 68, 0.05); }
+        .btn-left:active { transform: scale(0.96); background: var(--risk); color: black; box-shadow: 0 0 30px var(--risk); }
+
+        .btn-right { border-color: rgba(16, 185, 129, 0.3); color: var(--terminal); background: rgba(16, 185, 129, 0.05); }
+        .btn-right:active { transform: scale(0.96); background: var(--terminal); color: black; box-shadow: 0 0 30px var(--terminal); }
+
+        .mode-golden .btn-left { border-color: #887800; color: #ffd700; background: rgba(255, 215, 0, 0.05); } 
+        .mode-golden .btn-right { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.15); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .mode-golden .btn-right:active, .mode-golden .btn-left:active { background: var(--gold); color: black; box-shadow: 0 0 40px var(--gold); }
+
+        .legal-text { 
+            font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; 
+            padding: 0 20px; line-height: 1.4; margin-top: 10px;
+        }
+        
+        .result-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; z-index: 50; pointer-events: none; text-align: center; opacity: 0; transition: 0.1s; }
+        .show-result { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        .res-title { font-size: 1.8rem; font-weight: 900; font-style: italic; line-height: 1; margin-bottom: 5px; text-shadow: 0 0 20px black; font-family: 'Outfit'; text-transform: uppercase; }
+        .res-sub { font-size: 0.8rem; font-family: monospace; background: black; color: white; padding: 4px 8px; display: inline-block; border-radius: 4px; border: 1px solid #333; }
+
+    </style>
+</head>
+<body id="main-body">
+    <div class="ambient-glow"></div>
+
+    <div class="reactor-box">
+        <div class="header-row">
+            <div class="turbine-brand">
+                TURBINA <span id="brand-suffix">DE DATOS</span>
+            </div>
+            <div class="close-btn" onclick="exitTurbine()"><i class="fas fa-times"></i></div>
+        </div>
+
+        <div class="vault-pill">
+            <i class="fas fa-lock" style="font-size:0.8rem;"></i>
+            BÓVEDA: <span id="vault-amount" class="vault-val">$0</span>
+        </div>
+
+        <div class="monitor-screen" id="monitor">
+            <div class="q-text" id="question">INICIANDO...</div>
+        </div>
+
+        <div class="reactor-stage idle-breath" id="reactor">
+            <div id="result-msg" class="result-overlay">
+                <div class="res-title" id="res-t"></div>
+                <div class="res-sub" id="res-s"></div>
+            </div>
+            <div class="ring-outer"></div>
+            <div class="ring-inner"></div>
+            <div class="core">
+                <i id="core-icon" class="fas fa-atom"></i>
+            </div>
+        </div>
+
+        <div class="controls" id="btns">
+            <button class="btn btn-left" id="btn-left" onclick="handleBtn(false)"></button>
+            <button class="btn btn-right" id="btn-right" onclick="handleBtn(true)"></button>
+        </div>
+
+        <div class="legal-text">La honestidad es recompensada en GoVotto.</div>
+    </div>
+
+    <script>
+        // --- 1. MOTOR DE AUDIO SINTÉTICO (NO MP3) ---
+        const AudioEngine = {
+            ctx: null,
+            init: function() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            playTone: function(freq, type, duration, vol=0.1) {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+            playSweep: function(start, end, duration) {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(start, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(end, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+            // FX PRESETS
+            click: function() { this.playTone(800, 'sine', 0.1, 0.05); },
+            spin: function() { this.playSweep(200, 800, 0.5); },
+            win: function() { 
+                this.playTone(600, 'sine', 0.2); 
+                setTimeout(()=>this.playTone(900, 'sine', 0.4), 100); 
+            },
+            loss: function() { this.playTone(150, 'sawtooth', 0.4, 0.1); },
+            error: function() { 
+                this.playTone(100, 'square', 0.5, 0.2); 
+                setTimeout(()=>this.playTone(100, 'square', 0.5, 0.2), 200);
+            },
+            gold: function() {
+                this.playTone(800, 'triangle', 0.5);
+                setTimeout(()=>this.playTone(1200, 'triangle', 0.5), 150);
+                setTimeout(()=>this.playTone(1600, 'triangle', 0.8), 300);
+            }
+        };
+
+        // --- 2. MOTOR HÁPTICO (VIBRACIÓN) ---
+        const HapticEngine = {
+            click: function() { if(navigator.vibrate) navigator.vibrate(20); },
+            win: function() { if(navigator.vibrate) navigator.vibrate([50, 50, 50]); },
+            loss: function() { if(navigator.vibrate) navigator.vibrate([30, 50, 30]); },
+            error: function() { if(navigator.vibrate) navigator.vibrate(500); },
+            gold: function() { if(navigator.vibrate) navigator.vibrate([40,40,40,40,40,40]); }
+        };
+
+        // --- LÓGICA DE JUEGO (V10) ---
+        const SCENARIO = [
+            { type: 0, text: "¿HAS ESTADO EN MARTE?" },           
+            { type: 1, text: "¿TIENES MASCOTAS?" },               
+            { type: 1, text: "¿AMAS TU TRABAJO?" },               
+            { type: 1, text: "¿ERES FELIZ?" },                    
+            { type: 2, text: "¿PREFIERES CRÉDITO O CONTADO?" }    
+        ];
+
+        const els = { body: document.getElementById('main-body'), reactor: document.getElementById('reactor'), monitor: document.getElementById('monitor'), overlay: document.getElementById('result-msg'), t: document.getElementById('res-t'), s: document.getElementById('res-s'), icon: document.getElementById('core-icon'), btns: document.getElementById('btns'), btnL: document.getElementById('btn-left'), btnR: document.getElementById('btn-right'), q: document.getElementById('question'), vault: document.getElementById('vault-amount') };
+        
+        let busy = false;
+        let step = 0; 
+        let money = parseInt(localStorage.getItem('govotto_vault')) || 0;
+        els.vault.innerText = "$" + money.toLocaleString();
+
+       function exitTurbine() {
+            // 1. Grabado forzoso en la Bóveda Ryzen
+            localStorage.setItem('govotto_vault', money);
+            
+            // 2. Transmisión de datos al Mapa Principal (index.html)
+            try { 
+                window.parent.postMessage({ 
+                    action: 'close_turbine', 
+                    balance: money 
+                }, '*'); 
+            } catch(e) {
+                console.error("Fallo de enlace satelital");
+            }
+
+            // 3. Feedback visual de desconexión profesional
+            els.q.innerText = "TERMINAL DESCONECTADA";
+            els.monitor.style.borderLeftColor = "#555"; // Color apagado
+            els.btns.style.pointerEvents = 'none'; // Bloquea clics accidentales
+            els.btns.style.opacity = '0.3';
+        }
+
+        loadQuestion();
+
+        function loadQuestion() {
+            if(step >= SCENARIO.length) step = 1; 
+            const currentQ = SCENARIO[step];
+            
+            els.body.classList.remove('mode-error', 'mode-success', 'mode-golden');
+            els.reactor.classList.remove('state-error'); 
+            els.monitor.className = 'monitor-screen';
+            els.icon.className = 'fas fa-atom';
+            els.q.innerText = currentQ.text;
+
+            if (currentQ.type === 2) { 
+                els.body.classList.add('mode-golden');
+                els.btnL.innerHTML = '<i class="fas fa-coins"></i> CONTADO';
+                els.btnR.innerHTML = '<i class="fas fa-credit-card"></i> CRÉDITO';
+                els.icon.className = 'fas fa-lock-open';
+            } else if (currentQ.type === 0) {
+                els.btnL.innerHTML = '<i class="fas fa-times"></i> NO';
+                els.btnR.innerHTML = '<i class="fas fa-check"></i> SÍ';
+                els.icon.className = 'fas fa-user-astronaut';
+            } else {
+                els.btnL.innerHTML = '<i class="fas fa-times"></i> NO';
+                els.btnR.innerHTML = '<i class="fas fa-check"></i> SÍ';
+            }
+        }
+
+        // Wrapper para iniciar audio en primer click
+        function handleBtn(val) {
+            AudioEngine.init(); // Iniciar AudioContext
+            AudioEngine.click(); // Sonido Click
+            HapticEngine.click(); // Vibración Click
+            play(val);
+        }
+
+        function play(val) {
+            if(busy) return; busy = true;
+            
+            const currentType = SCENARIO[step].type;
+
+            AudioEngine.spin(); // Sonido Giro
+            els.reactor.classList.remove('idle-breath', 'state-error');
+            els.btns.style.opacity = '0.5'; els.btns.style.pointerEvents = 'none';
+            els.reactor.className = 'reactor-stage state-spinning'; 
+            els.icon.className = 'fas fa-sync fa-spin';
+            els.q.innerText = "SINTETIZANDO...";
+
+            setTimeout(() => {
+                
+                if (currentType === 0) {
+                    if (val === true) { 
+                        showResult("ERROR", "MENTIRA DETECTADA", "ACCESO DENEGADO", 0);
+                        return; 
+                    } else { 
+                        showResult("SUCCESS", "CALIBRACIÓN EXITOSA", "BONO +$50", 50);
+                        step++; 
+                        return;
+                    }
+                }
+                
+                else if (currentType === 2) {
+                    showResult("GOLD", "DATA VALIOSA", "PREMIO +$500", 500);
+                    step++;
+                    return;
+                }
+
+                else {
+                    const r = Math.random(); 
+                    if (r > 0.98) {
+                        showResult("JACKPOT", "¡DATA CRÍTICA!", "JACKPOT +$5.000", 5000);
+                    } else if (r > 0.80) {
+                        showResult("WIN", "DATO VALIDADO", "+$50 BÓVEDA", 50);
+                    } else {
+                        showResult("LOSS", "SISTEMA INESTABLE", "INTENTA DE NUEVO", 0);
+                    }
+                    step++;
+                    return;
+                }
+
+            }, 1000); // Duración del giro
+        }
+
+        function showResult(type, title, sub, reward) {
+            if (reward > 0) {
+                money += reward;
+                localStorage.setItem('govotto_vault', money);
+                els.vault.innerText = "$" + money.toLocaleString();
+            }
+
+            if (type === "ERROR") {
+                AudioEngine.error(); HapticEngine.error(); // FX
+                els.body.classList.add('mode-error');
+                els.reactor.className = 'reactor-stage state-error';
+                els.icon.className = 'fas fa-exclamation-triangle';
+                els.t.innerText = title; els.t.style.color = "var(--risk)";
+                els.s.innerText = sub; els.s.style.color = "var(--risk)"; els.s.style.borderColor = "var(--risk)";
+                setTimeout(() => reset(false), 2500);
+
+            } else if (type === "SUCCESS") {
+                AudioEngine.win(); HapticEngine.win(); // FX
+                els.body.classList.add('mode-success');
+                els.reactor.className = 'reactor-stage state-win';
+                els.icon.className = 'fas fa-fingerprint';
+                els.t.innerText = title; els.t.style.color = "var(--terminal)";
+                els.s.innerText = sub; els.s.style.color = "var(--terminal)"; els.s.style.borderColor = "var(--terminal)";
+                setTimeout(() => reset(true), 1500);
+
+            } else if (type === "GOLD") {
+                AudioEngine.gold(); HapticEngine.gold(); // FX
+                els.reactor.className = 'reactor-stage state-gold-win';
+                els.icon.className = 'fas fa-gem';
+                els.t.innerText = title; els.t.style.color = "var(--gold)";
+                els.s.innerText = sub; els.s.style.color = "var(--gold)"; els.s.style.borderColor = "var(--gold)";
+                setTimeout(() => reset(true), 2000);
+
+            } else if (type === "LOSS") {
+                AudioEngine.loss(); HapticEngine.loss(); // FX
+                els.reactor.className = 'reactor-stage state-glitch';
+                els.icon.className = 'fas fa-bug';
+                els.t.innerText = title; els.t.style.color = "var(--risk)";
+                els.s.innerText = sub; els.s.style.color = "white"; els.s.style.borderColor = "var(--risk)";
+                setTimeout(() => reset(true), 1200);
+
+            } else { 
+                AudioEngine.win(); HapticEngine.win(); // FX
+                els.reactor.className = 'reactor-stage state-win';
+                els.icon.className = 'fas fa-check';
+                els.t.innerText = title; els.t.style.color = "var(--terminal)";
+                els.s.innerText = sub; els.s.style.color = "white"; els.s.style.borderColor = "var(--terminal)";
+                setTimeout(() => reset(true), 1200);
+            }
+
+            els.overlay.classList.add('show-result');
+        }
+
+        function reset(next) {
+            els.reactor.className = 'reactor-stage idle-breath';
+            els.overlay.classList.remove('show-result');
+            els.btns.style.opacity = '1'; els.btns.style.pointerEvents = 'auto';
+            loadQuestion();
+            busy = false;
+        }
+    </script>
+</body>
+</html>
