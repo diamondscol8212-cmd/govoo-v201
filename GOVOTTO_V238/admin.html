@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoVotto | CEO Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root { --bg: #050505; --panel: #111; --gold: #ffd700; --green: #00ff9d; --red: #ff0050; --blue: #00f2ea; }
+        body { background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; background-image: radial-gradient(circle at 50% 0%, #1a1a1a, #000); min-height: 100vh; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* TARJETAS ESTILO BLOOMBERG */
+        .glass-panel { background: rgba(20, 20, 20, 0.6); border: 1px solid #333; backdrop-filter: blur(10px); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .kpi-value { font-size: 2.5rem; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+        .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #888; font-weight: 700; margin-bottom: 8px; }
+
+        /* INDICADORES */
+        .trend-up { color: var(--green); } .trend-down { color: var(--red); }
+        .dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .bg-gold { background-color: var(--gold); } .bg-blue { background-color: var(--blue); }
+        
+        /* BOTONES */
+        .btn-action { background: #222; border: 1px solid #444; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-action:hover { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.1); }
+
+        /* LOADING */
+        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .loader-bar { width: 200px; height: 2px; background: #333; margin-top: 20px; overflow: hidden; }
+        .loader-progress { width: 0%; height: 100%; background: var(--gold); transition: width 0.5s; }
+    </style>
+</head>
+<body class="p-6 overflow-x-hidden">
+
+    <div id="login-overlay" class="fixed inset-0 bg-black z-[100] flex items-center justify-center">
+        <div class="text-center w-full max-w-xs">
+            <div class="text-5xl mb-4">🦅</div>
+            <h1 class="text-3xl font-black mb-1 tracking-tighter">CEO ACCESS</h1>
+            <p class="text-zinc-500 text-xs mb-8 uppercase tracking-widest">GoVotto Intelligence V3</p>
+            <input type="password" id="admin-pass" placeholder="ACCESS CODE" class="w-full bg-[#111] border border-[#333] p-4 text-center text-white mono mb-4 rounded-xl focus:border-yellow-500 outline-none transition">
+            <button onclick="checkAuth()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-gray-200 uppercase tracking-widest text-sm">Unlock System</button>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden max-w-7xl mx-auto pb-20">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">Tablero de Control</h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="text-[10px] bg-green-500/10 text-green-500 border border-green-500/30 px-2 py-0.5 rounded font-bold uppercase">System Online</span>
+                    <span class="text-xs text-zinc-500 mono" id="btc-ticker">BTC: Cargando...</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="downloadReport()" class="btn-action"><i class="fas fa-file-download"></i> REPORTE COMPLETO (CSV)</button>
+                <button onclick="location.reload()" class="btn-action"><i class="fas fa-sync"></i></button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass-panel relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 text-9xl opacity-5 group-hover:opacity-10 transition text-yellow-500"><i class="fas fa-users"></i></div>
+                <div class="kpi-label">Base de Usuarios</div>
+                <div class="kpi-value text-white" id="total-users">0</div>
+                <div class="text-xs text-zinc-500 mt-2 flex justify-between">
+                    <span>Activos en DB</span>
+                    <span class="text-green-500 font-bold" id="banked-percent">0% Bancarizados</span>
+                </div>
+            </div>
+
+            <div class="glass-panel relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 text-9xl opacity-5 group-hover:opacity-10 transition text-red-500"><i class="fas fa-chart-line"></i></div>
+                <div class="kpi-label text-red-400">Pasivo Real (Deuda)</div>
+                <div class="kpi-value text-red-500" id="total-liability">$0</div>
+                <div class="text-xs text-zinc-500 mt-2">Valor en COP a liquidar hoy</div>
+            </div>
+
+            <div class="glass-panel relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 text-9xl opacity-5 group-hover:opacity-10 transition text-blue-400"><i class="fas fa-coins"></i></div>
+                <div class="kpi-label text-blue-400">Masa Monetaria</div>
+                <div class="kpi-value text-blue-400" id="total-coins">0</div>
+                <div class="text-xs text-zinc-500 mt-2">Total GoCoins Circulantes</div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-brain text-yellow-500"></i> Market Intelligence <span class="text-[10px] text-zinc-600 uppercase bg-[#111] px-2 rounded">Live Data</span></h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            <div class="glass-panel">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-zinc-300">INTENCIÓN DE MOVILIDAD</h3>
+                    <i class="fas fa-car text-zinc-600"></i>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chart-mobility"></canvas>
+                    <div id="no-data-mobility" class="absolute inset-0 flex items-center justify-center bg-black/80 hidden">
+                        <span class="text-xs text-zinc-500">Esperando data...</span>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 gap-2 text-center">
+                    <div class="bg-[#111] p-2 rounded">
+                        <span class="block text-xs text-zinc-500">CARROS</span>
+                        <span class="font-bold text-blue-400" id="stat-car">0%</span>
+                    </div>
+                    <div class="bg-[#111] p-2 rounded">
+                        <span class="block text-xs text-zinc-500">MOTOS</span>
+                        <span class="font-bold text-yellow-500" id="stat-moto">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-zinc-300">PERFIL DE INVERSIÓN</h3>
+                    <i class="fas fa-chart-pie text-zinc-600"></i>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="chart-invest"></canvas>
+                    <div id="no-data-invest" class="absolute inset-0 flex items-center justify-center bg-black/80 hidden">
+                        <span class="text-xs text-zinc-500">Esperando data...</span>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 gap-2 text-center">
+                    <div class="bg-[#111] p-2 rounded">
+                        <span class="block text-xs text-zinc-500">CONSERVADOR (RAÍZ)</span>
+                        <span class="font-bold text-green-400" id="stat-realstate">0%</span>
+                    </div>
+                    <div class="bg-[#111] p-2 rounded">
+                        <span class="block text-xs text-zinc-500">RIESGO (CRYPTO)</span>
+                        <span class="font-bold text-purple-400" id="stat-crypto">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel overflow-hidden p-0">
+            <div class="p-4 border-b border-[#333] flex justify-between items-center bg-[#151515]">
+                <h3 class="font-bold text-sm text-white">ÚLTIMOS REGISTROS (LIVE)</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-[#0a0a0a] text-zinc-500 uppercase font-bold">
+                        <tr>
+                            <th class="p-4">Usuario</th>
+                            <th class="p-4">Perfil</th>
+                            <th class="p-4 text-right">Saldo COP</th>
+                            <th class="p-4 text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table" class="divide-y divide-[#222]">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIGURACIÓN SUPABASE
+        const SB_URL = "https://yfplgyfnxdhfoanaricg.supabase.co";
+        const SB_KEY = "sb_publishable_uzNxIbYvxnMxaLxxmXWtEA_AryoR5ip"; 
+        const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+        let USERS_DATA = [];
+        let VOTES_DATA = [];
+        let BATTLES_DATA = [];
+        let BTC_PRICE = 400000000;
+        const SAT_RATIO = 100;
+
+        // AUTH
+        function checkAuth() {
+            const p = document.getElementById('admin-pass').value;
+            if(p === 'admin123') {
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                initSystem();
+            } else { alert("ACCESS DENIED"); }
+        }
+
+        // INIT
+        async function initSystem() {
+            // 1. Precio BTC
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=cop');
+                const d = await res.json();
+                BTC_PRICE = d.bitcoin.cop;
+                document.getElementById('btc-ticker').innerText = `BTC: $${(BTC_PRICE/1000000).toFixed(1)}M COP`;
+            } catch(e) { console.log("BTC API Error"); }
+
+            // 2. Fetch Data
+            await fetchDatabase();
+            
+            // 3. Render
+            renderFinancials();
+            renderCharts();
+            renderTable();
+        }
+
+        async function fetchDatabase() {
+            // Traer Perfiles
+            const { data: profiles } = await _supabase.from('perfiles').select('*').order('created_at', { ascending: false });
+            USERS_DATA = profiles || [];
+
+            // Traer Batallas (para saber los IDs de Movilidad e Inversion)
+            const { data: battles } = await _supabase.from('batallas').select('*');
+            BATTLES_DATA = battles || [];
+
+            // Traer Votos (Limitado a 1000 para optimizar, en prod usar paginación)
+            const { data: votes } = await _supabase.from('votos_log').select('*').limit(2000);
+            VOTES_DATA = votes || [];
+        }
+
+        function renderFinancials() {
+            const totalCoins = USERS_DATA.reduce((sum, u) => sum + (u.saldo || 0), 0);
+            const totalSats = totalCoins * SAT_RATIO;
+            const liability = (totalSats / 100000000) * BTC_PRICE;
+            const banked = USERS_DATA.filter(u => u.banco === 'SI').length;
+            const bankedPct = USERS_DATA.length > 0 ? Math.round((banked / USERS_DATA.length) * 100) : 0;
+
+            document.getElementById('total-users').innerText = USERS_DATA.length;
+            document.getElementById('total-coins').innerText = totalCoins.toLocaleString();
+            document.getElementById('total-liability').innerText = `$${Math.floor(liability).toLocaleString()}`;
+            document.getElementById('banked-percent').innerText = `${bankedPct}% Bancarizados`;
+        }
+
+        function renderCharts() {
+            // 1. IDENTIFICAR BATALLAS CLAVE POR TAG
+            // Buscamos la batalla que tenga el tag 'ruta_adulto_2' (Movilidad) y 'ruta_adulto_3' (Inversión)
+            // Nota: El código V24 normaliza, así que buscamos insensibilizando.
+            
+            const battleMobility = BATTLES_DATA.find(b => b.tag && b.tag.trim().toLowerCase() === 'ruta_adulto_2');
+            const battleInvest = BATTLES_DATA.find(b => b.tag && b.tag.trim().toLowerCase() === 'ruta_adulto_3');
+
+            // 2. PROCESAR VOTOS MOVILIDAD
+            let carCount = 0, motoCount = 0;
+            if (battleMobility) {
+                const votesMobility = VOTES_DATA.filter(v => v.batalla_id === battleMobility.id);
+                carCount = votesMobility.filter(v => v.opcion_elegida === 'A').length;
+                motoCount = votesMobility.filter(v => v.opcion_elegida === 'B').length;
+            }
+
+            // 3. PROCESAR VOTOS INVERSIÓN
+            let houseCount = 0, cryptoCount = 0;
+            if (battleInvest) {
+                const votesInvest = VOTES_DATA.filter(v => v.batalla_id === battleInvest.id);
+                houseCount = votesInvest.filter(v => v.opcion_elegida === 'A').length;
+                cryptoCount = votesInvest.filter(v => v.opcion_elegida === 'B').length;
+            }
+
+            // ACTUALIZAR PORCENTAJES TEXTO
+            const totalMob = carCount + motoCount || 1;
+            document.getElementById('stat-car').innerText = Math.round((carCount/totalMob)*100) + '%';
+            document.getElementById('stat-moto').innerText = Math.round((motoCount/totalMob)*100) + '%';
+
+            const totalInv = houseCount + cryptoCount || 1;
+            document.getElementById('stat-realstate').innerText = Math.round((houseCount/totalInv)*100) + '%';
+            document.getElementById('stat-crypto').innerText = Math.round((cryptoCount/totalInv)*100) + '%';
+
+            // RENDERIZAR CHART.JS
+            // Grafica Movilidad (Doughnut)
+            new Chart(document.getElementById('chart-mobility'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Carro', 'Moto'],
+                    datasets: [{
+                        data: [carCount, motoCount],
+                        backgroundColor: ['#00f2ea', '#ffd700'], // Blue, Gold
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
+            });
+
+            // Grafica Inversión (Doughnut)
+            new Chart(document.getElementById('chart-invest'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Finca Raíz', 'Crypto'],
+                    datasets: [{
+                        data: [houseCount, cryptoCount],
+                        backgroundColor: ['#00ff9d', '#a855f7'], // Green, Purple
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('users-table');
+            tbody.innerHTML = '';
+            
+            // Mostrar solo los ultimos 10
+            USERS_DATA.slice(0, 10).forEach(u => {
+                const sats = (u.saldo || 0) * SAT_RATIO;
+                const valCOP = (sats / 100000000) * BTC_PRICE;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#1a1a1a] transition";
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-white flex items-center gap-2"><span class="text-xl">${u.avatar||'👤'}</span> ${u.email.split('@')[0]}...</td>
+                    <td class="p-4 text-zinc-400 font-mono text-[10px] uppercase">${u.banco === 'SI' ? 'BANCARIZADO' : 'NO BANCARIZADO'}</td>
+                    <td class="p-4 text-right font-mono text-green-400">$${Math.floor(valCOP).toLocaleString()}</td>
+                    <td class="p-4 text-center"><span class="bg-green-500/10 text-green-500 text-[9px] px-2 py-1 rounded border border-green-500/20">ACTIVO</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function downloadReport() {
+            let csv = "ID,Email,Whatsapp,Banco,Vehiculo,Saldo_GC,Fecha\n";
+            USERS_DATA.forEach(u => {
+                csv += `${u.user_id},${u.email},${u.whatsapp},${u.banco},${u.vehiculo},${u.saldo},${u.created_at}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'govotto_full_report.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Enter Login
+        document.getElementById('admin-pass').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkAuth();
+        });
+    </script>
+</body>
+</html>

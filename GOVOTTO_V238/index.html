@@ -397,41 +397,6 @@ input[type=range] {
         .cube__face--bottom { transform: rotateX(-90deg) translateZ(40px); }
         @keyframes rotate { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
 
-        /* FRENZY CORREGIDO: AHORA CUBRE TODA LA PANTALLA Y SE CENTRA */
-        #frenzy-modal { 
-            position: absolute; 
-            inset: 0; 
-            z-index: 8000; 
-            background: rgba(20, 0, 0, 0.95); 
-            display: none; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-        }
-
-        .frenzy-card { width: 85%; max-width: 350px; background: #111; border: 2px solid var(--risk); border-radius: 20px; padding: 20px; text-align: center; position: relative; }
-        .frenzy-timer-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
-        .frenzy-fill { height: 100%; background: var(--risk); width: 100%; transition: width 1s linear; }
-        .frenzy-q { font-size: 1.5rem; font-weight: 900; color: white; margin-bottom: 30px; }
-        .frenzy-controls { display: flex; gap: 20px; width: 100%; }
-        .f-btn { flex: 1; height: 60px; border-radius: 15px; font-weight: 900; font-size: 1.2rem; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
-        .f-no { background: #333; color: #fff; border: 2px solid #555; }
-        .f-yes { background: var(--risk); color: white; border: 2px solid white; box-shadow: 0 0 20px var(--risk); }
-        
-        .content-area, .map-layer { z-index: 5; }
-        .node-wrapper { z-index: 10; } 
-        .node { z-index: 15; }
-        .node-active { z-index: 20; } 
-        .mascot-portrait-container { z-index: 25; }
-        .hud-header { z-index: 100; position: relative; }
-        .floating-dock { z-index: 110; } 
-        #mascot-speech { z-index: 120; } 
-        .battle-overlay { z-index: 500; } 
-        .modal-overlay { z-index: 1000; } 
-        .coin-visual { z-index: 2000; } 
-        #intro-layer { z-index: 9998; }
-        #boot-screen { z-index: 9999; }
-
         /* REGISTRATION FORM STYLES */
         .reg-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-family: 'JetBrains Mono'; }
         .reg-input:focus { border-color: var(--primary); outline: none; }
@@ -564,8 +529,7 @@ input[type=range] {
         <div class="hud-header">
             <div class="brand-logo">GO<span>VOTTO</span></div>
             <div class="hud-controls">
-                <div class="flash-btn" onclick="checkEvent('promo_launch')"><i class="fas fa-bolt"></i> EVENTO</div>
-                <div class="rank-btn" onclick="openRanking()"><i class="fas fa-trophy"></i></div>
+            <div class="flash-btn" onclick="checkEvent('diario')"><i class="fas fa-bolt"></i> EVENTO</div>                <div class="rank-btn" onclick="openRanking()"><i class="fas fa-trophy"></i></div>
                 <div class="flex items-center gap-2">
                     <div class="text-[9px] text-right"><div class="text-zinc-500">SALDO COP</div><div class="font-bold text-white font-mono" id="hud-money">$0</div></div>
                     <div class="hex-chip-wrapper"><span>G</span></div>
@@ -768,6 +732,14 @@ input[type=range] {
         </button>
     </div>
 
+    <div id="event-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 60000; display: flex; flex-direction: column;">
+        <iframe id="event-frame" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
+        
+        <button onclick="forceCloseEvent()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 70000;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
     <script>
         // --- MOTOR V201 FINAL FIXED ---
         
@@ -799,7 +771,6 @@ input[type=range] {
         }; 
         
         let audioContext = null;
-        let qQueue = []; let qIndex = 0; let frenzyTimer = null;
         let bombInterval = null;
         let fireHeartbeat = null; 
         let bombVib = null;
@@ -840,7 +811,6 @@ input[type=range] {
             {t:'truth',d:[{q:"¿COMPRA IMPULSIVA?",i:"fa-shopping-cart"},{q:"¿PROBLEMAS LEGALES?",i:"fa-gavel"},{q:"¿EJERCICIO 3X SEMANA?",i:"fa-dumbbell"},{q:"¿INVIERTES CRIPTO?",i:"fa-bitcoin"}]}
         ];
 
-        const FRENZY_QS = ["¿TIENES DEUDAS?", "¿FUMAS?", "¿HAS ROBADO?", "¿ERES FIEL?", "¿JUGARÍAS DE NUEVO?"];
         const SLOT_BRANDS = [{id:'coke',name:'COCA-COLA',icon:'🥤'},{id:'benz',name:'MERCEDES',icon:'🚘'},{id:'mazda',name:'MAZDA',icon:'🏎️'},{id:'mcd',name:'MCDONALDS',icon:'🍔'}];
         const SLOT_QS = [{q:"¿Qué refresco tomas?",a:["Coca-Cola","Pepsi","Agua"]},{q:"¿Tu auto soñado?",a:["Mercedes","Mazda","BMW"]},{q:"¿Comida rápida?",a:["McDonalds","Burger King","KFC"]}];
         const TINDER_DATA = [{t:"¿TU MAYOR MIEDO ES LA SOLEDAD?", i:"https://images.unsplash.com/photo-1501869385787-8d542562419f?w=400"}, {t:"¿EL ÉXITO ES DINERO?", i:"https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400"}, {t:"¿TE VES VIAJANDO EN 5 AÑOS?", i:"https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?w=400"}, {t:"¿TEMES AL FRACASO?", i:"https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=400"}];
@@ -1002,16 +972,6 @@ input[type=range] {
                 return;
             }
             startFireTrial();
-        }
-
-        // --- EVENTO (TOP BUTTON) LOGIC V171 ---
-        function checkEvent(eventId) {
-            try{playSfx('click');}catch(e){}
-            if(state.playedEvents.includes(eventId)) {
-                showCustomAlert('EVENTO FINALIZADO', 'Ya completaste este evento.\nEspera al siguiente lanzamiento.');
-                return;
-            }
-            startFrenzyMode(eventId); 
         }
 
         function closeGate() { let m = document.getElementById('gate-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); }
@@ -1370,7 +1330,7 @@ function advance() {
             layer.classList.remove('hidden');
             layer.classList.add('flex-show');
         }
-// >>> PEGA ESTO AQUÍ (NUEVO) <<<
+
         function startSlotGame() {
             localStorage.setItem('govotto_vault', state.$);
             document.getElementById('slots-modal').classList.remove('flex-show');
@@ -1409,61 +1369,38 @@ function advance() {
             document.getElementById('loot-frame').src = '';
         }
 
-        // 4. OÍDO CENTRAL (Para recibir premios)
+       // 4. OÍDO CENTRAL (Sincronización Total V202)
         window.addEventListener('message', function(event) {
+            // Caso 1: Turbina / Tragamonedas
             if (event.data.action === 'close_turbine') {
                 state.$ = event.data.balance;
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
+                actualizarVisualBoveda(0); 
                 forceCloseTurbine();
                 showCustomAlert('SINCRONIZADO', 'Saldo actualizado.');
-            }if (event.data.action === 'close_loot') {
-                state.$ += event.data.reward; 
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
-                
-                // >>> ESTA ES LA LÍNEA QUE DEBES AGREGAR AQUÍ <<<
-                localStorage.setItem('govotto_vault', state.$); 
-
-                forceCloseLoot();
-                showCustomAlert('RECOMPENSA', '¡Premio recibido!');
             }
-        });
-
-        // V171: FRENZY ONE SHOT
-        function startFrenzyMode(eventId = null) { 
-            try{playSfx('click');}catch(e){} fIndex = 0; 
-            let m = document.getElementById('frenzy-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); 
-            document.getElementById('frenzy-q').innerText = FRENZY_QS[0]; 
-            let timeLeft = 30; const clockEl = document.getElementById('nuclear-watch'); const bar = document.getElementById('frenzy-timer-bar'); clockEl.innerText = timeLeft; bar.style.width = '100%'; 
-            if(frenzyTimer) clearInterval(frenzyTimer); 
-            frenzyTimer = setInterval(() => { 
-                timeLeft--; clockEl.innerText = timeLeft < 10 ? "0" + timeLeft : timeLeft; bar.style.width = (timeLeft / 30 * 100) + '%'; 
-                if(timeLeft <= 0) { 
-                    clearInterval(frenzyTimer); 
-                    showCustomAlert('TIEMPO', '¡TIEMPO AGOTADO! RADIACIÓN AL MÁXIMO.'); 
-                    if(eventId) {
-                        state.playedEvents.push(eventId); // SAVE PLAYED
-                        localStorage.setItem('govotto_events', JSON.stringify(state.playedEvents));
-                    }
-                    m.classList.remove('flex-show'); m.classList.add('hidden'); 
-                } 
-            }, 1000); 
-        }
-
-        function handleFrenzyAnswer(ans) { 
-            try{playSfx('click');}catch(e){} spawnCoins(); state.$ += 200; 
-            document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString(); 
-            fIndex++; 
-            if(fIndex < FRENZY_QS.length) { 
-                document.getElementById('frenzy-q').innerText = FRENZY_QS[fIndex]; 
-            } else { 
-                clearInterval(frenzyTimer); state.$ += 1000; 
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString(); 
-                state.playedEvents.push('promo_launch');
-                localStorage.setItem('govotto_events', JSON.stringify(state.playedEvents));
-                let m = document.getElementById('frenzy-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); m.style.display = 'none'; 
-                setTimeout(() => { showCustomAlert('¡EXCELENTE!', '¡FRENESÍ COMPLETADO! +$1.000 COP'); }, 200); 
-            } 
-        }
+            // Caso 2: Tesoro (Gema)
+            else if (event.data.action === 'close_loot') {
+                state.$ += event.data.reward; 
+                actualizarVisualBoveda(event.data.reward);
+                forceCloseLoot();
+                showCustomAlert('RECOMPENSA', '¡Premio del tesoro recibido!');
+            }
+            // Caso 3: GO-EVENTO (Reactor)
+            else if (event.data.action === 'close_event') {
+                const monto = event.data.reward;
+                state.$ += monto;
+                if(state.$ < 0) state.$ = 0;
+                actualizarVisualBoveda(monto);
+                
+                if(monto > 0) {
+                    localStorage.setItem('govotto_last_event_date', new Date().toDateString());
+                    showCustomAlert('SINCRO OK', `+$${monto} transferidos.`);
+                } else {
+                    showCustomAlert('FAIL', `Multa de $500 aplicada.`);
+                }
+                forceCloseEvent();
+            }
+        }); // <--- ESTE CIERRE ES EL QUE QUITA EL COLOR ROJO
 
         // --- V173: FIRE TRIAL LOGIC (BOTTOM DOCK) ---
         function checkFireTrial() {
@@ -1471,6 +1408,7 @@ function advance() {
             if(state.playedEvents.includes('fire_trial')) {
                 showCustomAlert('FINALIZADO', 'Ya completaste la Prueba de Fuego hoy.');
                 return;
+                
             }
             startFireTrial();
         }
@@ -1606,45 +1544,93 @@ function advance() {
             }
         }
 
-        // 3. SINCRONIZADOR DE MENSAJES (RECIBE PREMIOS)
+     // ==========================================
+        // 3. OÍDO CENTRAL Y CIERRES (SINCRO TOTAL)
+        // ==========================================
         window.addEventListener('message', function(event) {
-            // Caso Tragamonedas / Turbina
+            // Caso A: Turbina / Tragamonedas (Balance absoluto)
             if (event.data.action === 'close_turbine') {
                 state.$ = event.data.balance; 
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
-                localStorage.setItem('govotto_vault', state.$); 
+                actualizarVisualBoveda(0); 
                 forceCloseTurbine();
-                if(typeof confetti === 'function') confetti(); 
             }
-            // Caso Tesoro
-            if (event.data.action === 'close_loot') {
+            // Caso B: Tesoro (Suma de recompensa)
+            else if (event.data.action === 'close_loot') {
                 state.$ += event.data.reward; 
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
-                localStorage.setItem('govotto_vault', state.$);
+                actualizarVisualBoveda(event.data.reward);
                 forceCloseLoot();
+            }
+            // >>> CASO C: GO-EVENTO (Reactor - Premia o Multa -$500) <<<
+            else if (event.data.action === 'close_event') {
+                const monto = event.data.reward; 
+                state.$ += monto;
+                if(state.$ < 0) state.$ = 0; 
+
+                actualizarVisualBoveda(monto);
+
+                if(monto > 0) {
+                    // SELLO DE SEGURIDAD: Solo si ganó dinero real
+                    localStorage.setItem('govotto_last_event_date', new Date().toDateString());
+                    showCustomAlert('SINCRO OK', `+$${monto} transferidos.`);
+                } else {
+                    showCustomAlert('FAIL', `Multa de $500 aplicada.`);
+                }
+                forceCloseEvent();
             }
         });
 
-        // 4. CIERRES DE TERMINAL
-        function forceCloseTurbine() {
-            const layer = document.getElementById('turbine-layer');
-            const frame = document.getElementById('turbine-frame');
-            if(layer) {
-                layer.classList.add('hidden');
-                layer.style.display = 'none';
-                if(frame) frame.src = ''; 
+        // FUNCIONES DE CIERRE CENTRALIZADAS (SOLO UNA VEZ)
+        function forceCloseEvent() { 
+            const l = document.getElementById('event-layer');
+            if(l) { l.style.display = 'none'; l.classList.add('hidden'); document.getElementById('event-frame').src = ''; }
+        }
+        function forceCloseTurbine() { 
+            const l = document.getElementById('turbine-layer');
+            if(l) { l.style.display = 'none'; l.classList.add('hidden'); document.getElementById('turbine-frame').src = ''; }
+        }
+        function forceCloseLoot() { 
+            const l = document.getElementById('loot-layer');
+            if(l) { l.style.display = 'none'; l.classList.add('hidden'); document.getElementById('loot-frame').src = ''; }
+        }
+
+        // 4. ACTUALIZADOR DE INTERFAZ (VITAL PARA EL PASO SIGUIENTE)
+        function actualizarVisualBoveda(cambio) {
+            const hud = document.getElementById('hud-money');
+            if(hud) {
+                hud.innerText = "$" + state.$.toLocaleString();
+                if(cambio > 0) hud.style.color = "var(--accent)";
+                else if(cambio < 0) hud.style.color = "var(--risk)";
+                setTimeout(() => hud.style.color = "white", 2000);
+            }
+            localStorage.setItem('govotto_vault', state.$);
+        }
+        // ==========================================
+        // 5. MOTOR DE LANZAMIENTO (24H LOCK)
+        // ==========================================
+        function checkEvent(eventId) {
+            try { playSfx('click'); } catch(e){}
+            
+            const lastEventDate = localStorage.getItem('govotto_last_event_date');
+            const today = new Date().toDateString();
+
+            // Si ya jugó hoy, bloqueamos el paso
+            if (lastEventDate === today) {
+                showCustomAlert('EVENTO BLOQUEADO', 'Ya participaste hoy. Vuelve mañana para un nuevo desafío patrocinado.');
+                return;
+            }
+
+            // Si tiene permiso, encendemos el hangar del evento
+            const layer = document.getElementById('event-layer');
+            const frame = document.getElementById('event-frame');
+            
+            if(layer && frame) {
+                frame.src = 'evento.html'; // Aquí aterrizará el archivo comercial
+                layer.classList.remove('hidden');
+                layer.style.display = 'flex';
+                layer.style.zIndex = "65000";
             }
         }
 
-        function forceCloseLoot() {
-            const layer = document.getElementById('loot-layer');
-            const frame = document.getElementById('loot-frame');
-            if(layer) {
-                layer.classList.add('hidden');
-                layer.style.display = 'none';
-                if(frame) frame.src = '';
-            }
-        }
         function openCasinoMenu() {
     try { playSfx('click'); } catch(e){}
     const modal = document.getElementById('slots-modal');
