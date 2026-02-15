@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoVotto Slots | Dashboard V232</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* --- PALETA GOVOTTO --- */
+        :root { 
+            --bg-deep: #050505; 
+            --brand-cyan: #00ffff; 
+            --brand-gold: #FFD700; 
+            --risk-red: #FF0044;
+            --money-green: #2ecc71;
+            --lemon-yellow: #dbff33;
+            --silver-plate: #bdc3c7;
+            
+            --border-color: var(--brand-cyan);
+            --glow-color: rgba(0, 255, 255, 0.4);
+            --btn-bg: rgba(0, 20, 20, 0.9);
+            --text-color: var(--brand-cyan);
+            --lever-color: var(--risk-red);
+            --question-bg: linear-gradient(180deg, rgba(0, 255, 255, 0.15) 0%, rgba(0,0,0,0.8) 100%);
+        }
+
+        .gold-mode-active {
+            --border-color: var(--brand-gold) !important;
+            --glow-color: rgba(255, 215, 0, 0.6) !important;
+            --text-color: var(--brand-gold) !important;
+            --btn-bg: rgba(20, 15, 0, 0.9) !important;
+            --question-bg: linear-gradient(180deg, rgba(255, 215, 0, 0.2) 0%, rgba(0,0,0,0.9) 100%) !important;
+        }
+
+        .silver-mode-active {
+            --border-color: var(--silver-plate) !important;
+            --glow-color: rgba(189, 195, 199, 0.5) !important;
+            --text-color: var(--silver-plate) !important;
+            --question-bg: linear-gradient(180deg, rgba(189, 195, 199, 0.2) 0%, rgba(0,0,0,0.9) 100%) !important;
+        }
+
+        .system-overload {
+            --border-color: var(--risk-red) !important;
+            --glow-color: rgba(255, 0, 68, 0.8) !important;
+            animation: circuit-glitch 0.1s infinite !important;
+        }
+        @keyframes circuit-glitch { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: white; font-family: 'Outfit', sans-serif; margin: 0; padding: 0;
+            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background-image: linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px; transition: background 0.5s; overflow: hidden; 
+        }
+
+        .close-app-btn {
+            position: absolute; top: 20px; left: 20px; padding: 10px 15px;
+            background: #111; border: 1px solid #333; color: #666;
+            font-size: 10px; font-weight: bold; border-radius: 4px;
+            cursor: pointer; z-index: 1001; transition: 0.3s;
+        }
+        .close-app-btn:hover { background: var(--risk-red); color: white; border-color: white; }
+
+        .power-off-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: #000; border: 1px solid #333; color: #555; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 100; transition: 0.3s; }
+
+        .console-wrapper { display: flex; align-items: flex-start; justify-content: center; gap: 0; transform: scale(0.90); position: relative; margin-top: 20px; }
+        .machine-column { display: flex; flex-direction: column; align-items: center; width: 350px; z-index: 10; }
+
+        /* --- TOPPER --- */
+        .vegas-topper { width: 100%; height: 80px; background: linear-gradient(180deg, #1a1a1a 0%, #050505 100%); border: 2px solid #333; border-bottom: none; border-radius: 40px 40px 0 0; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); z-index: 20; transition: border-color 0.5s; }
+        .marquee-lights { position: absolute; top: 5px; left: 10px; right: 10px; height: 100%; pointer-events: none; }
+        .bulb { width: 8px; height: 8px; border-radius: 50%; background: #444; position: absolute; box-shadow: 0 0 2px #000; }
+        .bulb:nth-child(1) { top: 30px; left: 0; animation: blink 1s infinite alternate; }
+        .bulb:nth-child(2) { top: 10px; left: 20px; animation: blink 1s 0.2s infinite alternate; }
+        .bulb:nth-child(3) { top: 0px; left: 50%; transform: translateX(-50%); animation: blink 1s 0.4s infinite alternate; }
+        .bulb:nth-child(4) { top: 10px; right: 20px; animation: blink 1s 0.6s infinite alternate; }
+        .bulb:nth-child(5) { top: 30px; right: 0; animation: blink 1s 0.8s infinite alternate; }
+        @keyframes blink { 0% { background: #444; } 100% { background: #fff; box-shadow: 0 0 10px #fff; } }
+        .topper-brand { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 28px; letter-spacing: -1px; color: #fff; text-transform: uppercase; text-shadow: 0 0 10px var(--border-color); margin-top: 10px; }
+
+        /* --- CHASIS --- */
+        .machine-chassis { width: 100%; background: #0a0a0a; border: 2px solid #333; border-top: 1px solid #222; border-radius: 0 0 15px 15px; padding: 15px; position: relative; box-shadow: -10px 10px 50px rgba(0,0,0,0.9); display: flex; flex-direction: column; gap: 8px; transition: all 0.5s ease; z-index: 10; }
+
+        /* --- OVERLAYS --- */
+        #gold-overlay, #overload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(10px); }
+        #gold-overlay.active, #overload-overlay.active { opacity: 1; pointer-events: auto; }
+        .glitch-msg { color: var(--risk-red); font-weight: 900; text-align: center; animation: text-shake 0.2s infinite; }
+        @keyframes text-shake { 0% { transform: translate(0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+
+        /* --- GAMEPLAY --- */
+        .paytable-wrapper { background: rgba(0,0,0,0.6); border: 1px solid #333; border-radius: 6px; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
+        .pay-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 4px; border: 1px solid transparent; }
+        .pay-price { font-family: 'JetBrains Mono'; font-size: 12px; color: var(--border-color); font-weight: bold; }
+        .pay-row.winner { background: var(--border-color); box-shadow: 0 0 15px var(--glow-color); }
+        .pay-row.winner .pay-price, .pay-row.winner i { color: #000 !important; }
+
+        .question-deck { background: var(--question-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; min-height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 5px; position: relative; overflow: hidden; transition: 0.5s; }
+        .question-text { color: #fff; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; text-align: center; line-height: 1.2; z-index: 10; animation: breatheText 4s infinite ease-in-out; }
+        @keyframes breatheText { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
+
+        .reels-wrapper { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; height: 120px; position: relative; }
+        .reel { flex: 1; background: #000; border: 2px solid var(--border-color); border-radius: 8px; overflow: hidden; position: relative; box-shadow: 0 0 10px var(--glow-color); transition: all 0.3s ease; }
+        .reel-strip { position: absolute; top: 0; left: 0; width: 100%; transform: translateY(0); display: flex; flex-direction: column; align-items: center; }
+        .reel.spinning .reel-strip { animation: infiniteSpin 0.25s linear infinite; filter: blur(0px); opacity: 0.8; }
+        @keyframes infiniteSpin { 0% { transform: translateY(0); } 100% { transform: translateY(-2000px); } }
+        .symbol { height: 100px; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 42px; filter: drop-shadow(0 0 5px currentColor); }
+
+        .reel.win-border { border-color: #fff; box-shadow: 0 0 60px var(--border-color); background: #fff; z-index: 50; animation: pulseWin 0.4s infinite alternate; }
+        .reel.win-border .symbol { color: #000 !important; filter: none; }
+        .reel.loss-border { border-color: var(--risk-red) !important; box-shadow: 0 0 20px var(--risk-red); opacity: 0.7; }
+
+        .dashboard-bar { display: flex; justify-content: space-between; align-items: center; background: #111; border: 1px solid #333; border-radius: 6px; padding: 5px 10px; margin-bottom: 5px; box-shadow: inset 0 0 15px rgba(0,0,0,1); }
+        .db-screen { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 900; color: var(--money-green); text-shadow: 0 0 10px rgba(46, 204, 113, 0.3); }
+        .db-screen.loss { color: var(--risk-red); text-shadow: 0 0 15px var(--risk-red); animation: shake 0.3s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+
+        .input-deck { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 80px; }
+        .holo-btn { background: var(--btn-bg); border: 1px solid #333; color: #fff; padding: 15px 5px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; opacity: 0.7; animation: btnBreathe 3s infinite ease-in-out; }
+        @keyframes btnBreathe { 0%, 100% { border-color: #333; transform: scale(1); } 50% { border-color: var(--border-color); transform: scale(1.01); } }
+        .holo-btn.selected { background: var(--border-color); color: black; border-color: white; opacity: 1; box-shadow: 0 0 20px var(--border-color); transform: scale(1.02); z-index: 10; animation: none; }
+        .deck-locked .holo-btn { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+
+        .coin-tray { margin-top: 10px; height: 50px; background: linear-gradient(180deg, #151515 0%, #050505 100%); border: 1px solid #333; border-top: none; border-radius: 0 0 10px 10px; position: relative; box-shadow: inset 0 5px 15px rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: flex-end; overflow: hidden; }
+        .tray-glow-fx { position: absolute; bottom: -20px; left: 0; width: 100%; height: 60px; background: radial-gradient(ellipse at bottom, #FFD700 0%, #FF8C00 40%, transparent 80%); opacity: 0; transition: opacity 0.3s; }
+        .coin-tray.payout-active .tray-glow-fx { opacity: 0.9; animation: pulseTray 0.5s infinite alternate; }
+
+        /* --- PALANCA V232 --- */
+        .lever-housing { width: 60px; height: 500px; background: linear-gradient(90deg, #111 0%, #080808 100%); border: 1px solid #333; border-left: none; border-radius: 0 20px 20px 0; display: flex; justify-content: center; align-items: flex-start; padding-top: 100px; position: relative; margin-top: 40px; }
+        .lever-track { width: 10px; height: 320px; background: #000; border-radius: 5px; box-shadow: inset 0 0 5px #000; position: relative; }
+        .lever-stick { width: 14px; height: 80px; background: linear-gradient(90deg, #444, #888, #444); position: absolute; top: 0; left: 50%; transform: translateX(-50%); border-radius: 4px; transition: height 0.3s; transform-origin: top; }
+        
+        /* MANIJA GRANDE Y LUMINOSA */
+        .lever-knob { width: 72px; height: 72px; background: #222; border-radius: 50%; position: absolute; top: -36px; left: 50%; transform: translateX(-50%); box-shadow: 0 5px 15px rgba(0,0,0,0.6); cursor: not-allowed; transition: all 0.3s; z-index: 20; display: flex; align-items: center; justify-content: center; color: #555; }
+        .lever-active .lever-knob { 
+            background: var(--lever-color); color: #fff; 
+            box-shadow: 0 0 40px var(--lever-color), inset 0 0 15px white; 
+            cursor: pointer; animation: knobPulse 0.8s infinite; 
+        }
+        @keyframes knobPulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.15); } 100% { transform: translateX(-50%) scale(1); } }
+        .lever-pulled .lever-knob { top: 290px; animation: none; }
+        .lever-pulled .lever-stick { height: 320px; }
+
+        #mega-win { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        #mega-win.active { opacity: 1; pointer-events: auto; }
+        .mega-text { font-size: 50px; color: var(--brand-gold); font-weight: 900; text-shadow: 0 0 30px var(--brand-gold); text-align: center; }
+    </style>
+</head>
+<body>
+
+    <button class="close-app-btn" onclick="closeMachine()">TERMINAR SESIÓN</button>
+
+    <div id="overload-overlay">
+        <div class="glitch-msg" style="font-size: 44px;">FATAL ERROR</div>
+        <div class="glitch-msg" style="font-size: 18px; color: white; margin-top: 10px;">MÁQUINA SOBRECARGADA</div>
+        <div id="final-stats" style="margin-top: 20px; font-family: 'JetBrains Mono'; color: var(--money-green); font-size: 20px;">TOTAL GANADO: $0</div>
+        <div style="font-family: 'JetBrains Mono'; color: #444; font-size: 10px; margin-top: 30px; letter-spacing: 2px;">SEGURIDAD ACTIVADA - REGRESA MAÑANA</div>
+    </div>
+
+    <div id="mega-win"><div class="mega-text">CRITICAL<br>DATA ACQUIRED</div></div>
+    <div class="power-off-btn" onclick="closeMachine()"><i class="fas fa-power-off"></i></div>
+
+    <div class="console-wrapper">
+        <div class="machine-column">
+            <div class="vegas-topper">
+                <div class="marquee-lights"><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div></div>
+                <div class="topper-brand">GOVOTTO</div><div class="topper-sub">QUANTUM SLOTS V2.32</div>
+            </div>
+            <div class="machine-chassis" id="chassis">
+                <div id="gold-overlay"><div style="font-size:30px; font-weight:900; color:var(--brand-gold)">¡X2 BONUS!</div></div>
+                <div class="paytable-wrapper">
+                    <div class="pay-row" id="row-core"><div class="pay-icons"><i class="fas fa-gem" style="color:var(--brand-cyan)"></i></div><div class="pay-price" id="pay-core">$1000</div></div>
+                    <div class="pay-row" id="row-seven"><div class="pay-icons"><i class="fas fa-7" style="color:var(--brand-gold)"></i></div><div class="pay-price" id="pay-seven">$500</div></div>
+                    <div class="pay-row" id="row-bar"><div class="pay-icons"><i class="fas fa-barcode" style="color:var(--money-green)"></i></div><div class="pay-price" id="pay-bar">$250</div></div>
+                </div>
+                <div class="question-deck"><div class="question-text" id="screen-text">CONECTANDO...</div></div>
+                <div class="reels-wrapper">
+                    <div class="reel" id="reel-1"><div class="reel-strip" id="strip-1"></div></div>
+                    <div class="reel" id="reel-2"><div class="reel-strip" id="strip-2"></div></div>
+                    <div class="reel" id="reel-3"><div class="reel-strip" id="strip-3"></div></div>
+                </div>
+                <div class="dashboard-bar"><div class="db-label">BALANCE</div><div class="db-screen" id="credit-val">$0</div></div>
+                <div class="input-deck" id="controls"></div>
+                <div class="coin-tray" id="coin-tray"><div class="tray-glow-fx"></div></div>
+            </div>
+        </div>
+        <div class="lever-housing" id="lever-housing"><div class="lever-track"><div class="lever-stick"></div><div class="lever-knob" id="lever-knob" onclick="pullLever()"><i class="fas fa-chevron-down"></i></div></div></div>
+    </div>
+
+    <script>
+        const AudioEngine = {
+            ctx: null, init: function() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            playTone: function(f, t, d, v=0.1) { if(!this.ctx) this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); },
+            click: function() { this.playTone(1200, 'sine', 0.05); },
+            lever: function() { this.playTone(100, 'sawtooth', 0.4); },
+            win: function() { [523, 659, 783].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.6, 0.1), i*100)); },
+            loss: function() { this.playTone(150, 'sawtooth', 0.5, 0.2); },
+            glitch: function() { setInterval(() => { if(document.getElementById('chassis').classList.contains('system-overload')) this.playTone(Math.random()*150+40, 'sawtooth', 0.1, 0.05); }, 120); }
+        };
+
+        const QUESTIONS = [
+            { q: "¿TU PRESUPUESTO MENSUAL OCIO?", a: ["< $200k", "$200k-$500k", "$500k-$1M", "> $1M"], gold: false },
+            { q: "¿QUÉ RED USAS PARA COMPRAR?", a: ["INSTAGRAM", "TIKTOK", "GOOGLE", "FACEBOOK"], gold: false },
+            { q: "¿MÉTODO PAGO FAVORITO?", a: ["T. CRÉDITO", "EFECTIVO", "PSE/DÉBITO", "CRIPTO"], gold: false },
+            { q: "¿QUÉ TE MOTIVA A COMPRAR?", a: ["DESCUENTOS", "EXCLUSIVIDAD", "CALIDAD", "RAPIDEZ"], gold: false },
+            { q: "¿VIAJAS A JÚPITER FRECUENCIA?", a: ["2 VECES/AÑO", "1 VEZ/AÑO", "CASI NUNCA", "NO EXISTEN VIAJES"], gold: false, trap: true, correct: "NO EXISTEN VIAJES" },
+            { q: "¿COMPRARÍAS UN AUTO ESTE AÑO?", a: ["SÍ, NUEVO", "SÍ, USADO", "QUIZÁS", "NO"], gold: true },
+            { q: "¿INVERTIRÍAS EN PROPIEDAD?", a: ["SÍ, AHORA", "EN 12 MESES", "SOLO INFO", "NO INTERESA"], gold: true }
+        ];
+
+        const ICONS = [{ id: 'lemon', char: 'fa-lemon', color: '#dbff33', val: 0 }, { id: 'cherry', char: 'fa-circle-nodes', color: '#ff00ff', val: 100 }, { id: 'bar', char: 'fa-barcode', color: '#00ff41', val: 250 }, { id: 'seven', char: 'fa-7', color: '#FFD700', val: 500 }, { id: 'core', char: 'fa-gem', color: '#00ffff', val: 1000 }];
+        let currentCredits=0, displayCredits=0, qAnswered=0, trapStrikes=0, cycleCount=1, isSpinning=false, isGoldMode=false, currentSelection=null;
+
+        window.onload = () => {
+            initReels(); setPos(1, 3); setPos(2, 4); setPos(3, 0); loadNextQuestion();
+            document.body.onclick = () => { if(!AudioEngine.ctx) AudioEngine.init(); };
+        };
+
+        function setPos(id, idx) { document.getElementById(`strip-${id}`).style.transform = `translateY(-${(10*ICONS.length+idx)*100}px)`; }
+        function initReels() { [1, 2, 3].forEach(i => { const s=document.getElementById(`strip-${i}`); let h=''; for(let k=0; k<30; k++) ICONS.forEach(ic => h+=`<div class="symbol"><i class="fas ${ic.char}" style="color:${ic.color}"></i></div>`); s.innerHTML=h; }); }
+
+        function triggerSystemFailure() {
+            const ch=document.getElementById('chassis'), ov=document.getElementById('overload-overlay');
+            ch.classList.add('system-overload'); AudioEngine.glitch();
+            [1, 2, 3].forEach(i => document.getElementById(`reel-${i}`).classList.add('spinning'));
+            document.getElementById('final-stats').innerText = "TOTAL GANADO: $" + currentCredits.toLocaleString();
+            setTimeout(() => ov.classList.add('active'), 1500);
+        }
+
+        function loadNextQuestion() {
+            if(qAnswered >= 6 || trapStrikes >= 3) { triggerSystemFailure(); return; }
+            const ch=document.getElementById('chassis'), sc=document.getElementById('screen-text'), ov=document.getElementById('gold-overlay');
+            document.getElementById('lever-housing').classList.remove('lever-pulled', 'lever-active');
+            ch.classList.remove('silver-mode-active', 'system-overload'); currentSelection=null; 
+            isGoldMode=(cycleCount%3===0);
+            if(isGoldMode){ ov.classList.add('active'); AudioEngine.win(); setTimeout(() => { ov.classList.remove('active'); ch.classList.add('gold-mode-active'); }, 2000); }
+            else ch.classList.remove('gold-mode-active');
+            updatePaytableUI();
+            const pool=QUESTIONS.filter(q => q.gold===isGoldMode);
+            const data=pool[Math.floor(Math.random()*pool.length)];
+            if(data.trap) ch.classList.add('silver-mode-active');
+            sc.innerText=data.q; const deck=document.getElementById('controls'); deck.innerHTML='';
+            data.a.forEach(opt => {
+                const b=document.createElement('div'); b.className='holo-btn'; b.innerText=opt;
+                b.onclick=()=>{ if(data.trap && opt!==data.correct){ trapStrikes++; AudioEngine.loss(); ch.classList.add('system-overload'); sc.innerHTML="<span style='color:red'>DATO ERRÓNEO</span>"; setTimeout(loadNextQuestion, 1200); return; } selectOption(opt, b); };
+                deck.appendChild(b);
+            });
+        }
+
+        function selectOption(c, b) { AudioEngine.click(); currentSelection=c; document.querySelectorAll('.holo-btn').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); document.getElementById('lever-housing').classList.add('lever-active'); }
+
+        function pullLever() {
+            if(isSpinning || !currentSelection) return;
+            isSpinning=true; document.getElementById('controls').classList.add('deck-locked'); AudioEngine.lever();
+            document.getElementById('lever-housing').classList.add('lever-pulled');
+            setTimeout(() => {
+                [1,2,3].forEach(i=>document.getElementById(`reel-${i}`).classList.add('spinning'));
+                const isNearMiss=Math.random()<0.4; const res=[Math.floor(Math.random()*5), Math.floor(Math.random()*5), Math.floor(Math.random()*5)];
+                if(isNearMiss) res[1]=res[0];
+                setTimeout(()=>stopReel(1, res[0]), 2000);
+                setTimeout(()=>stopReel(2, res[1]), 3000);
+                setTimeout(()=>stopReel(3, res[2], ()=>finishSpin(res)), 4500);
+            }, 300);
+        }
+
+        function stopReel(id, idx, cb) { const r=document.getElementById(`reel-${id}`), s=document.getElementById(`strip-${id}`); r.classList.remove('spinning'); AudioEngine.click(); s.style.transition='transform 1.5s cubic-bezier(0.1, 0.9, 0.2, 1.05)'; s.style.transform=`translateY(-${(10*ICONS.length+idx)*100}px)`; if(cb) setTimeout(cb, 1500); }
+
+        function finishSpin(res) {
+            isSpinning=false; const reels=[1,2,3].map(i=>document.getElementById(`reel-${i}`));
+            if(res[0]===res[1] && res[1]===res[2] && ICONS[res[0]].val>0){
+                AudioEngine.win(); animateCredits(ICONS[res[0]].val*(isGoldMode?2:1)); reels.forEach(r=>r.classList.add('win-border'));
+            } else {
+                AudioEngine.loss(); animateCredits(-50); reels.forEach(r=>r.classList.add('loss-border'));
+            }
+            qAnswered++; cycleCount++; setTimeout(loadNextQuestion, 2000);
+        }
+
+        function animateCredits(amt) {
+            currentCredits=Math.max(0, currentCredits+amt); const step=amt/20;
+            const int=setInterval(()=>{ displayCredits+=step; if((amt>0 && displayCredits>=currentCredits)||(amt<0 && displayCredits<=currentCredits)){ displayCredits=currentCredits; clearInterval(int); } document.getElementById('credit-val').innerText="$"+Math.floor(displayCredits).toLocaleString(); }, 50);
+        }
+
+        function updatePaytableUI() { const m=isGoldMode?2:1; document.getElementById('pay-core').innerText="$"+(1000*m); document.getElementById('pay-seven').innerText="$"+(500*m); document.getElementById('pay-bar').innerText="$"+(250*m); }
+        function closeMachine() { window.parent.postMessage({ action: 'close_turbine', balance: currentCredits }, '*'); }
+    </script>
+</body>
+</html>

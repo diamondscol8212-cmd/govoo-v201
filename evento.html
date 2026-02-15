@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoVotto | GO-EVENTO CYBER-CORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800&family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root { --risk: #FF0044; --terminal: #00ff41; --primary: #D4AF37; --accent: #00ffff; }
+        body { 
+            background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; 
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        /* --- SCANLINE & HACKER FX --- */
+        .hacker-scanline {
+            position: absolute; width: 100%; height: 2px; background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); top: 0; left: 0; z-index: 200;
+            pointer-events: none; animation: scan 3s linear infinite;
+        }
+        @keyframes scan { from { top: 0%; } to { top: 100%; } }
+
+        body::before {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), linear-gradient(90deg, rgba(0, 255, 255, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 100; background-size: 100% 3px, 3px 100%; pointer-events: none;
+        }
+
+        .glitch-active { animation: shake 0.15s infinite; filter: contrast(140%) brightness(1.2) hue-rotate(10deg); }
+        @keyframes shake { 0% { transform: translate(0); } 25% { transform: translate(3px,-3px); } 75% { transform: translate(-3px,3px); } }
+
+        /* --- HUD ELEMENTS --- */
+        .nuclear-clock { font-size: 3.5rem; font-weight: 900; color: var(--risk); text-shadow: 0 0 20px var(--risk); line-height: 1; }
+        .money-flow { font-size: 1.8rem; color: var(--primary); text-shadow: 0 0 15px var(--primary); font-family: 'Outfit'; }
+        
+        /* BOTÓN CERRAR [X] */
+        .btn-close-event {
+            position: absolute; top: 20px; right: 20px; width: 44px; height: 44px;
+            border: 1px solid var(--accent); background: rgba(0, 255, 255, 0.1);
+            color: var(--accent); display: flex; align-items: center; justify-content: center;
+            font-weight: bold; border-radius: 5px; z-index: 300; cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .terminal-interface {
+            width: 92%; max-width: 420px; border: 1px solid var(--accent); background: rgba(0, 15, 15, 0.95);
+            padding: 24px; position: relative; box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .btn-neural {
+            width: 100%; padding: 18px; margin-bottom: 10px; border: 1px solid var(--accent);
+            background: rgba(0, 255, 255, 0.05); color: var(--accent); font-weight: 800; text-transform: uppercase;
+        }
+
+        .golden-card { border-color: var(--primary) !important; box-shadow: 0 0 40px var(--primary) !important; border-width: 2px; }
+        .progress-block { flex: 1; height: 6px; background: #111; border: 1px solid #333; }
+        .block-filled { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .penalty-flash { animation: flash-red 0.2s infinite; }
+        @keyframes flash-red { 0%, 100% { border-color: var(--accent); } 50% { border-color: var(--risk); background: rgba(255,0,0,0.2); } }
+        .hologram-pic { filter: sepia(100%) hue-rotate(140deg) saturate(180%) brightness(0.8); border: 1px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="hacker-scanline"></div>
+
+    <div id="close-btn" class="btn-close-event" onclick="abortMission()">X</div>
+
+    <div class="brand-title mb-2 z-50" style="font-family: 'Outfit'; font-size: 2.2rem; font-weight: 900;"><span style="color:white">GO-</span><span style="color:var(--primary)">EVENTO</span></div>
+
+    <div class="w-full max-w-[420px] flex justify-between items-center mb-4 px-6 z-50 text-[10px]">
+        <div>
+            <span class="text-zinc-500 block uppercase font-bold tracking-tighter">Bounty_Sync</span>
+            <div id="money-counter" class="money-flow">$0</div>
+        </div>
+        <div class="text-right">
+            <span class="text-zinc-500 block uppercase font-bold tracking-tighter">Stability_T</span>
+            <div id="clock" class="nuclear-clock">45</div>
+        </div>
+    </div>
+
+    <div id="progress-map" class="w-full max-w-[420px] flex gap-1 mb-6 px-6 z-50"></div>
+
+    <div class="terminal-interface" id="reactor-core">
+        <div id="scene">
+            <h1 class="text-lg font-bold mb-4 tracking-widest text-white italic text-center uppercase">Awaiting_Input</h1>
+            <button onclick="boot()" class="btn-neural" style="text-align: center; cursor: pointer;">> Iniciar Sincro</button>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 45;
+        let qIndex = 0;
+        let totalVal = 0;
+        let timer, idleTime = 0;
+        let phase = 1; 
+        let brainVault = {};
+        
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, dur, vol = 0.04) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
+        }
+
+        function haptic(pattern) { if(navigator.vibrate) navigator.vibrate(pattern); }
+
+        const missions = [
+            { id: 'vibe', q: "¿TU PLAN IDEAL?", type: 'visual', opts: [{t:"FIESTA", i:"https://images.unsplash.com/photo-1514525253361-bee8718a7439?w=300"}, {t:"RELAX", i:"https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=300"}] },
+            { id: 'food', q: "¿PREFIERES COCINAR O PEDIR?", type: 'btn', opts: ["COCINAR EN CASA", "PEDIR DOMICILIO"] },
+            { id: 'card', q: "¿USAS TARJETAS FRECUENTEMENTE?", golden: true, type: 'btn', opts: ["SÍ, SIEMPRE", "SOLO EFECTIVO"] },
+            { id: 'os', q: "¿TU SMARTPHONE IDEAL?", type: 'visual', opts: [{t:"IPHONE", i:"https://images.unsplash.com/photo-1510557880182-3d4d3cba3f21?w=300"}, {t:"ANDROID", i:"https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300"}] },
+            { id: 'risk', q: "¿TE GUSTA EL RIESGO?", type: 'btn', opts: ["SÍ, ARRIESGO", "NO, VOY SEGURO"] },
+            { id: 'shop', q: "¿DÓNDE COMPRAS MÁS?", type: 'btn', opts: ["TIENDAS", "APPS / WEB"] },
+            { id: 'mirror_card', q: "¿TU NIVEL DE PREMIO ACTUAL?", type: 'btn', opts: ["$0 (SIN CUPO)", "MENOS DE $5M", "MÁS DE $5M"], mirror: 'card', logic: (v) => v === "SOLO EFECTIVO" ? "$0 (SIN CUPO)" : "VALID" },
+            { id: 'mote', q: "¿QUÉ TE MOTIVA MÁS?", type: 'btn', opts: ["ÉXITO Y DINERO", "PAZ Y FAMILIA"] },
+            { id: 'mirror_os', q: "¿TU TIENDA PREFERIDA?", golden: true, type: 'btn', opts: ["APP STORE", "PLAY STORE"], mirror: 'os', logic: (v) => v === "IPHONE" ? "APP STORE" : "PLAY STORE" },
+            { id: 'leader', q: "¿ERES LÍDER O EJECUTOR?", type: 'btn', opts: ["SOY LÍDER", "SOY EJECUTOR"] },
+            { id: 'mirror_food', q: "¿TU GASTO EN APPS DE COMIDA?", type: 'btn', opts: ["$0 (NO USO)", "BAJO", "ALTO"], mirror: 'food', logic: (v) => v === "COCINAR EN CASA" ? "$0 (NO USO)" : "VALID" },
+            { id: 'final', q: "¿COMO VIAJAS?", type: 'btn', opts: ["RESERVA TOTAL", "AVENTURA LIBRE"] }
+        ];
+
+        function boot() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('progress-map').innerHTML = missions.map((_, i) => `<div id="block-${i}" class="progress-block"></div>`).join('');
+            render();
+            timer = setInterval(() => {
+                timeLeft--; idleTime++;
+                document.getElementById('clock').innerText = timeLeft;
+                
+                if(phase < 3) {
+                    if(idleTime >= 3) { playTone(300, 'sine', 0.1, 0.02); haptic(30); document.getElementById('reactor-core').style.borderColor = "var(--risk)"; }
+                    if(idleTime >= 5) { timeLeft--; document.getElementById('reactor-core').classList.add('penalty-flash'); }
+                    if(timeLeft <= 10) { 
+                        document.body.classList.add('glitch-active');
+                        // Cambio de color de la X en Fase de Peligro
+                        const xBtn = document.getElementById('close-btn');
+                        xBtn.style.color = "var(--risk)";
+                        xBtn.style.borderColor = "var(--risk)";
+                    }
+                } else {
+                    document.body.classList.remove('glitch-active');
+                    document.getElementById('reactor-core').style.borderColor = "var(--accent)";
+                    document.getElementById('reactor-core').classList.remove('penalty-flash');
+                }
+
+                if(timeLeft <= 0) {
+                    if(phase === 1 && qIndex < missions.length) activatePhase(2, 10, "OVERCLOCK: +10s", true);
+                    else if(phase === 2 && qIndex < missions.length) activatePhase(3, 5, "STABILITY: +5s", false);
+                    else shutdown(qIndex >= missions.length);
+                }
+            }, 1000);
+        }
+
+        function activatePhase(p, t, label, vibration) {
+            phase = p; timeLeft = t;
+            playTone(vibration ? 200 : 600, vibration ? 'sawtooth' : 'sine', 0.8, 0.05);
+            if(vibration) haptic([100,50,400]);
+            document.getElementById('scene').innerHTML = `<div class="${vibration ? 'text-yellow-500' : 'text-cyan-400'} font-bold text-center animate-pulse"><p class="text-lg uppercase italic">${label}</p></div>`;
+            setTimeout(render, 1500);
+        }
+
+        function render() {
+            if(qIndex >= missions.length) return shutdown(true);
+            idleTime = 0;
+            const data = missions[qIndex];
+            const core = document.getElementById('reactor-core');
+            if(data.golden) core.classList.add('golden-card'); else core.classList.remove('golden-card');
+            document.getElementById(`block-${qIndex}`).classList.add('block-filled');
+            let html = `<div class="text-[8px] mb-2 text-zinc-500 font-bold uppercase tracking-widest text-center">SEGMENT_${qIndex+1}</div>`;
+            html += `<h2 class="text-sm font-bold mb-6 uppercase text-center tracking-tight">${data.q}</h2>`;
+            if(data.type === 'visual') {
+                html += `<div class="flex gap-3">`;
+                data.opts.forEach(o => html += `<div class="flex-1 cursor-pointer" onclick="process('${data.id}','${o.t}')"><img src="${o.i}" class="hologram-pic rounded-lg w-full h-24 object-cover mb-1"><div class="text-[8px] text-center font-bold text-cyan-400">${o.t}</div></div>`);
+                html += `</div>`;
+            } else {
+                data.opts.forEach(o => html += `<button onclick="process('${data.id}','${o}')" class="btn-neural text-[10px]">> ${o}</button>`);
+            }
+            document.getElementById('scene').innerHTML = html;
+        }
+
+        function process(id, val) {
+            const data = missions[qIndex];
+            if(data.mirror && data.logic(brainVault[data.mirror]) !== "VALID" && val !== data.logic(brainVault[data.mirror])) return penalty();
+            playTone(880, 'sine', 0.08, 0.03); if(phase < 3) haptic(15);
+            brainVault[id] = val;
+            let gain = data.golden ? 500 : (phase === 1 ? 150 : 50);
+            totalVal += gain;
+            updateMoney(totalVal - gain, totalVal);
+            if(phase === 1) timeLeft--; 
+            qIndex++; render();
+        }
+
+        function penalty() {
+            playTone(100, 'square', 0.4, 0.08); haptic([200,100,200]);
+            timeLeft -= 8; totalVal = Math.max(0, totalVal - 300);
+            updateMoney(totalVal + 300, totalVal);
+            document.getElementById('reactor-core').classList.add('penalty-flash');
+            setTimeout(() => { qIndex++; render(); }, 600);
+        }
+
+        function updateMoney(start, end) {
+            let el = document.getElementById('money-counter');
+            let cur = start; let step = (end - start) / 10;
+            let anim = setInterval(() => {
+                cur += step; el.innerText = "$" + Math.floor(cur).toLocaleString();
+                if((step > 0 && cur >= end) || (step < 0 && cur <= end)) { el.innerText = "$" + end.toLocaleString(); clearInterval(anim); }
+            }, 30);
+        }
+
+        function abortMission() {
+            haptic([500]);
+            playTone(50, 'sawtooth', 0.5, 0.1);
+            shutdown(false); 
+        }
+
+       function shutdown(success) {
+            clearInterval(timer);
+            // Si tiene éxito, manda el acumulado (ej: +2500). Si falla, manda la multa (-500).
+            let finalReward = success ? totalVal : -500;
+            
+            playTone(success ? 1046 : 60, 'sine', 1, 0.1);
+            
+            // Pantalla final Cyber
+            document.body.innerHTML = `
+                <div class="text-center z-50 animate-pulse">
+                    <h1 class="text-5xl font-black ${success?'text-cyan-400':'text-red-500'} mb-4 italic">
+                        ${success ? 'SYNC_OK' : 'FAIL'}
+                    </h1>
+                    <p class="text-white font-bold text-sm uppercase tracking-widest">
+                        ${success ? 'Transferring: $' + totalVal : 'Penalty Applied: -$500'}
+                    </p>
+                </div>`;
+            
+            // Enviamos el comando al INDEX
+            setTimeout(() => {
+                window.parent.postMessage({ 
+                    action: 'close_event', 
+                    reward: finalReward 
+                }, '*');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
