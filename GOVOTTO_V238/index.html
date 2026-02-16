@@ -504,10 +504,83 @@ input[type=range] {
         }
         .hex-chip-wrapper span { color: var(--primary); font-weight: 900; font-size: 20px; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+/* --- MOTOR VISUAL: TERMINAL GLOBAL V246 --- */
+        #global-scanline {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            /* Crea el efecto de rejilla de monitor antiguo */
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.08) 50%
+            ), 
+            linear-gradient(90deg, 
+                rgba(255, 0, 0, 0.01), 
+                rgba(0, 255, 0, 0.005), 
+                rgba(0, 0, 255, 0.01)
+            );
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none; /* Crucial: permite tocar los botones de abajo */
+            z-index: 5000; /* Capa intermedia */
+            opacity: 0.5;
+        }
 
+        /* La barra de escaneo que recorre el mapa */
+        .hacker-bar {
+            position: fixed; 
+            width: 100%; 
+            height: 5px;
+            background: rgba(0, 255, 255, 0.03);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+            top: -10px; 
+            z-index: 5001;
+            pointer-events: none;
+            animation: globalScan 10s linear infinite; /* Movimiento lento y profesional */
+        }
+
+        @keyframes globalScan {
+            0% { top: -5%; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 105%; opacity: 0; }
+        }
+      /* --- MOTOR DE ANIMACIÓN DEL REACTOR CIUDAD --- */
+        #city-core { 
+            filter: drop-shadow(0 0 15px var(--accent)); 
+            transition: all 1s ease; 
+        }
+        .core-rotate-slow { 
+            animation: rotateSlow 25s linear infinite; 
+            transform-origin: center; 
+        }
+        .core-rotate-fast { 
+            animation: rotateFast 12s linear infinite reverse; 
+            transform-origin: center; 
+        }
+        .core-pulse { 
+            animation: corePulse 4s ease-in-out infinite; 
+            transform-origin: center; 
+        }
+
+        @keyframes rotateSlow { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
+        @keyframes rotateFast { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
+        @keyframes corePulse { 
+            0%, 100% { opacity: 0.2; transform: scale(1); stroke-width: 2px; } 
+            50% { opacity: 0.8; transform: scale(1.05); stroke-width: 4px; } 
+        }   
     </style>
 </head>
 <body>
+    <div id="global-scanline"></div>
+    <div class="hacker-bar"></div>
     <div id="app-frame"> 
         <div id="boot-screen">
             <div style="font-size: 3rem; font-weight: 900; font-style: italic;">GO<span style="color:var(--primary);">VOTTO</span></div>
@@ -539,12 +612,24 @@ input[type=range] {
         
         <div class="ticker-wrap"><div class="ticker"><div class="ticker-item">1 COIN = <span>1 PESO</span></div><div class="ticker-item">META FINAL: <span>$45.000 COP</span></div><div class="ticker-item">👗 LAURA GANÓ <span>BONO ZARA</span></div><div class="ticker-item">💎 BÓVEDA <span>ACTIVA</span></div></div></div>
 
-        <div class="content-area" id="content-area">
+       <div class="content-area" id="content-area">
             <div id="map-view" class="map-layer flex-show">
+                
+                <div id="city-motor-container" class="absolute left-1/2 top-[280px] -translate-x-1/2 -z-10 opacity-30 pointer-events-auto cursor-pointer flex flex-col items-center" onclick="window.location.href='dante.html'">
+                    <svg id="city-core" width="220" height="220" viewBox="0 0 200 200" style="fill: none; stroke-width: 2;">
+                        <circle class="core-static" cx="100" cy="100" r="15" stroke="var(--accent)" />
+                        <path class="core-rotate-slow" d="M100,20 L100,180 M20,100 L180,100" stroke="var(--accent)" />
+                        <rect class="core-rotate-fast" x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" stroke="var(--accent)" />
+                        <path class="core-pulse" d="M100,20 L180,100 L100,180 L20,100 Z" stroke="var(--accent)" />
+                    </svg>
+                    <p class="text-[7px] text-zinc-500 tracking-[0.6em] mt-4 font-bold uppercase">Reactor_Central</p>
+                </div>
+
                 <div class="w-full px-6 text-left mb-6 border-l-4 ml-6" id="map-border">
                     <div class="text-2xl font-black italic" id="map-title">RUTA 1</div>
                     <div class="text-xs text-zinc-500 tracking-widest" id="map-sub">DIAGNÓSTICO</div>
                 </div>
+
                 <div id="nodes-container" class="w-full flex flex-col items-center pb-32"></div>
             </div>
         </div>
@@ -787,7 +872,50 @@ input[type=range] {
             "¿CAFÉ O TÉ?", "¿MADRUGAS?", "¿COCINAS?", "¿HACES DEPORTE?", 
             "¿NETFLIX O CINE?", "¿INVIERNO O VERANO?"
         ];
+// --- CEREBRO DE ACCESO GOVOTTO ---
+        function verificarUsuario() {
+            const isRegistered = localStorage.getItem('govotto_registered') === 'true';
+            const bootBtn = document.getElementById('boot-btn');
+            const bootScreen = document.getElementById('boot-screen');
+            
+            let statusDiv = document.getElementById('ident-status');
+            if(!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'ident-status';
+                statusDiv.style.margin = '15px 0';
+                statusDiv.style.fontSize = '10px';
+                statusDiv.style.fontWeight = 'bold';
+                statusDiv.style.fontFamily = 'monospace';
+                statusDiv.style.letterSpacing = '2px';
+                bootScreen.insertBefore(statusDiv, bootBtn);
+            }
 
+            if (isRegistered) {
+                const adn = JSON.parse(localStorage.getItem('govotto_dante_adn')) || {vision:50, reserva:50};
+                let rango = (adn.vision > adn.reserva) ? "CONQUISTADOR" : "GUARDIÁN";
+                
+                // >>> ACTIVACIÓN DE SISTEMAS LATERALES <<<
+                state.dockUnlocked = true; 
+
+                statusDiv.innerText = `ID DETECTADO: ${rango}`;
+                statusDiv.style.color = "var(--primary)";
+                statusDiv.style.textShadow = "0 0 10px var(--primary)";
+
+                bootBtn.innerText = "ACCEDER A LA RED";
+                bootBtn.style.color = "var(--primary)";
+                bootBtn.style.border = "1px solid var(--primary)";
+                bootBtn.onclick = () => startApp(); 
+            } else {
+                statusDiv.innerText = "NÚCLEO NO DETECTADO";
+                statusDiv.style.color = "var(--risk)";
+                statusDiv.style.textShadow = "0 0 10px var(--risk)";
+
+                bootBtn.innerText = "INICIAR NACIMIENTO";
+                bootBtn.style.border = "1px solid var(--risk)";
+                bootBtn.style.color = "var(--risk)";
+                bootBtn.onclick = () => window.location.href = 'nacimiento.html';
+            }
+        }
         const R1 = [
             {t:'ab',d:[{tA:"COCA-COLA",tB:"PEPSI",iA:"https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400",iB:"https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400"},{tA:"IPHONE",tB:"ANDROID",iA:"https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400",iB:"https://images.unsplash.com/photo-1605236453806-6ff36851218e?w=400"},{tA:"NIKE",tB:"ADIDAS",iA:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",iB:"https://images.unsplash.com/photo-1518002171953-a080ee802e12?w=400"},{tA:"RUMBA",tB:"NETFLIX",iA:"https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400",iB:"https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400"},{tA:"UBER",tB:"TRANSMI",iA:"https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400",iB:"https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=400"}]},
             {t:'mascot'},
@@ -815,15 +943,24 @@ input[type=range] {
         const SLOT_QS = [{q:"¿Qué refresco tomas?",a:["Coca-Cola","Pepsi","Agua"]},{q:"¿Tu auto soñado?",a:["Mercedes","Mazda","BMW"]},{q:"¿Comida rápida?",a:["McDonalds","Burger King","KFC"]}];
         const TINDER_DATA = [{t:"¿TU MAYOR MIEDO ES LA SOLEDAD?", i:"https://images.unsplash.com/photo-1501869385787-8d542562419f?w=400"}, {t:"¿EL ÉXITO ES DINERO?", i:"https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400"}, {t:"¿TE VES VIAJANDO EN 5 AÑOS?", i:"https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?w=400"}, {t:"¿TEMES AL FRACASO?", i:"https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=400"}];
 
-        window.onload = function() { 
+       window.onload = function() { 
             let b=document.getElementById('energy-fill'); let w=0; 
-            let i=setInterval(()=>{ w+=5;b.style.width=w+'%'; if(w>=100){ clearInterval(i); document.getElementById('boot-btn').classList.remove('hidden'); } }, 30); 
+            let i=setInterval(()=>{ 
+                w+=5;
+                b.style.width=w+'%'; 
+                if(w>=100){ 
+                    clearInterval(i); 
+                    document.getElementById('boot-btn').classList.remove('hidden'); 
+                    // --- AQUÍ SE ACTIVA EL ESCÁNER DE ADN ---
+                    verificarUsuario(); 
+                } 
+            }, 30); 
             
             // LOAD SAVED EVENTS
             const saved = localStorage.getItem('govotto_events');
             if(saved) state.playedEvents = JSON.parse(saved);
 
-            // >>> INSERTA ESTO AQUÍ: CARGA DE SALDO GUARDADO <<<
+            // CARGA DE SALDO GUARDADO
             const savedMoney = localStorage.getItem('govotto_vault');
             if(savedMoney) {
                 state.$ = parseInt(savedMoney);
@@ -863,9 +1000,9 @@ input[type=range] {
             }, 1800);
         }
 
-        function finishIntro() {
-            document.getElementById('intro-modal').classList.add('flex-show'); 
-            document.getElementById('intro-modal').classList.remove('hidden');
+       function finishIntro() {
+            // Saltamos el modal viejo y entramos directo al mapa
+            startMap(); 
         }
 
         function startMap() { 
@@ -874,8 +1011,32 @@ input[type=range] {
             showView('map-view'); 
             renderMap(); 
         }
-
+        
         function renderMap() {
+            // --- CALIBRACIÓN DE ENERGÍA DEL REACTOR (DNA SYNC & WEALTH) ---
+            const reactorADN = JSON.parse(localStorage.getItem('govotto_dante_adn'));
+            const reactorSVG = document.getElementById('city-core');
+            
+            if(reactorADN && reactorSVG) {
+                // 1. Color según ADN
+                const colorMotor = (reactorADN.vision > reactorADN.reserva) ? "var(--accent)" : "var(--primary)";
+                const parts = reactorSVG.querySelectorAll('path, circle, rect');
+                parts.forEach(p => p.style.stroke = colorMotor);
+                
+                // 2. EL TOQUE MAESTRO: Intensidad según Capital ($)
+                // Se ve tenue (0.4) al inicio y brilla al máximo (1) al pasar los $5,000
+                const intensidad = state.$ > 5000 ? "1" : "0.4";
+                reactorSVG.style.opacity = intensidad;
+
+                // 3. Brillo dinámico de Magnate
+                if(state.$ > 10000) {
+                    reactorSVG.style.filter = `drop-shadow(0 0 35px ${colorMotor}) brightness(1.3)`;
+                } else {
+                    reactorSVG.style.filter = `drop-shadow(0 0 20px ${colorMotor})`;
+                }
+            }
+
+            // --- LÓGICA ORIGINAL DE DIBUJADO DEL MAPA ---
             const c = document.getElementById('nodes-container'); c.innerHTML=''; const nodes = state.route===1 ? R1 : R2;
             
             const mapTitle = document.getElementById('map-title');
@@ -917,7 +1078,7 @@ input[type=range] {
                 d.innerHTML=`<div class="${cls}" onclick="clickNode(${i})">${ic}</div><div class="node-name">NIVEL ${i+1}</div>`; 
                 c.appendChild(d);
 
-                if(i===state.lvl && state.pet) {
+             if(i===state.lvl && state.pet) {
                     let faceUrl = AVATARS[state.pet].icon; 
                     let acc = state.item ? `<div class="mascot-accessory-mini"></div>` : ''; 
                     let p = document.createElement('div');
@@ -926,11 +1087,18 @@ input[type=range] {
                     d.appendChild(p);
                 }
             });
-            
-            let ghost = document.createElement('div'); ghost.style.height = '400px'; ghost.style.width = '100%'; c.appendChild(ghost);
-            setTimeout(() => { const active = document.querySelector('.node-active, .node-active-cyber'); if(active) { active.scrollIntoView({behavior: "smooth", block: "center"}); } }, 300);
-        }
 
+            // 3. FINALIZACIÓN Y SCROLL AUTOMÁTICO
+            let ghost = document.createElement('div'); 
+            ghost.style.height = '400px'; 
+            ghost.style.width = '100%'; 
+            c.appendChild(ghost);
+
+            setTimeout(() => { 
+                const active = document.querySelector('.node-active, .node-active-cyber'); 
+                if(active) { active.scrollIntoView({behavior: "smooth", block: "center"}); } 
+            }, 300);
+        }
         function clickNode(i) {
             if(i!==state.lvl) return; 
             const n = state.route===1 ? R1[i] : R2[i]; 

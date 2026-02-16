@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoVotto | DANTE CORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #D4AF37; --accent: #00ffff; --risk: #FF0044; --bg: #000; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        .dante-card {
+            width: 320px; height: 520px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+        }
+
+        /* Efecto de Brillo dinámico según ADN */
+        .card-glow {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* --- EL NÚCLEO (ANIMACIÓN) --- */
+        .core-svg { width: 180px; height: 180px; filter: drop-shadow(0 0 10px var(--accent)); animation: rotateCore 20s linear infinite; }
+        @keyframes rotateCore { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .core-part { stroke: var(--accent); stroke-width: 2; fill: none; transition: all 1s ease; }
+
+        /* --- SISTEMA DE STATS --- */
+        .stat-bar-bg { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; width: 100%; margin-top: 6px; overflow: hidden; }
+        .stat-fill { height: 100%; width: 0%; transition: width 2s cubic-bezier(0.19, 1, 0.22, 1); }
+
+        .btn-back {
+            margin-top: 20px; border: 1px solid var(--accent); color: var(--accent);
+            padding: 8px 20px; font-size: 10px; font-weight: 800; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-back:hover { background: var(--accent); color: #000; }
+    </style>
+</head>
+<body>
+
+    <div class="dante-card" id="main-card">
+        <div class="card-glow" id="dynamic-glow"></div>
+        
+        <div class="p-5 flex justify-between items-center border-b border-white/5">
+            <span class="text-[9px] text-zinc-600 font-bold tracking-widest">SISTEMA_DANTE_V3</span>
+            <span id="sync-label" class="text-[9px] text-accent font-bold px-2 py-0.5 border border-accent/30 rounded uppercase">Sincronizado</span>
+        </div>
+
+        <div class="h-[220px] w-full flex items-center justify-center">
+            <svg class="core-svg" viewBox="0 0 200 200">
+                <circle class="core-part" cx="100" cy="100" r="15" />
+                <path class="core-part" d="M100,20 L100,180 M20,100 L180,100" />
+                <rect class="core-part" x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" />
+                <path class="core-part" d="M100,20 L180,100 L100,180 L20,100 Z" />
+                <circle class="core-part" cx="100" cy="100" r="85" stroke-dasharray="4,4" opacity="0.3" />
+            </svg>
+        </div>
+
+        <div class="px-8 text-center mb-6">
+            <h1 id="user-rank" class="font-black text-2xl italic font-['Outfit'] tracking-tighter uppercase text-white">Arquitecto</h1>
+            <p class="text-[8px] text-zinc-500 tracking-[0.4em] uppercase">Esencia de Datos</p>
+        </div>
+
+        <div class="px-8 space-y-5">
+            <div class="stat-row">
+                <div class="flex justify-between text-[8px] font-bold text-zinc-500 uppercase">
+                    <span>Visión (Riesgo)</span>
+                    <span id="val-vision" class="text-white">--</span>
+                </div>
+                <div class="stat-bar-bg"><div id="bar-vision" class="stat-fill" style="background:var(--accent); box-shadow: 0 0 10px var(--accent);"></div></div>
+            </div>
+
+            <div class="stat-row">
+                <div class="flex justify-between text-[8px] font-bold text-zinc-500 uppercase">
+                    <span>Reserva (Ahorro)</span>
+                    <span id="val-reserva" class="text-white">--</span>
+                </div>
+                <div class="stat-bar-bg"><div id="bar-reserva" class="stat-fill" style="background:var(--primary); box-shadow: 0 0 10px var(--primary);"></div></div>
+            </div>
+
+            <div class="stat-row">
+                <div class="flex justify-between text-[8px] font-bold text-zinc-500 uppercase">
+                    <span>Táctica (Estabilidad)</span>
+                    <span id="val-tactica" class="text-white">--</span>
+                </div>
+                <div class="stat-bar-bg"><div id="bar-tactica" class="stat-fill" style="background:var(--risk); box-shadow: 0 0 10px var(--risk);"></div></div>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-5 left-8 right-8 flex justify-center">
+            <button onclick="window.location.href='index.html'" class="btn-back">CERRAR NÚCLEO</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Cargar el ADN del LocalStorage
+            const adnData = JSON.parse(localStorage.getItem('govotto_dante_adn'));
+
+            if(adnData) {
+                // 2. Mapear los valores a la interfaz
+                // Usamos una pequeña fórmula para que los valores se vean como porcentajes atractivos (entre 0 y 100)
+                const v = Math.min(Math.max(adnData.vision, 5), 95);
+                const r = Math.min(Math.max(adnData.reserva, 5), 95);
+                const t = Math.min(Math.max(adnData.tactica, 5), 95);
+
+                // 3. Actualizar Textos
+                document.getElementById('val-vision').innerText = v + "%";
+                document.getElementById('val-reserva').innerText = r + "%";
+                document.getElementById('val-tactica').innerText = t + "%";
+
+                // 4. Animar Barras
+                setTimeout(() => {
+                    document.getElementById('bar-vision').style.width = v + "%";
+                    document.getElementById('bar-reserva').style.width = r + "%";
+                    document.getElementById('bar-tactica').style.width = t + "%";
+                }, 500);
+
+                // 5. Ajustar el rango según el ADN
+                const rankLabel = document.getElementById('user-rank');
+                if(v > 70) rankLabel.innerText = "Conquistador";
+                else if(r > 70) rankLabel.innerText = "Guardián";
+                else rankLabel.innerText = "Arquitecto";
+
+                // 6. Color del Brillo dinámico
+                const glow = document.getElementById('dynamic-glow');
+                if(v > r) glow.style.background = `radial-gradient(circle at 50% 30%, rgba(0, 255, 255, 0.15) 0%, transparent 70%)`;
+                else glow.style.background = `radial-gradient(circle at 50% 30%, rgba(212, 175, 55, 0.15) 0%, transparent 70%)`;
+            }
+        });
+    </script>
+</body>
+</html>
