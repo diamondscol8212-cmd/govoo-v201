@@ -18,7 +18,6 @@
             --lemon-yellow: #dbff33;
             --silver-plate: #bdc3c7;
             
-            /* VARIABLES DINÁMICAS */
             --border-color: var(--brand-cyan);
             --glow-color: rgba(0, 255, 255, 0.4);
             --btn-bg: rgba(0, 20, 20, 0.9);
@@ -71,18 +70,16 @@
         
         body.gold-bg { background-image: radial-gradient(circle at center, rgba(255, 215, 0, 0.15) 0%, transparent 90%); }
 
-        /* BOTON CERRAR REDISEÑADO - MEJOR VISIBILIDAD */
+        /* UNICA SALIDA: BOTON FIJO SUPERIOR */
         .general-close-btn {
-            position: absolute; top: 20px; left: 20px; padding: 12px 18px;
-            background: #000; border: 1px solid #444; color: #fff;
+            position: fixed; top: 20px; left: 20px; padding: 12px 18px;
+            background: #000; border: 2px solid var(--border-color); color: #fff;
             font-size: 10px; font-weight: 900; letter-spacing: 2px;
-            border-radius: 4px; cursor: pointer; z-index: 1001; transition: 0.3s;
+            border-radius: 4px; cursor: pointer; z-index: 5000; transition: 0.3s;
             font-family: 'JetBrains Mono', monospace; text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0,0,0,1);
+            box-shadow: 0 4px 15px rgba(0,0,0,1);
         }
-        .general-close-btn:hover { border-color: var(--risk-red); color: var(--risk-red); box-shadow: 0 0 15px rgba(255,0,68,0.3); }
-
-        .power-off-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: #000; border: 1px solid #333; color: #555; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 100; transition: 0.3s; }
+        .general-close-btn:hover { border-color: var(--risk-red); color: var(--risk-red); box-shadow: 0 0 15px rgba(255,0,68,0.4); }
 
         .console-wrapper { display: flex; align-items: flex-start; justify-content: center; gap: 0; transform: scale(0.90); position: relative; margin-top: 20px; }
         .machine-column { display: flex; flex-direction: column; align-items: center; width: 350px; z-index: 10; }
@@ -180,7 +177,9 @@
 </head>
 <body>
 
-    <button class="general-close-btn" onclick="closeMachine()"><i class="fas fa-power-off mr-2"></i>CERRAR TERMINAL</button>
+    <button class="general-close-btn" onclick="closeMachine()">
+        <i class="fas fa-power-off mr-2"></i>CERRAR TERMINAL
+    </button>
 
     <div id="overload-overlay">
         <div class="glitch-msg" style="font-size: 44px;">FATAL ERROR</div>
@@ -190,7 +189,6 @@
     </div>
 
     <div id="mega-win"><div class="mega-text">CRITICAL<br>DATA ACQUIRED</div><div class="mega-sub">RECOMPENSA LEGENDARIA</div></div>
-    <div class="power-off-btn" onclick="closeMachine()"><i class="fas fa-power-off"></i></div>
 
     <div class="console-wrapper">
         <div class="machine-column">
@@ -296,7 +294,7 @@
         const ICONS = [{ id: 'lemon', char: 'fa-lemon', color: '#dbff33', val: 0 }, { id: 'cherry', char: 'fa-circle-nodes', color: '#ff00ff', val: 100 }, { id: 'bar', char: 'fa-barcode', color: '#00ff41', val: 250 }, { id: 'seven', char: 'fa-7', color: '#FFD700', val: 500 }, { id: 'core', char: 'fa-gem', color: '#00ffff', val: 1000 }];
         const SYMBOL_HEIGHT = 100;
         const REPEAT_COUNT = 30; 
-// --- CALIBRACIÓN DE BÓVEDA RYZEN ---
+
         let savedVault = localStorage.getItem('govotto_vault');
         let currentCredits = savedVault ? parseInt(savedVault) : 0; 
         
@@ -304,10 +302,8 @@
         let questionsAnswered = 0, trapStrikes = 0, cycleCount = 1;
         let isSpinning = false, isGoldMode = false, currentSelection = null, usedQuestionIndexes = [];
         let winPhase1 = false, winPhase2 = false;
-        // --- MOTOR DE SUERTE ERRÁTICA ---
-        // Turno aleatorio entre 3 y 5 (índices 2, 3 o 4)
+        
         let targetWinTurn1 = Math.floor(Math.random() * 3) + 2; 
-        // Turno aleatorio entre 8 y 10 (índices 7, 8 o 9)
         let targetWinTurn2 = Math.floor(Math.random() * 3) + 7;
 
         window.onload = function() {
@@ -372,7 +368,6 @@
                 
                 let res = [Math.floor(Math.random()*5), Math.floor(Math.random()*5), Math.floor(Math.random()*5)];
                 
-                // --- MOTOR DE VICTORIAS CONTROLADO ---
                 if (questionsAnswered === targetWinTurn1 && !winPhase1) { res = [3, 3, 3]; } 
                 else if (questionsAnswered === targetWinTurn2 && !winPhase2) { res = [4, 4, 4]; }
                 else if (Math.random() < 0.4) { res[1] = res[0]; }
@@ -400,22 +395,23 @@
             questionsAnswered++; cycleCount++; document.getElementById('controls').classList.remove('deck-locked'); setTimeout(loadNextQuestion, 2000);
         }
 
-function animateCredits(amountToAdd) { 
-    currentCredits = Math.max(0, currentCredits + amountToAdd); 
-    // AGREGA ESTA LÍNEA AQUÍ PARA BLINDAR EL SALDO EN EL PC RYZEN
-    localStorage.setItem('govotto_vault', currentCredits); 
+        function animateCredits(amountToAdd) { 
+            currentCredits = Math.max(0, currentCredits + amountToAdd); 
+            localStorage.setItem('govotto_vault', currentCredits); 
 
-    const step = amountToAdd / 20; 
-    let interval = setInterval(() => { 
-        displayCredits += step; 
-        if((amountToAdd > 0 && displayCredits >= currentCredits) || (amountToAdd < 0 && displayCredits <= currentCredits)) { 
-            displayCredits = currentCredits; 
-            clearInterval(interval); 
-        } 
-        updateDisplay(); 
-        if(amountToAdd > 0) AudioEngine.coin(); 
-    }, 50); 
-}        function updateDisplay() { document.getElementById('credit-val').innerText = "$" + Math.floor(displayCredits).toLocaleString(); }
+            const step = amountToAdd / 20; 
+            let interval = setInterval(() => { 
+                displayCredits += step; 
+                if((amountToAdd > 0 && displayCredits >= currentCredits) || (amountToAdd < 0 && displayCredits <= currentCredits)) { 
+                    displayCredits = currentCredits; 
+                    clearInterval(interval); 
+                } 
+                updateDisplay(); 
+                if(amountToAdd > 0) AudioEngine.coin(); 
+            }, 50); 
+        }
+
+        function updateDisplay() { document.getElementById('credit-val').innerText = "$" + Math.floor(displayCredits).toLocaleString(); }
         function updatePaytableUI() { const m = isGoldMode ? 2 : 1; document.getElementById('pay-core').innerText = "$"+(1000*m); document.getElementById('pay-seven').innerText = "$"+(500*m); document.getElementById('pay-bar').innerText = "$"+(250*m); }
         function closeMachine() { window.parent.postMessage({ action: 'close_turbine', balance: currentCredits }, '*'); }
     </script>
