@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoVotto | DANTE CORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #D4AF37; --accent: #00ffff; --risk: #FF0044; --bg: #000; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: auto; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px 0; }
+
+       .dante-card {
+            width: 320px; 
+            min-height: 550px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--accent);
+            border-radius: 24px;
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 0 20px rgba(255,255,255,0.02);
+            padding-bottom: 20px;
+        }
+
+        .card-glow {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            border-radius: 24px;
+        }
+
+       /* --- MOTOR DE ENERGÍA DANTE CORE --- */
+        .core-svg { width: 180px; height: 180px; transition: all 1s ease; }
+        .rotate-slow { animation: coreRotate 25s linear infinite; transform-origin: center; }
+        .rotate-fast { animation: coreRotate 12s linear infinite reverse; transform-origin: center; }
+        .core-pulse { animation: corePulse 4s ease-in-out infinite; transform-origin: center; }
+
+        @keyframes coreRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes corePulse { 0%, 100% { opacity: 0.3; transform: scale(1); stroke-width: 2px; } 50% { opacity: 0.8; transform: scale(1.05); stroke-width: 4px; } }
+
+        .core-part { stroke: var(--accent); stroke-width: 2; fill: none; transition: all 1s ease; }
+
+        /* --- SISTEMA DE STATS --- */
+        .stat-bar-bg { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; width: 100%; margin-top: 6px; overflow: hidden; }
+        .stat-fill { height: 100%; width: 0%; transition: width 2s cubic-bezier(0.19, 1, 0.22, 1); }
+
+        .btn-back {
+            margin: 25px auto 10px auto; 
+            width: 80%; 
+            display: block;
+            border: 1px solid var(--accent); 
+            color: var(--accent);
+            padding: 10px 20px; 
+            font-size: 10px; 
+            font-weight: 800; 
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+        }
+        .btn-back:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent); }
+        
+        /* Barrido láser */
+        .dante-card::after {
+            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 20px;
+            background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+            opacity: 0.1; pointer-events: none; animation: scannerSweep 6s linear infinite;
+        }
+        @keyframes scannerSweep { 0% { top: -100%; } 30% { top: 100%; } 100% { top: 100%; } }
+        
+        .wallet-display { background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 10px; border: 1px dashed var(--accent); opacity: 0.8; }
+        .badge-slot { width: 35px; height: 35px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.2); transition: all 0.5s ease; position: relative; cursor: help; }
+        .badge-active { color: var(--accent); border-color: var(--accent); text-shadow: 0 0 10px var(--accent); box-shadow: inset 0 0 10px var(--accent); opacity: 1; }
+        .energy-ring { position: absolute; width: 210px; height: 210px; border: 2px solid transparent; border-top-color: var(--accent); border-radius: 50%; opacity: 0.2; animation: coreRotate 4s linear infinite; }
+        .lvl-tag { font-size: 10px; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 8px; box-shadow: 0 0 10px var(--accent); }
+
+        .badge-slot::before { content: attr(data-tooltip); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--accent); color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 8px; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 50; }
+        .badge-slot:hover::before { opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body>
+
+<div class="dante-card" id="main-card">
+        <div class="card-glow" id="dynamic-glow"></div>
+        
+        <div class="p-5 flex justify-between items-center border-b border-white/5">
+            <span class="text-[9px] text-zinc-600 font-bold tracking-widest">SISTEMA_DANTE_V3</span>
+            <div class="wallet-display">
+                <span class="text-[8px] text-zinc-500 block">CAPITAL_TOTAL</span>
+                <span id="display-money" class="text-xs font-black text-white">$ 0.00</span>
+            </div>
+        </div>
+
+      <div class="h-[220px] w-full flex items-center justify-center relative">
+            <div class="energy-ring" id="dante-ring"></div>
+            <svg class="core-svg" id="dante-reactor" viewBox="0 0 200 200">
+                <circle class="core-part" cx="100" cy="100" r="15" />
+                <path class="core-part rotate-slow" d="M100,20 L100,180 M20,100 L180,100" />
+                <rect class="core-part rotate-fast" x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" />
+                <path class="core-part core-pulse" d="M100,10 L190,100 L100,190 L10,100 Z" />
+            </svg>
+        </div>
+
+        <div class="flex justify-center gap-4 mb-4">
+            <div id="badge-rich" class="badge-slot" data-tooltip="MAGNATE: Acumula $10,000">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div id="badge-survivor" class="badge-slot" data-tooltip="SUPERVIVIENTE: Supera el Nivel 5">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div id="badge-explorer" class="badge-slot" data-tooltip="EXPLORADOR: Inicia el camino">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+        </div>
+
+        <div class="px-8 text-center mb-4">
+            <h1 class="font-black text-2xl italic font-['Outfit'] tracking-tighter uppercase text-white">
+                <span id="user-rank">Arquitecto</span>
+                <span id="user-lvl" class="lvl-tag">LVL 01</span>
+            </h1>
+            <p class="text-[8px] text-zinc-500 tracking-[0.4em] uppercase">Esencia de Datos</p>
+        </div>
+
+        <div class="mx-8 mb-6 p-3 rounded-xl border border-dashed border-zinc-700 bg-black/50 text-center relative overflow-hidden" id="streak-panel">
+            <div class="text-[9px] text-zinc-500 tracking-widest font-mono">ESTADO DEL NÚCLEO</div>
+            <div id="dante-status" class="text-xl font-black italic mt-1" style="color: var(--accent); text-shadow: 0 0 10px var(--accent);">ESTABLE</div>
+            <div id="dante-streak" class="text-[10px] text-zinc-400 mt-1 font-mono tracking-widest">RACHA: 1 DÍA</div>
+        </div>
+
+       <div class="px-8 space-y-5">
+            <div class="stat-row">
+                <div class="flex justify-between text-[8px] font-bold text-zinc-500 uppercase">
+                    <span>Visión (Riesgo)</span>
+                    <span id="val-vision" class="text-white">--</span>
+                </div>
+                <div class="stat-bar-bg"><div id="bar-vision" class="stat-fill" style="background:var(--accent); box-shadow: 0 0 10px var(--accent);"></div></div>
+            </div>
+
+            <div class="stat-row">
+                <div class="flex justify-between text-[8px] font-bold text-zinc-500 uppercase">
+                    <span>Reserva (Ahorro)</span>
+                    <span id="val-reserva" class="text-white">--</span>
+                </div>
+                <div class="stat-bar-bg"><div id="bar-reserva" class="stat-fill" style="background:var(--primary); box-shadow: 0 0 10px var(--primary);"></div></div>
+            </div>
+
+            <div class="stat-row">
+                <div class="flex justify-between text-[8px] font-bold text-zinc-500 uppercase">
+                    <span>Táctica (Estabilidad)</span>
+                    <span id="val-tactica" class="text-white">--</span>
+                </div>
+                <div class="stat-bar-bg"><div id="bar-tactica" class="stat-fill" style="background:var(--risk); box-shadow: 0 0 10px var(--risk);"></div></div>
+            </div>
+        </div>
+        
+        <button onclick="window.location.href='index.html?skipIntro=true'" class="btn-back">VOLVER AL CAMINO</button>
+    </div> 
+
+ <script>
+   document.addEventListener('DOMContentLoaded', () => {
+            // 1. CARGA DE ADN Y ESTADO DEL JUEGO
+            const adnData = JSON.parse(localStorage.getItem('govotto_dante_adn'));
+            const gameState = JSON.parse(localStorage.getItem('govotto_state')) || { $: 1000, lvl: 1 };
+            
+            // LECTURA DIRECTA DE RACHA (SISTEMA CRONOS)
+            const rachaReal = parseInt(localStorage.getItem('govotto_streak')) || 1;
+
+            if(adnData) {
+                const v = Math.min(Math.max(adnData.vision, 5), 95);
+                const r = Math.min(Math.max(adnData.reserva, 5), 95);
+                const t = Math.min(Math.max(adnData.tactica, 5), 95);
+
+                const isConquistador = v > r;
+                let activeColor = isConquistador ? "#00ffff" : "#D4AF37";
+                
+                // --- LÓGICA DE MUTACIÓN PRIORITARIA ---
+                let statusText = "ESTABLE";
+
+                if (rachaReal >= 3 && rachaReal < 5) {
+                    activeColor = "#ffdd00"; // ALERTA
+                    statusText = "ALERTA";
+                } else if (rachaReal >= 5 && rachaReal < 7) {
+                    activeColor = "#ff4400"; // SOBRECARGA
+                    statusText = "SOBRECARGA";
+                } else if (rachaReal >= 7) {
+                    activeColor = "#a200ff"; // VIOLETA NUCLEAR
+                    statusText = "NUCLEAR";
+                    // ACELERACIÓN FÍSICA
+                    const motor = document.querySelector('.rotate-fast');
+                    if(motor) motor.style.animationDuration = "1s";
+                    const anillo = document.getElementById('dante-ring');
+                    if(anillo) anillo.style.animationDuration = "1s";
+                }
+
+                // Inyectar colores y textos de Racha
+                document.documentElement.style.setProperty('--accent', activeColor);
+                document.getElementById('dante-status').innerText = statusText;
+                document.getElementById('dante-status').style.color = activeColor;
+                document.getElementById('dante-status').style.textShadow = `0 0 15px ${activeColor}`;
+                document.getElementById('dante-streak').innerText = `CONEXIÓN: ${rachaReal} DÍA${rachaReal > 1 ? 'S' : ''}`;
+                document.getElementById('streak-panel').style.borderColor = activeColor;
+                document.getElementById('main-card').style.borderColor = activeColor;
+
+                // 2. ACTUALIZACIÓN DE INTERFAZ (DINERO Y NIVEL)
+                document.getElementById('display-money').innerText = `$ ${gameState.$.toLocaleString()}`;
+                document.getElementById('user-lvl').innerText = `LVL ${gameState.lvl.toString().padStart(2, '0')}`;
+
+                // 3. ACTIVACIÓN DE INSIGNIAS SEGÚN LOGROS
+                if(gameState.$ >= 10000) document.getElementById('badge-rich').classList.add('badge-active');
+                if(gameState.lvl >= 5) document.getElementById('badge-survivor').classList.add('badge-active');
+                if(gameState.lvl >= 1) document.getElementById('badge-explorer').classList.add('badge-active');
+
+                // 4. ACTUALIZACIÓN DE RANGO
+                const rankLabel = document.getElementById('user-rank');
+                rankLabel.innerText = isConquistador ? "Conquistador" : "Guardián";
+                rankLabel.style.color = activeColor;
+
+                // 6. ANIMACIÓN DE BARRAS Y EFECTOS
+                setTimeout(() => {
+                    document.getElementById('bar-vision').style.width = v + "%";
+                    document.getElementById('val-vision').innerText = v + "%";
+                    
+                    document.getElementById('bar-reserva').style.width = r + "%";
+                    document.getElementById('val-reserva').innerText = r + "%";
+                    
+                    document.getElementById('bar-tactica').style.width = t + "%";
+                    document.getElementById('val-tactica').innerText = t + "%";
+                    
+                    const reactor = document.getElementById('dante-reactor');
+                    reactor.style.filter = `drop-shadow(0 0 25px ${activeColor})`;
+                    
+                    const glow = document.getElementById('dynamic-glow');
+                    glow.style.background = `radial-gradient(circle at 50% 30%, ${activeColor}33 0%, transparent 70%)`;
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

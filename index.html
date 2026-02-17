@@ -10,504 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <style>
-        /* --- MOTOR GRÁFICO V184 (BASE) --- */
-        :root { --bg-deep: #050505; --primary: #D4AF37; --accent: #00ffff; --risk: #FF0044; --terminal: #00ff41; --btc: #F7931A; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        
-        body { 
-            background-color: #050505;
-            background-image: 
-                radial-gradient(at 50% 50%, rgba(0, 255, 255, 0.03) 0%, transparent 70%),
-                linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%);
-            background-size: 100% 100%, 100% 4px; 
-            color: #fff; font-family: 'Outfit', sans-serif; margin: 0; padding: 0; 
-            width: 100vw; height: 100dvh; overflow: hidden; display: flex; justify-content: center; align-items: center; 
-        }
-
-        #app-frame { 
-            width: 100%; height: 100%; max-width: 480px; 
-            background: #0a0a0a; 
-            position: relative; display: flex; flex-direction: column; overflow: hidden; 
-            border: 1px solid #333;
-            transform: translate3d(0,0,0); 
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            z-index: 10; 
-        }
-        @media (min-width: 500px) { #app-frame { height: 95dvh; border-radius: 20px; border: 1px solid #444; } }
-
-        /* --- CORRECCIÓN DE BLOQUEO DE CLICS V238 --- */
-.hidden { 
-    display: none !important; 
-} 
-
-.flex-show { 
-    display: flex !important; 
-    visibility: visible !important; 
-    pointer-events: auto !important; 
-    opacity: 1 !important; 
-    z-index: 70000 !important; /* Asegura que el modal esté al frente */
-}
-        /* --- SENSORY FX --- */
-        @keyframes stressPulse { 0% { box-shadow: inset 0 0 0 red; border-color: #000; } 50% { box-shadow: inset 0 0 20px red; border-color: red; } 100% { box-shadow: inset 0 0 0 red; border-color: #000; } }
-        @keyframes stressShake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
-        @keyframes heartBeatScale { 0% { transform: scale(1); } 15% { transform: scale(1.15); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } 60% { transform: scale(1); } 100% { transform: scale(1); } }
-
-        .stress-alert { animation: stressPulse 0.5s infinite; border: 2px solid transparent; }
-        .stress-critical { animation: stressShake 0.5s infinite, stressPulse 0.2s infinite; }
-        .heart-throb { animation: heartBeatScale 1.2s infinite; } 
-        .heart-throb-fast { animation: heartBeatScale 0.6s infinite; }
-
-        /* --- CYBER ICONS & HEX COINS --- */
-        .cyber-node { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
-        .cyber-ring { position: absolute; width: 100%; height: 100%; border: 2px dashed var(--terminal); border-radius: 50%; animation: spin 3s linear infinite; }
-        .cyber-arrow { color: var(--terminal); font-size: 1.2rem; filter: drop-shadow(0 0 5px var(--terminal)); }
-        .node-active-cyber { background: #001100; border-color: var(--terminal) !important; box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); transform: scale(1.15); z-index: 100; }
-
-        /* HEX-CHIP */
-        .hex-coin-display {
-            width: 40px; height: 45px;
-            background: #111;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            display: flex; justify-content: center; align-items: center;
-            border: 1px solid var(--primary);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            animation: float 3s ease-in-out infinite;
-        }
-        .hex-coin-display span { color: var(--primary); font-weight: 900; font-size: 18px; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-
-        .coin-visual { 
-            position: absolute; width: 30px; height: 30px; 
-            background: linear-gradient(135deg, #00ffff, #0088ff);
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            box-shadow: 0 0 15px #00ffff; 
-            z-index: 20000; pointer-events: none; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 14px; font-weight: 900; color: #000; 
-            animation: flyAndSpin 1.2s forwards ease-out; 
-        }
-        .coin-visual::after { content: ''; } 
-        @keyframes flyAndSpin { 0% { transform: translateY(0) rotate(0deg) scale(0.5); opacity: 0; } 10% { opacity: 1; transform: translateY(-20px) rotate(180deg) scale(1); } 100% { transform: translateY(-300px) rotate(720deg) scale(1.2); opacity: 0; } }
-
-        /* --- INTRO --- */
-        #intro-layer { position: absolute; inset: 0; z-index: 21000; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-        .scanline { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; z-index: 2; opacity: 0.6; }
-        .intro-logo-box { position: relative; z-index: 10; text-align: center; animation: introFadeIn 0.8s ease-out forwards; }
-        .intro-title { font-size: 3.5rem; font-weight: 900; font-style: italic; color: #fff; letter-spacing: -2px; line-height: 1; text-shadow: 0 0 20px rgba(255, 255, 255, 0.2); transform: scale(0.9); transition: text-shadow 0.2s; }
-        .intro-title span { color: #D4AF37; text-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
-        .intro-sub { font-family: 'JetBrains Mono', monospace; color: #444; font-size: 0.7rem; letter-spacing: 4px; margin-top: 10px; text-transform: uppercase; opacity: 0; animation: slideUp 0.5s ease-out 0.5s forwards; }
-        .loader-bar-box { width: 150px; height: 2px; background: #222; margin-top: 30px; position: relative; overflow: hidden; border-radius: 2px; opacity: 0; animation: fadeIn 0.5s ease-out 0.8s forwards; }
-        .loader-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #D4AF37; box-shadow: 0 0 10px #D4AF37; }
-        @keyframes introFadeIn { from { opacity: 0; transform: scale(1.2); filter: blur(10px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeIn { to { opacity: 1; } }
-
-        #boot-screen { position: absolute; inset: 0; z-index: 22000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* --- HUD --- */
-        .hud-header { height: 60px; background: #000; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; z-index: 6000; position: relative; }
-        .ticker-wrap { height: 28px; background: #000; border-bottom: 1px solid #222; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; }
-        .ticker { white-space: nowrap; animation: ticker 40s linear infinite; }
-        .ticker-item { display: inline-block; padding: 0 1rem; font-family: 'JetBrains Mono'; font-size: 9px; color: var(--terminal); font-weight: 700; }
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        .brand-logo { font-weight: 900; font-style: italic; font-size: 1.2rem; }
-        .brand-logo span { color: var(--primary); }
-        .hud-controls { display: flex; gap: 10px; align-items: center; }
-        .flash-btn { background: var(--risk); color: white; border-radius: 20px; padding: 5px 10px; font-size: 10px; font-weight: 900; display: flex; align-items: center; gap: 5px; cursor: pointer; border: 1px solid white; transition: transform 0.1s; }
-        .flash-btn:active { transform: scale(0.95); }
-        .rank-btn { width: 35px; height: 35px; border-radius: 50%; background: #222; border: 1px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-        /* --- MAPA --- */
-        .content-area { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 10; }
-        .map-layer { display: none; width: 100%; height: 100%; overflow-y: auto; flex-direction: column; align-items: center; padding-top: 60px; padding-bottom: 150px; scrollbar-width: none; background-image: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .03) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .03) 75%, rgba(255, 255, 255, .03) 76%, transparent 77%, transparent); background-size: 100% 100%, 50px 50px; }
-        .node-wrapper { display: flex; flex-direction: column; align-items: center; margin: 15px 0; position: relative; width: 100%; flex-shrink: 0; pointer-events: none; }
-        .node-wrapper:nth-child(4n+1) { transform: translateX(0); }        
-        .node-wrapper:nth-child(4n+2) { transform: translateX(60px); }    
-        .node-wrapper:nth-child(4n+3) { transform: translateX(0); }        
-        .node-wrapper:nth-child(4n+4) { transform: translateX(-60px); }    
-        .node-wrapper::before { content: ''; position: absolute; top: 30px; height: 110px; width: 4px; background: #222; z-index: 1; }
-        .node-wrapper:nth-child(4n+1)::before { transform: rotate(-25deg); height: 120px; left: 52%; }
-        .node-wrapper:nth-child(4n+2)::before { transform: rotate(25deg); height: 120px; right: 52%; }
-        .node-wrapper:nth-child(4n+3)::before { transform: rotate(25deg); height: 120px; left: 52%; }
-        .node-wrapper:nth-child(4n+4)::before { transform: rotate(-25deg); height: 120px; right: 52%; }
-        .node-wrapper:last-child::before { display: none; }
-        .node { width: 70px; height: 70px; background: #111; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; color: #444; position: relative; z-index: 11; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .node-done { border-color: var(--primary); background: #1a1a1a; color: var(--primary); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
-        .node-active { background: radial-gradient(circle at 30% 30%, #fff, #ddd); color: #000; border-color: #fff; box-shadow: 0 0 25px var(--primary); transform: scale(1.15); z-index: 100; animation: pulseNode 2s infinite; }
-        
-        .node-bomb { border-color: var(--risk) !important; color: var(--risk) !important; background: #110000 !important; }
-        .node-bomb.node-active { background: radial-gradient(circle at 30% 30%, #ff5555, #990000) !important; box-shadow: 0 0 30px var(--risk) !important; color: white !important; }
-        
-        .node-fire { border-color: #ff5500 !important; color: #ff5500 !important; background: #220500 !important; box-shadow: 0 0 15px #ff4400; }
-        .node-fire.node-active { background: radial-gradient(circle, #ffaa00, #ff0000) !important; color: white !important; box-shadow: 0 0 40px #ff4400 !important; animation: pulseFire 1s infinite !important; }
-        @keyframes pulseFire { 0% { box-shadow: 0 0 20px #ff4400; } 50% { box-shadow: 0 0 50px #ffcc00; } 100% { box-shadow: 0 0 20px #ff4400; } }
-
-        @keyframes pulseNode { 0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); } 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); } }
-        .node-name { position: absolute; bottom: -20px; width: 120px; text-align: center; font-size: 0.6rem; font-weight: 900; color: #666; letter-spacing: 1px; text-transform: uppercase; background: rgba(0,0,0,0.8); padding: 2px 5px; border-radius: 4px; }
-        .node-active .node-name { color: var(--primary); bottom: -25px; }
-        
-        .mascot-portrait-container { position: absolute; left: 50%; top: -60px; transform: translateX(-50%); width: 70px; height: 70px; z-index: 101; pointer-events: none; animation: bounceMascot 2s infinite ease-in-out; }
-        @keyframes bounceMascot { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
-        .mascot-portrait { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent); background: #000; box-shadow: 0 0 20px var(--accent); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .holo-icon { font-size: 40px; color: var(--accent); filter: drop-shadow(0 0 10px var(--accent)); animation: flicker 2s infinite; }
-        
-        .mascot-accessory-mini { position: absolute; bottom: 0; right: -5px; width: 25px; height: 25px; background: #000; border-radius: 50%; border: 1px solid var(--terminal); padding: 4px; z-index: 102; }
-
-        /* --- BATALLA --- */
-        .battle-overlay { position: absolute; inset: 0; z-index: 500; background: #000; display: none; flex-direction: column; align-items: center; padding: 60px 0 0 0; }
-        .ab-container { display: flex; flex-direction: column; width: 100%; height: 100%; position: relative; }
-        
-        .option-panel { 
-            flex: 1; width: 100%; position: relative; cursor: pointer; overflow: hidden; border-bottom: 2px solid #000; 
-            pointer-events: auto !important; z-index: 50 !important;
-        }
-        
-        .option-img, .tinder-img { 
-            width: 100%; height: 100%; object-fit: cover; 
-            filter: grayscale(100%) sepia(20%) hue-rotate(180deg) brightness(0.7) contrast(1.2); 
-            transition: all 0.3s ease; 
-        }
-        .option-panel:hover .option-img { filter: grayscale(0%) brightness(1) contrast(1); }
-        .option-panel:active .option-img { transform: scale(0.95); }
-        
-        .option-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.2); pointer-events: none; transition: 0.3s; z-index: 60; }
-        
-        .option-title { font-size: 2rem; font-weight: 900; color: white; text-transform: uppercase; font-style: italic; text-shadow: 0 5px 15px rgba(0,0,0,0.8); letter-spacing: -1px; }
-        
-        /* FIX: VS BADGE ENCIMA DE TODO */
-        .vs-badge { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 50px; height: 50px; 
-            background: var(--risk); 
-            border: 3px solid white; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; color: white; font-size: 1.2rem; 
-            z-index: 100; /* FIXED */
-            box-shadow: 0 0 20px rgba(0,0,0,0.8); 
-            pointer-events: none; 
-        }
-
-        /* --- BOMB MODE --- */
-        #bomb-view { background: radial-gradient(circle, #220000 0%, #000 100%); }
-        .bomb-timer-box { width: 80%; height: 20px; background: #333; border: 1px solid #555; border-radius: 10px; margin-bottom: 20px; overflow: hidden; position: relative; box-shadow: 0 0 15px var(--risk); }
-        .bomb-fill { height: 100%; background: var(--risk); width: 100%; transition: width 1s linear; }
-        .bomb-icon { font-size: 3rem; color: var(--risk); margin-bottom: 10px; animation: shake 0.5s infinite; }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
-        
-        /* --- FIRE MODE (ORACLE) --- */
-        #fire-view { background: radial-gradient(circle at center, #2a0000 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px !important; }
-        .fire-stage { width: 150px; height: 150px; position: relative; display: flex; justify-content: center; align-items: flex-end; margin: 30px 0; filter: drop-shadow(0 0 20px #ff4400); }
-        .flame-core { width: 80px; height: 80px; background: linear-gradient(-45deg, #ff4400, #ffcc00); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; transform: rotate(-45deg) scale(1); animation: flicker 0.1s infinite alternate; box-shadow: 0 0 40px #ff4400; position: relative; transition: all 0.5s ease; }
-        .fire-win .flame-core { background: linear-gradient(-45deg, #0088ff, #00ffff); box-shadow: 0 0 60px #0088ff; filter: brightness(1.5); transform: rotate(-45deg) scale(1.3); }
-        .fire-loss .flame-core { background: #333; box-shadow: none; transform: rotate(-45deg) scale(0.2); opacity: 0.5; }
-        @keyframes flicker { 0% { transform: rotate(-45deg) scale(1); opacity: 1; } 100% { transform: rotate(-44deg) scale(1.05); opacity: 0.9; } }
-
-        /* MENSAJE GIGANTE NIVEL 7 */
-        .fire-msg-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; font-size: 3rem; font-weight: 900; font-style: italic; z-index: 50; opacity: 0; pointer-events: none; transition: all 0.3s ease; text-shadow: 0 0 20px black; }
-        .f-win-text { color: #00ffff; text-shadow: 0 0 30px #0088ff; } 
-        .f-loss-text { color: #555; text-shadow: 0 0 20px #000; } 
-        .show-fire-msg { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-
-        /* GRID & TITLES */
-        .grid-box { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 15px; width: 100%; max-width: 380px; padding: 10px; margin: 0 auto; }
-        .grid-item { background: rgba(20, 20, 20, 0.9); border: 1px solid #333; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; cursor: pointer; pointer-events: auto; position: relative; overflow: hidden; transition: all 0.2s ease; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #888; font-weight: 700; }
-        .grid-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #444; transition: 0.2s; }
-        .grid-item:hover { background: #111; border-color: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .grid-item:hover::before { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
-        .grid-item:active { transform: scale(0.95); background: var(--primary); color: black; }
-        
-        #grid-view, #truth-view, #slider-view, #bomb-view, #fire-view { justify-content: center !important; padding-top: 0 !important; gap: 20px; }
-        #grid-q, #slider-q, #truth-text, #bomb-q, #fire-q { font-size: 1.5rem; color: white; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.3); text-align: center; width: 100%; }
-
-input[type=range] { 
-    width: 90%; 
-    -webkit-appearance: none; 
-    appearance: none; /* <--- Agrega esta línea */
-    background: transparent; 
-    margin: 30px 0; 
-    z-index: 4005; 
-    position: relative; 
-    cursor: pointer; 
-}        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 30px; width: 30px; border-radius: 50%; background: var(--primary); margin-top: -12px; cursor: pointer; box-shadow: 0 0 10px var(--primary); }
-
-        /* DOCKS REPARADOS */
-        .floating-dock { position: absolute; background: transparent; border: none; padding: 0; transform: translateX(-200%); transition: transform 0.3s ease; z-index: 9000; pointer-events: auto; }
-        .dock-visible { transform: translateX(0) !important; } 
-        
-        .dock-btn { width: 55px; height: 55px; border-radius: 50%; background: rgba(10, 10, 10, 0.95); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; border: 2px solid #333; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .dock-btn:active { transform: scale(0.9); }
-        
-        /* POSICIONAMIENTO ORIGINAL RESTAURADO */
-        #loot-dock { top: 40%; left: 10px; } 
-        #casino-dock { top: 60%; left: 10px; } 
-        #fire-dock { top: 80%; left: 10px; }
-        #vault-dock { top: 40%; right: 10px; transform: translateX(200%); } 
-        #home-dock { top: 60%; right: 10px; transform: translateX(200%); }
-
-        .dock-loot { border-color: #9d00ff; color: #d896ff; box-shadow: 0 0 15px rgba(157, 0, 255, 0.3); }
-        .dock-casino { border-color: #ff0044; color: #ff0044; box-shadow: 0 0 15px rgba(255, 0, 68, 0.3); }
-        .dock-vault { border-color: #00ffff; color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); }
-        .dock-home { border-color: #ffffff; color: #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
-        .dock-fire-active { border-color: #ff5500; color: #ff5500; box-shadow: 0 0 20px #ff4400; animation: pulseFireDock 1.5s infinite alternate; }
-        .dock-fire-disabled { border-color: #333; color: #555; box-shadow: none; filter: grayscale(1); }
-        @keyframes pulseFireDock { from { box-shadow: 0 0 10px #ff4400; transform: scale(1); } to { box-shadow: 0 0 25px #ffaa00; transform: scale(1.1); } }
-
-        /* V181: NEW TURBINE ROULETTE STYLES */
-        .cyber-roulette-container { position: relative; width: 160px; height: 160px; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; }
-        .cyber-ring-outer { position: absolute; inset: 0; border-radius: 50%; border: 4px solid #333; box-shadow: 0 0 20px rgba(0,255,255,0.1); }
-        .cyber-ring-inner { position: absolute; inset: 10px; border-radius: 50%; border: 2px dashed var(--accent); transition: transform 0.3s linear; }
-        .cyber-center-display { position: absolute; width: 80px; height: 80px; background: radial-gradient(circle, #222, #000); border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 30px; color: var(--primary); box-shadow: 0 0 15px var(--primary); }
-        .cyber-laser-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid var(--risk); filter: drop-shadow(0 0 5px var(--risk)); z-index: 20; }
-        .spin-fast { animation: turbineSpin 0.5s linear infinite; }
-        @keyframes turbineSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- V183: MASCOT SELECTOR CARDS --- */
-        .mascot-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-top: 20px; }
-        
-        .m-card { 
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; padding: 15px 20px;
-            background: linear-gradient(90deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.8) 100%);
-            border: 1px solid #333; border-left-width: 4px;
-            border-radius: 12px; cursor: pointer; position: relative; overflow: hidden;
-            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .m-card:active { transform: scale(0.96); filter: brightness(1.2); }
-        
-        .m-icon-box { font-size: 2rem; width: 50px; display: flex; justify-content: center; filter: drop-shadow(0 0 8px currentColor); }
-        
-        .m-info { flex: 1; padding-left: 15px; text-align: left; }
-        .m-name { font-size: 1.2rem; font-weight: 900; font-style: italic; color: white; line-height: 1; letter-spacing: 1px; }
-        .m-class { font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; color: #666; letter-spacing: 2px; margin-top: 4px; }
-        
-        .m-select-arrow { color: #333; font-size: 0.8rem; }
-
-        /* COLORES POR PERSONAJE */
-        .mc-wolf { border-left-color: #00ffff; } 
-        .mc-wolf .m-icon-box { color: #00ffff; }
-        .mc-wolf:hover { box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1); border-color: #00ffff; }
-
-        .mc-cat { border-left-color: #d896ff; } 
-        .mc-cat .m-icon-box { color: #d896ff; }
-        .mc-cat:hover { box-shadow: inset 0 0 20px rgba(216, 150, 255, 0.1); border-color: #d896ff; }
-
-        .mc-owl { border-left-color: #D4AF37; } 
-        .mc-owl .m-icon-box { color: #D4AF37; }
-        .mc-owl:hover { box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.1); border-color: #D4AF37; }
-
-        /* --- V184: DANTE HOLOGRAM FX --- */
-        .dante-holo {
-            /* Convierte la imagen a color Cian Neón */
-            filter: grayscale(100%) sepia(100%) hue-rotate(130deg) saturate(300%) drop-shadow(0 0 10px var(--accent));
-            opacity: 0.9;
-            /* La animación de interferencia */
-            animation: holoGlitch 3.5s infinite;
-            transition: all 0.1s;
-        }
-
-        @keyframes holoGlitch {
-            0% { opacity: 0.9; transform: scale(1) translate(0,0); }
-            2% { opacity: 0.7; transform: scale(1.02) translate(-2px, 0); filter: grayscale(100%) sepia(100%) hue-rotate(300deg) saturate(500%) drop-shadow(0 0 5px red); } /* Glitch Rojo breve */
-            4% { opacity: 0.9; transform: scale(1) translate(0,0); filter: grayscale(100%) sepia(100%) hue-rotate(130deg) saturate(300%) drop-shadow(0 0 10px var(--accent)); }
-            50% { opacity: 0.85; filter: drop-shadow(0 0 15px var(--accent)); }
-            52% { opacity: 0.4; transform: skewX(10deg); }
-            54% { opacity: 0.85; transform: skewX(0deg); }
-            100% { opacity: 0.9; }
-        }
-
-        .modal-overlay { position: absolute; inset: 0; z-index: 7000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; }
-        .modal-box { background: #0a0a0a; border: 1px solid #333; padding: 25px; border-radius: 20px; text-align: center; width: 90%; max-width: 350px; max-height: 90vh; overflow-y: auto; }
-        .modal-btn { background: white; color: black; font-weight: 900; padding: 15px; border-radius: 50px; width: 100%; text-transform: uppercase; margin-top: 15px; cursor: pointer; border: none; }
-        #mascot-speech { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(200px); width: 90%; background: #222; border: 1px solid var(--primary); border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 15px; transition: 0.3s; z-index: 3000; }
-        .speech-show { transform: translateX(-50%) translateY(0) !important; }
-        .speech-face { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; background: black; object-fit: cover; }
-
-        .slot-layout { display: flex; flex-direction: column; width: 100%; gap: 15px; background: linear-gradient(180deg, #220000 0%, #111 100%); border: 4px solid #D4AF37; border-radius: 20px; padding: 15px; box-shadow: 0 0 30px rgba(212,175,55,0.2); }
-        .slot-screen-lcd { background: #002200; border: 2px solid #555; border-radius: 8px; padding: 10px; text-align: center; box-shadow: inset 0 0 10px #000; margin-bottom: 10px; }
-        .slot-lcd-text { color: #00ff41; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-shadow: 0 0 5px #00ff41; }
-        .slot-lcd-q { color: white; font-weight: 900; font-size: 14px; margin-top: 5px; line-height: 1.2; }
-        .slot-display { display: flex; justify-content: center; gap: 5px; background: #000; padding: 10px; border-radius: 10px; border: 2px solid #664400; height: 90px; }
-        .slot-reel { background: #fff; color: #000; width: 55px; height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: inset 0 0 5px rgba(0,0,0,0.6); }
-        .spin-anim { animation: spin 0.1s linear infinite; }
-        @keyframes spin { 0% { transform: translateY(-5px); opacity: 0.5; } 50% { transform: translateY(5px); opacity: 0.8; } 100% { transform: translateY(-5px); opacity: 0.5; } }
-        .slot-answers-grid { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-        .slot-btn-mechanical { background: #333; border: 1px solid #555; color: white; font-weight: bold; font-size: 12px; padding: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 0 #111; transition: 0.1s; }
-        .slot-btn-mechanical:active { transform: translateY(4px); box-shadow: 0 0 0 #111; border-color: var(--primary); }
-
-        .truth-card-styled { width: 100%; background: #1a1a1a; border: 2px solid #333; border-radius: 20px; padding: 30px 20px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .truth-icon-large { font-size: 60px; color: #555; margin-bottom: 20px; }
-        .truth-text-large { font-size: 1.6rem; font-weight: 900; line-height: 1.2; text-transform: uppercase; }
-        .truth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
-        .t-btn-lg { padding: 25px 0; border-radius: 15px; font-weight: 900; font-size: 1.5rem; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .t-btn-lg:active { transform: scale(0.95); }
-        .tb-no-lg { background: #440000; color: #ff5555; }
-        .tb-yes-lg { background: #004400; color: #55ff55; }
-
-        .rank-list-styled { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 15px; }
-        .rank-row-styled { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; padding: 12px 15px; background: #151515; border-radius: 12px; border: 1px solid #333; }
-        .rank-pos-styled { font-weight: 900; color: #666; font-size: 14px; }
-        .rank-user-styled { text-align: left; font-weight: bold; font-size: 14px; color: #ddd; padding-left: 10px; }
-        .rank-money-styled { color: var(--terminal); font-family: monospace; font-weight: bold; font-size: 14px; text-align: right; }
-        .rank-1 { border: 1px solid #FFD700; background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent); }
-        .rank-1 .rank-pos-styled { color: #FFD700; text-shadow: 0 0 5px #FFD700; }
-        .rank-2 { border: 1px solid #C0C0C0; } .rank-2 .rank-pos-styled { color: #C0C0C0; }
-        .rank-3 { border: 1px solid #CD7F32; } .rank-3 .rank-pos-styled { color: #CD7F32; }
-        .rank-me { border: 2px solid var(--risk); background: rgba(255,0,68,0.1); }
-
-        .roulette-container { display: none; width: 100%; flex-direction: column; align-items: center; }
-        
-        .casino-select-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
-        .c-option-btn { background: #1a1a1a; border: 2px solid #333; padding: 20px; border-radius: 15px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .c-option-btn:hover { border-color: var(--accent); background: #222; }
-        .c-icon { font-size: 30px; margin-bottom: 10px; color: var(--primary); }
-        .c-title { font-weight: 900; color: white; text-transform: uppercase; font-size: 12px; }
-        .c-desc { font-size: 9px; color: #888; margin-top: 5px; }
-
-        .withdraw-section { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .w-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border: 1px solid #333; border-radius: 10px; padding: 10px 5px; color: #888; font-size: 9px; font-weight: bold; cursor: pointer; }
-        .w-btn img { width: 32px; height: 32px; margin-bottom: 5px; object-fit: cover; border-radius: 50%; }
-        .w-btn:active { background: #222; border-color: var(--primary); color: white; }
-
-        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-top: 15px; }
-        .inv-item { background: #151515; border: 1px solid #333; border-radius: 12px; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; font-size: 10px; font-weight: 900; }
-        .inv-active { border-color: var(--primary); color: var(--primary); background: rgba(212, 175, 55, 0.1); }
-        .inv-icon { font-size: 24px; margin-bottom: 5px; }
-
-        .tinder-card { width: 100%; aspect-ratio: 16/9; background: #222; border-radius: 15px; overflow: hidden; position: relative; margin-bottom: 15px; }
-        .tinder-img { width: 100%; height: 100%; object-fit: cover; }
-        .tinder-overlay { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.5); padding: 10px; }
-        .tinder-controls { display: flex; gap: 15px; width: 100%; }
-        .tc-btn { flex: 1; padding: 15px; border-radius: 50px; font-weight: 900; border: 1px solid #333; background: #111; }
-        
-        .chest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .loot-card { background: #151515; border: 1px solid #333; border-radius: 15px; padding: 15px; display: flex; flex-direction: column; align-items: center; position: relative; }
-        .weekly-slot { grid-column: span 2; }
-        .lc-img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; }
-
-        .scene { width: 80px; height: 80px; margin: 20px auto; perspective: 400px; }
-        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: rotate 5s infinite linear; }
-        .cube__face { position: absolute; width: 80px; height: 80px; border: 1px solid var(--primary); background: rgba(0,0,0,0.8); line-height: 80px; font-size: 20px; text-align: center; }
-        .cube__face--front  { transform: rotateY(  0deg) translateZ(40px); }
-        .cube__face--right  { transform: rotateY( 90deg) translateZ(40px); }
-        .cube__face--back   { transform: rotateY(180deg) translateZ(40px); }
-        .cube__face--left   { transform: rotateY(-90deg) translateZ(40px); }
-        .cube__face--top    { transform: rotateX( 90deg) translateZ(40px); }
-        .cube__face--bottom { transform: rotateX(-90deg) translateZ(40px); }
-        @keyframes rotate { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-
-        /* REGISTRATION FORM STYLES */
-        .reg-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; border-radius: 8px; color: white; font-family: 'JetBrains Mono'; }
-        .reg-input:focus { border-color: var(--primary); outline: none; }
-        .reg-btn { background: var(--primary); color: black; font-weight: 900; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
-
-    /* --- RELOJ NUCLEAR --- */
-        .nuclear-clock {
-            font-family: 'Courier New', monospace; /* Fuente tipo digital/máquina */
-            font-size: 4rem;
-            font-weight: 900;
-            color: #ff0000; /* Rojo puro */
-            text-shadow: 0 0 10px #ff0000, 0 0 30px #ff4400; /* Resplandor radiactivo */
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            animation: pulseAlert 0.5s infinite alternate; /* Parpadeo de tensión */
-        }
-        
-        @keyframes pulseAlert {
-            from { text-shadow: 0 0 10px #ff0000; opacity: 1; }
-            to { text-shadow: 0 0 25px #ff0000, 0 0 50px #ffaa00; opacity: 0.9; }
-        }
-        /* --- ESTILO NIVEL CÁMARA (AZUL NEÓN) --- */
-        .node-camera { 
-            border-color: #00ffff !important; /* Azul Cian Brillante */
-            color: #00ffff !important; 
-            background: #001111 !important; 
-            box-shadow: 0 0 15px #008888;
-        }
-        
-        /* Cuando es el turno de jugar (Activo) */
-        .node-camera.node-active { 
-            background: radial-gradient(circle, #e0ffff, #00cccc) !important; 
-            color: #002222 !important; /* Icono oscuro para contraste */
-            box-shadow: 0 0 50px #00ffff !important; /* Resplandor fuerte */
-            animation: cameraFlash 2s infinite !important;
-        }
-
-        /* Animación de Flash fotográfico */
-        @keyframes cameraFlash {
-            0% { transform: scale(1.15); box-shadow: 0 0 20px #00ffff; }
-            5% { transform: scale(1.2); box-shadow: 0 0 60px #ffffff; filter: brightness(1.5); } /* Flashazo blanco */
-            10% { transform: scale(1.15); box-shadow: 0 0 20px #00ffff; filter: brightness(1); }
-            50% { transform: scale(1.1); box-shadow: 0 0 10px #008888; }
-            100% { transform: scale(1.15); box-shadow: 0 0 20px #00ffff; }
-        }
-
-        /* --- V166: FLIP CARD CASINO FIX --- */
-        .flip-card {
-            background-color: transparent;
-            width: 150px;
-            height: 220px;
-            perspective: 1000px;
-            margin: 20px auto;
-        }
-        .flip-card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.8s;
-            transform-style: preserve-3d;
-        }
-        .flip-card.do-flip .flip-card-inner {
-            transform: rotateY(180deg);
-        }
-        .flip-card-front, .flip-card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 900;
-            border: 4px solid #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        .flip-card-front {
-            background: linear-gradient(135deg, #111, #333);
-            color: var(--primary);
-        }
-        .flip-card-back {
-            transform: rotateY(180deg);
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        
-        /* V173 EXTRA STYLE FOR FIRE TRIAL */
-        #fire-trial-modal { z-index: 9000; }
-        .fire-trial-overlay { position: absolute; inset:0; background: rgba(50, 0, 0, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .ft-question-box { font-size: 1.8rem; font-weight: 900; color: white; text-align: center; margin: 20px 0; text-transform: uppercase; text-shadow: 0 0 10px orange; }
-
-        /* --- CAMBIO 2: HEX-CHIP (V190) --- */
-        .hex-chip-wrapper {
-            width: 35px; height: 40px;
-            background: #111;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            display: flex; justify-content: center; align-items: center;
-            border: 1px solid var(--primary);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
-            animation: float 3s ease-in-out infinite;
-        }
-        .hex-chip-wrapper span { color: var(--primary); font-weight: 900; font-size: 20px; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-
-    </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="global-scanline" style="pointer-events: none;"></div>
+    <div class="hacker-bar" style="pointer-events: none;"></div>
+
     <div id="app-frame"> 
         <div id="boot-screen">
             <div style="font-size: 3rem; font-weight: 900; font-style: italic;">GO<span style="color:var(--primary);">VOTTO</span></div>
@@ -527,127 +35,130 @@ input[type=range] {
         </div>
 
         <div class="hud-header">
-            <div class="brand-logo">GO<span>VOTTO</span></div>
-            <div class="hud-controls">
-            <div class="flash-btn" onclick="checkEvent('diario')"><i class="fas fa-bolt"></i> EVENTO</div>                <div class="rank-btn" onclick="openRanking()"><i class="fas fa-trophy"></i></div>
-                <div class="flex items-center gap-2">
-                    <div class="text-[9px] text-right"><div class="text-zinc-500">SALDO COP</div><div class="font-bold text-white font-mono" id="hud-money">$0</div></div>
-                    <div class="hex-chip-wrapper"><span>G</span></div>
+            <div class="hud-controls z-50 relative">
+                <div class="rank-btn" onclick="openRanking()"><i class="fas fa-trophy"></i></div>
+                <div class="flash-btn" onclick="checkEvent()"><i class="fas fa-bolt"></i> EVENTO</div>
+            </div>
+            <div class="brand-logo absolute left-1/2 -translate-x-1/2">GO<span>VOTTO</span></div>
+            <div class="flex items-center gap-2 z-50 relative">
+                <div class="text-[9px] text-right leading-tight">
+                    <div class="text-zinc-500 font-bold uppercase tracking-tighter">SALDO COP</div>
+                    <div class="font-bold text-white font-mono text-sm" id="hud-money">$0</div>
                 </div>
+                <div class="hex-chip-wrapper"><span>G</span></div>
             </div>
         </div>
         
         <div class="ticker-wrap"><div class="ticker"><div class="ticker-item">1 COIN = <span>1 PESO</span></div><div class="ticker-item">META FINAL: <span>$45.000 COP</span></div><div class="ticker-item">👗 LAURA GANÓ <span>BONO ZARA</span></div><div class="ticker-item">💎 BÓVEDA <span>ACTIVA</span></div></div></div>
 
-        <div class="content-area" id="content-area">
-            <div id="map-view" class="map-layer flex-show">
+<div class="content-area" id="content-area">            <div id="map-view" class="map-layer flex-show">
+                <div id="city-motor-container" class="absolute left-1/2 top-[280px] -translate-x-1/2 -z-10 opacity-30 pointer-events-auto cursor-pointer flex flex-col items-center" onclick="window.location.href='dante.html'">
+                    <svg id="city-core" width="220" height="220" viewBox="0 0 200 200" style="fill: none; stroke-width: 2;">
+                        <circle class="core-static" cx="100" cy="100" r="15" stroke="var(--accent)" />
+                        <path class="core-rotate-slow" d="M100,20 L100,180 M20,100 L180,100" stroke="var(--accent)" />
+                        <rect class="core-rotate-fast" x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" stroke="var(--accent)" />
+                        <path class="core-pulse" d="M100,20 L180,100 L100,180 L20,100 Z" stroke="var(--accent)" />
+                    </svg>
+                    <p class="text-[7px] text-zinc-500 tracking-[0.6em] mt-4 font-bold uppercase">Reactor_Central</p>
+                </div>
+
                 <div class="w-full px-6 text-left mb-6 border-l-4 ml-6" id="map-border">
                     <div class="text-2xl font-black italic" id="map-title">RUTA 1</div>
                     <div class="text-xs text-zinc-500 tracking-widest" id="map-sub">DIAGNÓSTICO</div>
                 </div>
-                <div id="nodes-container" class="w-full flex flex-col items-center pb-32"></div>
-            </div>
-        </div>
 
-        <div id="ab-view" class="battle-overlay hidden">
-           <div class="ab-container" id="ab-cont">
-                <div id="opt-a" class="option-panel" style="z-index: 50; pointer-events: auto;" onclick="handleOption(this)">
-                    <img id="img-a" src="" class="option-img">
-                    <div class="option-overlay"><div class="option-title" id="txt-a">A</div></div>
+            <div class="relative w-full flex flex-col items-center">
+                    <svg id="path-svg-layer" class="absolute top-0 left-0 w-full h-[2000px] pointer-events-none" style="z-index: 1;">
+                        <line id="path-0" class="path-line path-locked" x1="50%" y1="75" x2="calc(50% + 55px)" y2="175" />
+                        
+                        <line id="path-1" class="path-line path-locked" x1="calc(50% + 55px)" y1="175" x2="50%" y2="275" />
+                        
+                        <line id="path-2" class="path-line path-locked" x1="50%" y1="275" x2="calc(50% - 55px)" y2="375" />
+                        
+                        <line id="path-3" class="path-line path-locked" x1="calc(50% - 55px)" y1="375" x2="50%" y2="475" />
+                        
+                        <line id="path-4" class="path-line path-locked" x1="50%" y1="475" x2="calc(50% + 55px)" y2="575" />
+
+                        <line id="path-5" class="path-line path-locked" x1="calc(50% + 55px)" y1="575" x2="50%" y2="675" />
+                    </svg>
+                    <div id="nodes-container" class="w-full flex flex-col items-center pb-32" style="z-index: 10;"></div>
                 </div>
-                <div class="vs-badge">VS</div>
-                <div id="opt-b" class="option-panel" style="z-index: 50; pointer-events: auto;" onclick="handleOption(this)">
-                    <img id="img-b" src="" class="option-img">
-                    <div class="option-overlay"><div class="option-title" id="txt-b">B</div></div>
+
+            <div id="ab-view" class="battle-overlay hidden">
+               <div class="ab-container" id="ab-cont">
+                    <div id="opt-a" class="option-panel" style="z-index: 50; pointer-events: auto;" onclick="handleOption(this)">
+                        <img id="img-a" src="" class="option-img">
+                        <div class="option-overlay"><div class="option-title" id="txt-a">A</div></div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div id="opt-b" class="option-panel" style="z-index: 50; pointer-events: auto;" onclick="handleOption(this)">
+                        <img id="img-b" src="" class="option-img">
+                        <div class="option-overlay"><div class="option-title" id="txt-b">B</div></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div id="bomb-view" class="battle-overlay hidden">
-            <div class="bomb-icon"><i class="fas fa-bomb"></i></div>
-            <div class="bomb-timer-box"><div id="bomb-timer" class="bomb-fill"></div></div>
-            <h2 id="bomb-q">PREGUNTA RAPIDA</h2>
-            <div class="grid-box" id="bomb-answers"></div>
-        </div>
-
-        <div id="fire-view" class="battle-overlay hidden">
-            <div id="fire-result" class="fire-msg-overlay"></div>
-            <h2 id="fire-q" style="margin-top: 20px; position:relative; z-index:10;">LA PREGUNTA</h2>
-            <div id="fire-stage" class="fire-stage"><div class="flame-core"></div></div>
-            <p class="text-xs text-zinc-500 mb-8 tracking-widest" style="position:relative; z-index:10;">EL FUEGO JUZGARÁ TU ALMA</p>
-            <div class="truth-actions" id="fire-btns">
-                <div class="t-btn-lg" style="border-color:#555; background:#111;" onclick="handleFireAnswer(false)">NO</div>
-                <div class="t-btn-lg" style="border-color:#ff5500; background:#330000; color:#ffaa00;" onclick="handleFireAnswer(true)">SÍ</div>
-            </div>
-        </div>
-
-        <div id="slider-view" class="battle-overlay hidden">
-            <h2 id="slider-q">VALORACIÓN</h2>
-            <div class="mech-container" style="display:flex; flex-direction:column; align-items:center; width:100%;">
-                <div class="text-4xl font-mono text-primary mb-4" id="slider-val-disp">0</div>
-                <input type="range" id="slider-inp" oninput="updateSlider(this.value)">
-            </div>
-            <button onclick="endBattle()" class="modal-btn w-3/4">CONFIRMAR</button>
-        </div>
-
-        <div id="grid-view" class="battle-overlay hidden">
-            <h2 id="grid-q">SELECCIÓN</h2>
-            <div class="grid-box" id="grid-box"></div>
-        </div>
             
-        <div id="truth-view" class="battle-overlay hidden">
-            <div class="truth-card-styled">
-                <i class="fas fa-question truth-icon-large" id="truth-icon"></i>
-                <div class="truth-text-large" id="truth-text">?</div>
+            <div id="bomb-view" class="battle-overlay hidden">
+                <div class="bomb-icon"><i class="fas fa-bomb"></i></div>
+                <div class="bomb-timer-box"><div id="bomb-timer" class="bomb-fill"></div></div>
+                <h2 id="bomb-q">PREGUNTA RAPIDA</h2>
+                <div class="grid-box" id="bomb-answers"></div>
             </div>
-            <div class="truth-actions">
-                <div class="t-btn-lg tb-no-lg" onclick="handleTruth()"><i class="fas fa-times"></i> NO</div>
-                <div class="t-btn-lg tb-yes-lg" onclick="handleTruth()"><i class="fas fa-check"></i> SÍ</div>
+
+            <div id="fire-view" class="battle-overlay hidden">
+                <div id="fire-result" class="fire-msg-overlay"></div>
+                <h2 id="fire-q" style="margin-top: 20px; position:relative; z-index:10;">LA PREGUNTA</h2>
+                <div id="fire-stage" class="fire-stage"><div class="flame-core"></div></div>
+                <p class="text-xs text-zinc-500 mb-8 tracking-widest" style="position:relative; z-index:10;">EL FUEGO JUZGARÁ TU ALMA</p>
+                <div class="truth-actions" id="fire-btns">
+                    <div class="t-btn-lg" style="border-color:#555; background:#111;" onclick="handleFireAnswer(false)">NO</div>
+                    <div class="t-btn-lg" style="border-color:#ff5500; background:#330000; color:#ffaa00;" onclick="handleFireAnswer(true)">SÍ</div>
+                </div>
+            </div>
+
+            <div id="slider-view" class="battle-overlay hidden">
+                <h2 id="slider-q">VALORACIÓN</h2>
+                <div class="mech-container" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                    <div class="text-4xl font-mono text-primary mb-4" id="slider-val-disp">0</div>
+                    <input type="range" id="slider-inp" oninput="updateSlider(this.value)">
+                </div>
+                <button onclick="endBattle()" class="modal-btn w-3/4">CONFIRMAR</button>
+            </div>
+
+            <div id="grid-view" class="battle-overlay hidden">
+                <h2 id="grid-q">SELECCIÓN</h2>
+                <div class="grid-box" id="grid-box"></div>
+            </div>
+                
+            <div id="truth-view" class="battle-overlay hidden">
+                <div class="truth-card-styled">
+                    <i class="fas fa-question truth-icon-large" id="truth-icon"></i>
+                    <div class="truth-text-large" id="truth-text">?</div>
+                </div>
+                <div class="truth-actions">
+                    <div class="t-btn-lg tb-no-lg" onclick="handleTruth()"><i class="fas fa-times"></i> NO</div>
+                    <div class="t-btn-lg tb-yes-lg" onclick="handleTruth()"><i class="fas fa-check"></i> SÍ</div>
+                </div>
+            </div>
+        </div> 
+
+        <div id="mascot-speech">
+            <img id="speech-img" class="speech-face" src="">
+            <div>
+                <div class="text-[10px] font-black text-primary" id="speech-title">COMANDO</div>
+                <div class="text-xs leading-tight" id="speech-txt">...</div>
             </div>
         </div>
 
-        <div id="loot-dock" class="floating-dock"><div class="dock-btn dock-loot" onclick="openLoot()"><i class="fas fa-gem"></i></div></div>
-
-        <div id="casino-dock" class="floating-dock" style="z-index: 9999 !important; pointer-events: auto !important;">
-            <div class="dock-btn dock-casino" onclick="openCasinoMenu()">
-                <i class="fas fa-dice"></i>
+        <div id="intro-modal" class="modal-overlay hidden">
+            <div class="modal-box">
+                <img src="dante.png" class="w-48 h-48 object-contain mx-auto mb-4 dante-holo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616554.png'">
+                <h2 class="text-xl font-black text-white">HOLA, SOY DANTE</h2>
+                <p class="text-sm text-zinc-400 mt-2">"Te guiaré por el mercado. Si tardas, te presionaré. ¿Listo?"</p>
+                <button onclick="startMap()" class="modal-btn">ACEPTAR DESAFÍO</button>
             </div>
         </div>
 
-        <div id="fire-dock" class="floating-dock">
-            <div id="fire-btn-inner" class="dock-btn dock-fire-active" onclick="checkFireTrial()">
-                <i class="fas fa-fire"></i>
-            </div>
-        </div>
-        
-        <div id="vault-dock" class="floating-dock">
-            <div class="dock-btn dock-vault" onclick="showVaultModal()">
-                <i class="fas fa-vault"></i>
-            </div>
-        </div>
-        
-        <div id="home-dock" class="floating-dock">
-            <div class="dock-btn dock-home" onclick="openHomeProfile()">
-                <i class="fas fa-house-user"></i>
-            </div>
-        </div>
-
-    </div> <div id="mascot-speech">
-        <img id="speech-img" class="speech-face" src="">
-        <div>
-            <div class="text-[10px] font-black text-primary" id="speech-title">COMANDO</div>
-            <div class="text-xs leading-tight" id="speech-txt">...</div>
-        </div>
-    </div>
-
-    <div id="intro-modal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <img src="dante.png" class="w-48 h-48 object-contain mx-auto mb-4 dante-holo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616554.png'">
-            <h2 class="text-xl font-black text-white">HOLA, SOY DANTE</h2>
-            <p class="text-sm text-zinc-400 mt-2">"Te guiaré por el mercado. Si tardas, te presionaré. ¿Listo?"</p>
-            <button onclick="startMap()" class="modal-btn">ACEPTAR DESAFÍO</button>
-        </div>
-    </div>
         <div id="mascot-modal" class="modal-overlay hidden">
             <div class="modal-box" style="border: 1px solid #333; background: #050505;">
                 <h2 class="text-xl font-black text-white italic">SELECCIONA AGENTE</h2>
@@ -672,7 +183,9 @@ input[type=range] {
             </div>
         </div>
         
-        <div id="avatar-confirm-modal" class="modal-overlay hidden"><div class="modal-box"><div class="mascot-portrait" style="width:120px; height:120px; margin:0 auto; border:4px solid var(--primary);"><i id="confirm-avatar-icon" class="fas fa-dog holo-icon" style="font-size:60px;"></i></div><h2 class="text-2xl font-black text-primary italic mb-4" id="confirm-avatar-title" style="margin-top:20px;">¡HOLA!</h2><p class="text-xl text-white font-black leading-tight uppercase" id="confirm-avatar-msg">Soy... y te acompañaré...</p><button onclick="finalizeAvatarSelection()" class="modal-btn mt-8 bg-primary text-black font-black text-lg">¡VAMOS!</button></div></div>
+        <div id="avatar-confirm-modal" class="modal-overlay hidden">
+            <div class="modal-box"><div class="mascot-portrait" style="width:120px; height:120px; margin:0 auto; border:4px solid var(--primary);"><i id="confirm-avatar-icon" class="fas fa-dog holo-icon" style="font-size:60px;"></i></div><h2 class="text-2xl font-black text-primary italic mb-4" id="confirm-avatar-title" style="margin-top:20px;">¡HOLA!</h2><p class="text-xl text-white font-black leading-tight uppercase" id="confirm-avatar-msg">Soy... y te acompañaré...</p><button onclick="finalizeAvatarSelection()" class="modal-btn mt-8 bg-primary text-black font-black text-lg">¡VAMOS!</button></div>
+        </div>
         
         <div id="ranking-modal" class="modal-overlay hidden">
             <div class="modal-box border border-primary relative" style="max-width:340px;">
@@ -686,26 +199,25 @@ input[type=range] {
         </div>
 
         <div id="slots-modal" class="modal-overlay hidden">
-    <div class="modal-box border border-accent relative" style="max-width:340px;">
-        <button onclick="closeSlots()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
-            <i class="fas fa-times text-xl"></i>
-        </button>
-        <h2 class="text-xl font-black text-accent italic mb-4">CASINO</h2>
-        
-        <div id="casino-selector" class="casino-select-screen">
-            <div class="c-option-btn" onclick="startSlotGame()">
-                <i class="fas fa-gem c-icon"></i>
-                <div class="c-title">TRAGAMONEDAS</div>
-                <div class="c-desc">Versión V238</div>
-            </div>
-            <div class="c-option-btn" onclick="startTurbineGame()">
-                <i class="fas fa-fan c-icon" style="color:var(--accent)"></i>
-                <div class="c-title">TURBINA</div>
-                <div class="c-desc">Alto Rendimiento</div>
+            <div class="modal-box border border-accent relative" style="max-width:340px;">
+                <button onclick="closeSlots()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <h2 class="text-xl font-black text-accent italic mb-4">CASINO</h2>
+                <div id="casino-selector" class="casino-select-screen">
+                    <div class="c-option-btn" onclick="startSlotGame()">
+                        <i class="fas fa-gem c-icon"></i>
+                        <div class="c-title">TRAGAMONEDAS</div>
+                        <div class="c-desc">Versión V238</div>
+                    </div>
+                    <div class="c-option-btn" onclick="startTurbineGame()">
+                        <i class="fas fa-fan c-icon" style="color:var(--accent)"></i>
+                        <div class="c-title">TURBINA</div>
+                        <div class="c-desc">Alto Rendimiento</div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
         
         <div id="accessory-modal" class="modal-overlay hidden"><div class="modal-box"><h2 class="text-xl font-black text-white">¡CAJA FASHION!</h2><button onclick="equipAccessory()" class="modal-btn">ABRIR</button></div></div>
         <div id="casino-modal" class="modal-overlay hidden"><div class="modal-box"><h2>DOBLE O NADA</h2><button onclick="playDouble('red')" class="modal-btn" style="background:red; color:white;">ROJO</button><button onclick="playDouble('black')" class="modal-btn" style="background:black; color:white;">NEGRO</button></div></div>
@@ -713,935 +225,73 @@ input[type=range] {
         <div id="vault-modal" class="modal-overlay hidden"><div class="modal-box"><h2 class="text-xl font-black text-white">BÓVEDA</h2><button onclick="openVaultLogic()" class="modal-btn">ABRIR</button><div id="vault-content" class="hidden"><div id="final-cop"></div><button onclick="sealVault()" class="modal-btn">CERRAR</button></div></div></div>
         <div id="coming-soon-modal" class="modal-overlay hidden"><div class="modal-box"><h2 class="text-xl font-black text-white">PRÓXIMAMENTE</h2><button onclick="closeComingSoon()" class="modal-btn">CERRAR</button></div></div>
         <div id="home-profile-modal" class="modal-overlay hidden"><div class="modal-box"><h2 class="text-xl font-black text-white">PERFIL</h2><div id="wallet-cop"></div><button onclick="closeHomeProfile()" class="modal-btn">CERRAR</button></div></div>
-        <div id="custom-alert" class="modal-overlay hidden" style="z-index: 31000;"><div class="modal-box"><h2 id="alert-title" class="text-xl font-black text-primary">AVISO</h2><p id="alert-msg" class="text-white text-sm"></p><button onclick="closeCustomAlert()" class="modal-btn">OK</button></div></div>
+        <div id="custom-alert" class="modal-overlay hidden" style="z-index: 900000;"><div class="modal-box"><h2 id="alert-title" class="text-xl font-black text-primary">AVISO</h2><p id="alert-msg" class="text-white text-sm"></p><button onclick="closeCustomAlert()" class="modal-btn">OK</button></div></div>
 
- </div> 
-
-    <div id="turbine-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 50000; display: flex; flex-direction: column;">
-        <iframe id="turbine-frame" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
-        
-        <button onclick="forceCloseTurbine()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60000;">
-            <i class="fas fa-times"></i>
-        </button>
+       <div id="docks-layer">
+            
+            <div id="loot-dock" class="floating-dock">
+    <div class="quantum-btn dock-loot" onclick="openLoot()">
+        <div class="quantum-ring"></div>
+        <div class="quantum-fluid"></div>
+        <i class="fas fa-gem quantum-icon"></i>
     </div>
+</div>
 
-    <div id="loot-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 50001; display: flex; flex-direction: column;">
-        <iframe id="loot-frame" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
-        <button onclick="forceCloseLoot()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60000;">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
+            <div id="casino-dock" class="floating-dock">
+                <div class="quantum-btn dock-casino" onclick="openCasinoMenu()">
+                    <div class="quantum-ring"></div>
+                    <div class="quantum-fluid"></div>
+                    <i class="fas fa-dice quantum-icon"></i>
+                </div>
+            </div>
 
-    <div id="event-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 60000; display: flex; flex-direction: column;">
+            <div id="fire-dock" class="floating-dock">
+                <div id="fire-btn-inner" class="quantum-btn dock-fire-active" onclick="checkFireTrial()">
+                    <div class="quantum-ring"></div>
+                    <div class="quantum-fluid"></div>
+                    <i class="fas fa-fire quantum-icon"></i>
+                </div>
+            </div>
+
+            <div id="vault-dock" class="floating-dock">
+                <div class="quantum-btn dock-vault" onclick="showVaultModal()">
+                    <div class="quantum-ring"></div>
+                    <div class="quantum-fluid"></div>
+                    <i class="fas fa-vault quantum-icon"></i>
+                </div>
+            </div>
+
+            <div id="home-dock" class="floating-dock">
+                <div class="quantum-btn dock-home" onclick="window.location.href='dante.html'" title="Ver Núcleo Dante">
+                    <div class="quantum-ring"></div>
+                    <div class="quantum-fluid"></div>
+                    <i class="fas fa-house-user quantum-icon"></i>
+                </div>
+            </div>
+
+        </div>
+
+
+    <div id="turbine-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 999995 !important; display: flex; flex-direction: column;">
+    <iframe id="turbine-frame" style="width: 100%; height: 100%; border: none; flex: 1; background: transparent;"></iframe>
+    <button onclick="forceCloseTurbine()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 999999;">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
+
+<div id="loot-layer" class="hidden" style="position: absolute; inset: 0; width: 100%; height: 100%; background: #000; z-index: 999999 !important; display: flex; flex-direction: column;">
+    <iframe id="loot-frame" src="about:blank" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
+</div>
+
+
+    <div id="event-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 999997 !important; display: flex; flex-direction: column;">
         <iframe id="event-frame" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
-        
-        <button onclick="forceCloseEvent()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 70000;">
+        <button onclick="forceCloseEvent()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 999999;">
             <i class="fas fa-times"></i>
         </button>
     </div>
 
-    <script>
-        // --- MOTOR V201 FINAL FIXED ---
-        
-        const AVATARS = {
-            wolf: { name: "LOBITO", icon: "fa-dog" },
-            cat: { name: "KIRA", icon: "fa-cat" },
-            owl: { name: "ORION", icon: "fa-crow" }
-        };
-
-        // STATE V184
-        let state = { 
-            route: 1, 
-            lvl: 0, 
-            $ : 1000, 
-            btc: 0.00000000,
-            pet: null, 
-            username: "VIAJERO",
-            nameSet: false, 
-            item: false, 
-            dockUnlocked: true,
-            vaultUnlocked: false, 
-            dailyClaimed: false, 
-            personality: "EXPLORADOR", 
-            goldenTicket: false,
-            coupons: [],
-            registered: false,
-            playedEvents: [], 
-            casinoPlayed: false 
-        }; 
-        
-        let audioContext = null;
-        let bombInterval = null;
-        let fireHeartbeat = null; 
-        let bombVib = null;
-        let stressTimerAlert = null;
-        let stressTimerCritical = null;
-        let stressVibrationInterval = null;
-        let gauntletActive = false;
-
-        // V173: FIRE TRIAL VARIABLES
-        let fireTrialIndex = 0;
-        let fireTrialTimer = null;
-        const FIRE_TRIAL_QS = [
-            "¿TE GUSTA LEER?", "¿VIAJAR SOLO?", "¿AHORRAS DINERO?", "¿TIENES MASCOTAS?", 
-            "¿CAFÉ O TÉ?", "¿MADRUGAS?", "¿COCINAS?", "¿HACES DEPORTE?", 
-            "¿NETFLIX O CINE?", "¿INVIERNO O VERANO?"
-        ];
-
-        const R1 = [
-            {t:'ab',d:[{tA:"COCA-COLA",tB:"PEPSI",iA:"https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400",iB:"https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400"},{tA:"IPHONE",tB:"ANDROID",iA:"https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400",iB:"https://images.unsplash.com/photo-1605236453806-6ff36851218e?w=400"},{tA:"NIKE",tB:"ADIDAS",iA:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",iB:"https://images.unsplash.com/photo-1518002171953-a080ee802e12?w=400"},{tA:"RUMBA",tB:"NETFLIX",iA:"https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400",iB:"https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400"},{tA:"UBER",tB:"TRANSMI",iA:"https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400",iB:"https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=400"}]},
-            {t:'mascot'},
-            {t:'bomb', d:[ {q:"¿IPHONE O SAMSUNG?", a:["IPHONE","SAMSUNG"]}, {q:"¿NIKE O ADIDAS?", a:["NIKE","ADIDAS"]}, {q:"¿PLAYA O CIUDAD?", a:["PLAYA","CIUDAD"]}, {q:"¿EFECTIVO O TARJETA?", a:["EFECTIVO","TARJETA"]}, {q:"¿SALIR O DORMIR?", a:["SALIR","DORMIR"]} ]},
-            {t:'grid',q:'TU EDAD',i:['18-24','25-34','35-44','45+']},
-            {t:'slider',q:'TU INGRESO MENSUAL',min:0,max:10000000,step:500000},
-            {t:'ab',d:[{tA:"HAMBURGUESA",tB:"PIZZA",iA:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400",iB:"https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400"},{tA:"REGGAETON",tB:"ROCK",iA:"https://images.unsplash.com/photo-1621693247912-c9695372561e?w=400",iB:"https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=400"},{tA:"ZARA",tB:"H&M",iA:"https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400",iB:"https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400"}]},
-            {t:'fire', d:[ "¿HAS SIDO INFIEL?", "¿MIENTES EN TU CV?", "¿ODIAS A TU JEFE?", "¿ROBARÍAS SI NADIE TE VE?", "¿REVISAS CELULARES AJENOS?", "¿TE IRÍAS DEL PAÍS MAÑANA?" ]},
-            {t:'grid',q:'TU BANCO PRINCIPAL',i:['BANCOLOMBIA','DAVIVIENDA','NU','NEQUI','BOGOTÁ','NINGUNO']},
-            {t:'acc'},
-            {t:'truth',d:[{q:"¿TIENES DEUDAS?",i:"fa-money-bill-wave"},{q:"¿FUMAS VAPE?",i:"fa-smoking"},{q:"¿HAS MENTIDO EN CV?",i:"fa-file-alt"}]}
-        ];
-        
-        const R2 = [
-            {t:'ab',d:[{tA:"EFECTIVO",tB:"APPS",iA:"https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=400",iB:"https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400"},{tA:"JUAN VALDEZ",tB:"STARBUCKS",iA:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400",iB:"https://images.unsplash.com/photo-1507133750069-bef9d5b4537a?w=400"},{tA:"PERRO",tB:"GATO",iA:"https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400",iB:"https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400"}]},
-            {t:'slider',q:'GASTO MAX ZAPATOS',min:50000,max:800000,step:20000},
-            {t:'grid',q:'TIENES VEHÍCULO',i:['CARRO','MOTO','BICI','NINGUNO']},
-            {t:'casino'},
-            {t:'ab',d:[{tA:"PLAYA",tB:"MONTAÑA",iA:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400",iB:"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400"},{tA:"MAC",tB:"WINDOWS",iA:"https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=400",iB:"https://images.unsplash.com/photo-1542393545-facac7050887?w=400"},{tA:"NACIONAL",tB:"IMPORTADA",iA:"https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=400",iB:"https://images.unsplash.com/photo-1567696911980-2c0c8dd84261?w=400"}]},
-            {t:'grid',q:'NIVEL EDUCATIVO',i:['BACHILLER','TÉCNICO','UNIVERSIDAD','POSGRADO']},
-            {t:'truth',d:[{q:"¿COMPRA IMPULSIVA?",i:"fa-shopping-cart"},{q:"¿PROBLEMAS LEGALES?",i:"fa-gavel"},{q:"¿EJERCICIO 3X SEMANA?",i:"fa-dumbbell"},{q:"¿INVIERTES CRIPTO?",i:"fa-bitcoin"}]}
-        ];
-
-        const SLOT_BRANDS = [{id:'coke',name:'COCA-COLA',icon:'🥤'},{id:'benz',name:'MERCEDES',icon:'🚘'},{id:'mazda',name:'MAZDA',icon:'🏎️'},{id:'mcd',name:'MCDONALDS',icon:'🍔'}];
-        const SLOT_QS = [{q:"¿Qué refresco tomas?",a:["Coca-Cola","Pepsi","Agua"]},{q:"¿Tu auto soñado?",a:["Mercedes","Mazda","BMW"]},{q:"¿Comida rápida?",a:["McDonalds","Burger King","KFC"]}];
-        const TINDER_DATA = [{t:"¿TU MAYOR MIEDO ES LA SOLEDAD?", i:"https://images.unsplash.com/photo-1501869385787-8d542562419f?w=400"}, {t:"¿EL ÉXITO ES DINERO?", i:"https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400"}, {t:"¿TE VES VIAJANDO EN 5 AÑOS?", i:"https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?w=400"}, {t:"¿TEMES AL FRACASO?", i:"https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=400"}];
-
-        window.onload = function() { 
-            let b=document.getElementById('energy-fill'); let w=0; 
-            let i=setInterval(()=>{ w+=5;b.style.width=w+'%'; if(w>=100){ clearInterval(i); document.getElementById('boot-btn').classList.remove('hidden'); } }, 30); 
-            
-            // LOAD SAVED EVENTS
-            const saved = localStorage.getItem('govotto_events');
-            if(saved) state.playedEvents = JSON.parse(saved);
-
-            // >>> INSERTA ESTO AQUÍ: CARGA DE SALDO GUARDADO <<<
-            const savedMoney = localStorage.getItem('govotto_vault');
-            if(savedMoney) {
-                state.$ = parseInt(savedMoney);
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
-            }
-        };
-
-       function startApp() {
-            // --- CABLE DE SINCRONIZACIÓN INICIAL ---
-            localStorage.setItem('govotto_vault', state.$); 
-
-            document.getElementById('boot-screen').style.display = 'none';
-            const layer = document.getElementById('intro-layer');
-            layer.classList.remove('hidden');
-            layer.style.display = 'flex'; 
-            try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
-            const bar = document.getElementById('cinema-fill');
-            setTimeout(() => { 
-                bar.style.transition = "width 0.8s cubic-bezier(0.22, 1, 0.36, 1)";
-                bar.style.width = "70%";
-                try{ playSfx('nudge'); } catch(e){} 
-            }, 200);
-
-            setTimeout(() => {
-                bar.style.transition = "width 0.4s ease-out";
-                bar.style.width = "100%";
-                document.querySelector('.intro-title').style.textShadow = "0 0 50px white"; 
-            }, 1200);
-
-            setTimeout(() => {
-                layer.style.transition = "opacity 0.5s ease";
-                layer.style.opacity = "0";
-                setTimeout(() => {
-                    finishIntro(); 
-                    layer.style.display = 'none'; 
-                }, 500);
-            }, 1800);
-        }
-
-        function finishIntro() {
-            document.getElementById('intro-modal').classList.add('flex-show'); 
-            document.getElementById('intro-modal').classList.remove('hidden');
-        }
-
-        function startMap() { 
-            document.getElementById('intro-modal').classList.remove('flex-show'); 
-            document.getElementById('intro-modal').classList.add('hidden');
-            showView('map-view'); 
-            renderMap(); 
-        }
-
-        function renderMap() {
-            const c = document.getElementById('nodes-container'); c.innerHTML=''; const nodes = state.route===1 ? R1 : R2;
-            
-            const mapTitle = document.getElementById('map-title');
-            const mapSub = document.getElementById('map-sub');
-            const mapBorder = document.getElementById('map-border');
-
-            if(state.route === 1) {
-                mapTitle.innerText = "RUTA 1";
-                mapTitle.style.color = "var(--primary)"; 
-                mapSub.innerText = "GANA POR PRIMERA VEZ";
-                mapBorder.style.borderColor = "var(--primary)";
-            } else {
-                mapTitle.innerText = "RUTA 2";
-                mapTitle.style.color = "#00ffff"; 
-                mapSub.innerText = "ZONA DE ACUMULACIÓN";
-                mapBorder.style.borderColor = "#00ffff";
-            }
-
-            nodes.forEach((n,i) => {
-                let cls="node"; 
-                let ic=`<div class="cyber-node"><div class="cyber-ring"></div><i class="fas fa-lock cyber-arrow"></i></div>`;
-                let isSpecial = false;
-
-                if(n.t === 'bomb') { ic = '<i class="fas fa-bomb"></i>'; if(i === state.lvl) cls += " node-bomb"; isSpecial = true; } 
-                else if(n.t === 'fire') { ic = '<i class="fas fa-fire"></i>'; if(i === state.lvl) cls += " node-fire"; isSpecial = true; }
-                else if(n.t === 'ab') { ic = '<i class="fas fa-camera"></i>'; if(i === state.lvl) cls += " node-camera"; isSpecial = true; }
-
-                if(i<state.lvl){ 
-                    cls+=" node-done"; 
-                    ic='<i class="fas fa-check"></i>'; 
-                } 
-                else if(i===state.lvl && !isSpecial){ 
-                    cls+=" node-active-cyber"; 
-                    ic=`<div class="cyber-node"><div class="cyber-ring" style="border-color:${state.route===1?'var(--primary)':'#00ffff'}"></div><i class="fas fa-crosshairs cyber-arrow" style="color:${state.route===1?'var(--primary)':'#00ffff'}"></i></div>`; 
-                }
-                
-                let d=document.createElement('div'); 
-                d.className='node-wrapper'; 
-                d.innerHTML=`<div class="${cls}" onclick="clickNode(${i})">${ic}</div><div class="node-name">NIVEL ${i+1}</div>`; 
-                c.appendChild(d);
-
-                if(i===state.lvl && state.pet) {
-                    let faceUrl = AVATARS[state.pet].icon; 
-                    let acc = state.item ? `<div class="mascot-accessory-mini"></div>` : ''; 
-                    let p = document.createElement('div');
-                    p.className = 'mascot-portrait-container';
-                    p.innerHTML = `${acc}<div class="mascot-portrait"><i class="fas ${faceUrl} holo-icon"></i></div>`; 
-                    d.appendChild(p);
-                }
-            });
-            
-            let ghost = document.createElement('div'); ghost.style.height = '400px'; ghost.style.width = '100%'; c.appendChild(ghost);
-            setTimeout(() => { const active = document.querySelector('.node-active, .node-active-cyber'); if(active) { active.scrollIntoView({behavior: "smooth", block: "center"}); } }, 300);
-        }
-
-        function clickNode(i) {
-            if(i!==state.lvl) return; 
-            const n = state.route===1 ? R1[i] : R2[i]; 
-            if(!n) return;
-            try{playSfx('click');}catch(e){}
-            
-            if(n.t==='ab') startAB(n.d); 
-            else if(n.t==='bomb') startBomb(n.d); 
-            else if(n.t==='fire') startFire(n.d); 
-            else if(n.t==='mascot') { let m=document.getElementById('mascot-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); }
-            else if(n.t==='grid') startGrid(n.q, n.i); 
-            else if(n.t==='acc') { let m=document.getElementById('accessory-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); }
-            else if(n.t==='slider') startSlider(n.q, n.min, n.max, n.step); 
-            else if(n.t==='casino') { let m=document.getElementById('casino-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); }
-            else if(n.t==='truth') startTruth(n.d);
-        }
-
-        function showView(id) {
-            document.querySelectorAll('.battle-overlay').forEach(el => { el.classList.add('hidden'); el.classList.remove('flex-show'); el.style.display = 'none'; });
-            const map = document.getElementById('map-view');
-            if(id === 'map-view') { map.style.display = 'flex'; map.classList.remove('hidden'); } 
-            else { map.style.display = 'none'; map.classList.add('hidden'); const target = document.getElementById(id); if(target) { target.classList.remove('hidden'); target.classList.add('flex-show'); target.style.display = 'flex'; } }
-
-            // Lógica de Docks Visible (SIEMPRE VISIBLES DESPUÉS DE INICIO)
-            const home = document.getElementById('home-dock'); const loot = document.getElementById('loot-dock'); const casino = document.getElementById('casino-dock'); const vault = document.getElementById('vault-dock'); const fire = document.getElementById('fire-dock');
-            if(id === 'map-view' && state.dockUnlocked) {
-                 home.classList.add('dock-visible'); loot.classList.add('dock-visible'); casino.classList.add('dock-visible'); fire.classList.add('dock-visible'); 
-                if(state.vaultUnlocked) { vault.classList.add('dock-visible'); }
-            } else {
-                home.classList.remove('dock-visible'); loot.classList.remove('dock-visible'); casino.classList.remove('dock-visible'); vault.classList.remove('dock-visible'); fire.classList.remove('dock-visible');
-            }
-        }
-
-        // --- GATEKEEPER LOGIC ---
-        function checkFireGate() {
-            try{playSfx('click');}catch(e){}
-            if(state.playedEvents.includes('fire_trial')) {
-                showCustomAlert('EVENTO FINALIZADO', 'Este evento ya cerró sus puertas por hoy.\nEspera al siguiente.');
-                return;
-            }
-            startFireTrial();
-        }
-
-        function closeGate() { let m = document.getElementById('gate-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); }
-        
-        function submitName() {
-            let n = document.getElementById('username-input').value;
-            if(n) {
-                state.username = n; state.nameSet = true;
-                document.getElementById('profile-name-display').innerText = state.username;
-                let m = document.getElementById('name-modal'); m.classList.remove('flex-show'); m.classList.add('hidden');
-                state.route = 2; state.lvl = 0; state.vaultUnlocked = true; 
-                document.getElementById('map-view').scrollTop = 0; 
-                setTimeout(()=>{ renderMap(); speak(`¡BÓVEDA DESBLOQUEADA, ${state.username}!`); }, 100);
-            }
-        }
-
-        function submitRegistration() {
-            let n = document.getElementById('reg-name').value; let e = document.getElementById('reg-email').value;
-            if(n && e) {
-                state.registered = true; state.btc += 0.00000500; 
-                let m = document.getElementById('reg-modal'); m.classList.remove('flex-show'); m.classList.add('hidden');
-                showCustomAlert("BIENVENIDO", "REGISTRO COMPLETADO.\nNIVEL EXTRA DESBLOQUEADO.");
-            } else { alert("Completa los campos."); }
-        }
-        function closeComingSoon() { let m = document.getElementById('coming-soon-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); }
-
-        // --- FUNCIONES MOTOR DE JUEGO (CORREGIDO) ---
-        // --- BOMB LEVEL LOGIC (EXPLOSION PRESSURE) ---
-        function startBomb(d) { qQueue = d; qIndex = 0; showView('bomb-view'); renderBomb(); }
-        function renderBomb() {
-            if(qIndex >= qQueue.length) { clearInterval(bombInterval); safeVibrate(0); speak("¡Desactivada!"); endBattle(); return; }
-            const q = qQueue[qIndex]; document.getElementById('bomb-q').innerText = q.q;
-            const grid = document.getElementById('bomb-answers'); grid.innerHTML = '';
-            q.a.forEach(ans => { let btn = document.createElement('div'); btn.className = 'grid-item'; btn.innerText = ans; btn.onclick = () => handleBombAnswer(true); grid.appendChild(btn); });
-            
-            const bar = document.getElementById('bomb-timer'); const container = document.getElementById('bomb-view');
-            bar.style.width = '100%';
-            
-            if(bombInterval) clearInterval(bombInterval);
-            safeVibrate(0);
-            container.classList.remove('stress-critical');
-
-            let timeLeft = 100;
-            bombInterval = setInterval(() => { 
-                timeLeft -= 1; bar.style.width = timeLeft + '%'; 
-                if(timeLeft < 30) {
-                    container.classList.add('stress-critical');
-                    if (timeLeft % 5 === 0) { safeVibrate(50); try{ playSfx('tick'); } catch(e){} }
-                }
-                if(timeLeft <= 0) { clearInterval(bombInterval); safeVibrate(0); container.classList.remove('stress-critical'); handleBombAnswer(false); } 
-            }, 100); 
-        }
-        function handleBombAnswer(win) {
-            clearInterval(bombInterval); safeVibrate(0);
-            document.getElementById('bomb-view').classList.remove('stress-critical');
-            if(win) { state.$ += 200; try{ playSfx('win'); } catch(e){} } 
-            else { state.$ -= 200; if(state.$ < 0) state.$ = 0; safeVibrate([200, 100, 200]); speak("¡BOOM! -$200"); try{ playSfx('nudge'); } catch(e){} }
-            document.getElementById('hud-money').innerText="$"+state.$.toLocaleString(); qIndex++; setTimeout(renderBomb, 500);
-        }
-
-        // --- FIRE ORACLE LOGIC (ANXIETY HEARTBEAT) ---
-        function startFire(d) { qQueue = d; qIndex = 0; showView('fire-view'); renderFire(); }
-        function renderFire() { 
-            if(fireHeartbeat) clearInterval(fireHeartbeat);
-            const stage = document.getElementById('fire-stage'); 
-            stage.className = 'fire-stage heart-throb'; 
-            
-            if(qIndex >= qQueue.length) { endBattle(); return; } 
-            document.getElementById('fire-q').innerText = qQueue[qIndex]; 
-
-            let timeElapsed = 0;
-            fireHeartbeat = setInterval(() => {
-                timeElapsed++;
-                if(timeElapsed % 2 === 0) { safeVibrate([30, 30]); }
-                if(timeElapsed > 3) {
-                    stage.classList.remove('heart-throb'); stage.classList.add('heart-throb-fast');
-                    safeVibrate(50); 
-                }
-            }, 1000);
-        }
-        function handleFireAnswer(ans) {
-            if(fireHeartbeat) clearInterval(fireHeartbeat);
-            safeVibrate(0);
-            document.getElementById('fire-btns').style.opacity = '0';
-            const stage = document.getElementById('fire-stage'); const msgBox = document.getElementById('fire-result'); const isWin = Math.random() > 0.5;
-            stage.classList.remove('heart-throb', 'heart-throb-fast'); 
-            if(isWin) { stage.classList.add('fire-win'); state.$ += 150; msgBox.innerHTML = "ACEPTADO<br><span style='font-size:1.5rem; color:white;'>+$150</span>"; msgBox.className = "fire-msg-overlay f-win-text show-fire-msg"; try{ playSfx('win'); } catch(e){} } 
-            else { stage.classList.add('fire-loss'); state.$ -= 150; if(state.$ < 0) state.$ = 0; msgBox.innerHTML = "RECHAZADO<br><span style='font-size:1.5rem; color:#888;'>-$150</span>"; msgBox.className = "fire-msg-overlay f-loss-text show-fire-msg"; try{ playSfx('nudge'); } catch(e){} }
-            document.getElementById('hud-money').innerText="$"+state.$.toLocaleString();
-            qIndex++; setTimeout(() => { msgBox.classList.remove('show-fire-msg'); document.getElementById('fire-btns').style.opacity = '1'; renderFire(); }, 2000); 
-        }
-
-        // --- AB LOGIC WITH SAFE PRESSURE ---
-        function startAB(d) { qQueue = d; qIndex = 0; showView('ab-view'); renderAB(); }
-        function renderAB() { 
-            if(qIndex >= qQueue.length) { endBattle(); return; } 
-            clearStress();
-            document.getElementById('img-a').src = qQueue[qIndex].iA; 
-            document.getElementById('txt-a').innerText = qQueue[qIndex].tA; 
-            document.getElementById('img-b').src = qQueue[qIndex].iB; 
-            document.getElementById('txt-b').innerText = qQueue[qIndex].tB; 
-            startPressureTimers();
-        }
-        
-        function startPressureTimers() {
-            const container = document.getElementById('ab-cont');
-            stressTimerAlert = setTimeout(() => { container.classList.add('stress-alert'); try{ playSfx('tick'); } catch(e){} }, 3000);
-            stressTimerCritical = setTimeout(() => {
-                container.classList.remove('stress-alert'); container.classList.add('stress-critical');
-                stressVibrationInterval = setInterval(() => { safeVibrate(50); try{ playSfx('tick'); } catch(e){} }, 800);
-            }, 7000);
-        }
-
-        function clearStress() {
-            clearTimeout(stressTimerAlert); clearTimeout(stressTimerCritical); clearInterval(stressVibrationInterval);
-            const container = document.getElementById('ab-cont');
-            if(container) { container.classList.remove('stress-alert'); container.classList.remove('stress-critical'); }
-            safeVibrate(0); 
-        }
-
-        function handleOption(element) { 
-            if(element) {
-                let img = element.querySelector('img');
-                if(img) { img.style.transform = "scale(0.9)"; setTimeout(() => img.style.transform = "", 100); }
-            }
-            clearStress(); spawnCoins(); state.$ += 150; qIndex++; 
-            if(gauntletActive) { nextGauntletQ(); } // Gauntlet Logic
-            else if(qIndex < qQueue.length) { renderAB(); } 
-            else { endBattle(); } 
-        }
-
-        function startTruth(d) { qQueue = d; qIndex = 0; showView('truth-view'); renderTruth(); }
-        function renderTruth() { if(qIndex >= qQueue.length) { endBattle(); return; } document.getElementById('truth-text').innerText = qQueue[qIndex].q; document.getElementById('truth-icon').className = "fas " + qQueue[qIndex].i + " truth-icon-large"; }
-        function handleTruth() { spawnCoins(); state.$ += 100; qIndex++; if(qIndex < qQueue.length) { renderTruth(); } else { endBattle(); } } 
-
-        function clearSensory() {
-            if(bombInterval) clearInterval(bombInterval);
-            if(fireHeartbeat) clearInterval(fireHeartbeat);
-            safeVibrate(0);
-        }
-
-        function startSlider(q,min,max,step) { clearSensory(); showView('slider-view'); document.getElementById('slider-q').innerText=q; const inp=document.getElementById('slider-inp'); inp.min=min; inp.max=max; inp.step=step; inp.value=min; updateSlider(min); }
-        function updateSlider(v) { let val=parseInt(v).toLocaleString(); document.getElementById('slider-val-disp').innerText="$"+val; }
-        
-        function startGrid(q,items) { clearSensory(); showView('grid-view'); document.getElementById('grid-q').innerText=q; const b=document.getElementById('grid-box'); b.innerHTML=''; items.forEach(x=>{ let d=document.createElement('div'); d.className='grid-item'; d.innerText=x; d.onclick=function(){this.classList.toggle('selected'); spawnCoins(); state.$ += 50; setTimeout(endBattle,300);}; b.appendChild(d); }); }
-        
-        function endBattle() { clearSensory(); showView('map-view'); advance(); }
-        
-        // V170: UPDATE DOCK VISUALS AFTER EVENT
-        function updateDockVisuals() {
-            const fireBtn = document.getElementById('fire-btn-inner');
-            if(state.playedEvents.includes('fire_trial')) {
-                fireBtn.classList.remove('dock-fire-active', 'fire-btn');
-                fireBtn.classList.add('dock-fire-disabled');
-            }
-        }
-function advance() {
-            state.lvl++; 
-            state.$ += 300; 
-            
-            // Sincronización con la Bóveda Ryzen
-            localStorage.setItem('govotto_vault', state.$); 
-
-            document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
-            
-            if(state.route === 1 && state.lvl >= R1.length) { 
-                let m = document.getElementById('name-modal'); 
-                if(m) {
-                    m.classList.remove('hidden'); 
-                    m.classList.add('flex-show'); 
-                }
-            } 
-            else if (state.route === 2 && state.lvl >= R2.length) {
-                 const fbTotal = document.getElementById('fb-total');
-                 const fbAssets = document.getElementById('fb-assets');
-                 if(fbTotal) fbTotal.innerText = "$" + state.$.toLocaleString();
-                 if(fbAssets) fbAssets.innerText = `${state.btc.toFixed(8)} BTC + ${state.coupons.length} CUPONES`;
-                 
-                 let m = document.getElementById('final-balance-modal'); 
-                 if(m) {
-                    m.classList.remove('hidden'); 
-                    m.classList.add('flex-show');
-                 }
-            } else { 
-                renderMap(); 
-            }
-            try { playSfx('win'); } catch(e) {}
-        }
-    
-        function handleFinalChoice(type) { 
-            let m = document.getElementById('final-balance-modal'); 
-            if(m) { m.classList.remove('flex-show'); m.classList.add('hidden'); }
-            let reg = document.getElementById('reg-modal'); 
-            if(reg) { reg.classList.remove('hidden'); reg.classList.add('flex-show'); }
-        }
-
-        function selectMascot(p) { 
-            state.pet = p; 
-            let m = document.getElementById('mascot-modal'); 
-            if(m) { m.classList.remove('flex-show'); m.classList.add('hidden'); }
-            
-            let iconClass = AVATARS[p].icon;
-            document.getElementById('confirm-avatar-icon').className = `fas ${iconClass} holo-icon`;
-            document.getElementById('confirm-avatar-msg').innerText = `Soy ${AVATARS[p].name}...`; 
-            
-            try { playSfx('win'); } catch(e) {} 
-            let c = document.getElementById('avatar-confirm-modal'); 
-            if(c) { c.classList.remove('hidden'); c.classList.add('flex-show'); }
-        }
-
-        function finalizeAvatarSelection() { 
-            let c = document.getElementById('avatar-confirm-modal'); 
-            if(c) { c.classList.remove('flex-show'); c.classList.add('hidden'); }
-            state.dockUnlocked = true; 
-            advance(); 
-        }
-
-        function openHomeProfile() { 
-            try { playSfx('click'); } catch(e){} 
-            let m = document.getElementById('home-profile-modal'); 
-            if(m) { m.classList.remove('hidden'); m.classList.add('flex-show'); }
-            switchHomeTab('profile'); 
-            
-            const p = state.pet || 'wolf'; 
-            document.getElementById('profile-img-icon').className = `fas ${AVATARS[p].icon} holo-icon`;
-            
-            if(state.$ > 50000) state.personality = "MAGNATE"; 
-            else if(state.item) state.personality = "ESTILISTA"; 
-            else state.personality = "EXPLORADOR"; 
-            
-            document.getElementById('profile-archetype').innerText = state.personality; 
-            document.getElementById('profile-name-display').innerText = state.username; 
-            document.getElementById('profile-lvl').innerText = state.lvl; 
-            document.getElementById('profile-money').innerText = "$" + state.$.toLocaleString(); 
-            
-            if(state.item) {
-                const invG = document.getElementById('inv-glasses');
-                if(invG) invG.classList.add('inv-active');
-            }
-            
-            document.getElementById('wallet-cop').innerText = "$" + state.$.toLocaleString(); 
-            document.getElementById('wallet-btc').innerText = state.btc.toFixed(8); 
-            renderCoupons(); 
-        }
-
-        function closeHomeProfile() { 
-            let m = document.getElementById('home-profile-modal'); 
-            if(m) { m.classList.remove('flex-show'); m.classList.add('hidden'); }
-        }
-
-        function switchHomeTab(tab) { 
-            const profCont = document.getElementById('tab-content-profile');
-            const wallCont = document.getElementById('tab-content-wallet');
-            const btnProf = document.getElementById('tab-btn-profile');
-            const btnWall = document.getElementById('tab-btn-wallet');
-
-            if(tab === 'profile') { 
-                if(profCont) profCont.classList.remove('hidden'); 
-                if(wallCont) wallCont.classList.add('hidden'); 
-                if(btnProf) { btnProf.classList.add('text-primary'); btnProf.classList.remove('text-zinc-500'); }
-                if(btnWall) { btnWall.classList.remove('text-primary'); btnWall.classList.add('text-zinc-500'); }
-            } else { 
-                if(profCont) profCont.classList.add('hidden'); 
-                if(wallCont) wallCont.classList.remove('hidden'); 
-                if(btnWall) { btnWall.classList.add('text-primary'); btnWall.classList.remove('text-zinc-500'); }
-                if(btnProf) { btnProf.classList.remove('text-primary'); btnProf.classList.add('text-zinc-500'); }
-            } 
-        }
-
-        function renderCoupons() { 
-            const list = document.getElementById('coupon-list'); 
-            if(!list) return;
-            if(state.coupons.length === 0) { 
-                list.innerHTML = '<div class="text-xs text-zinc-600 italic text-center py-2">Sin cupones aún...</div>'; 
-            } else { 
-                list.innerHTML = ''; 
-                state.coupons.forEach(c => { 
-                    let d = document.createElement('div'); 
-                    d.className = 'bg-zinc-800 p-2 rounded flex items-center justify-between border border-zinc-700'; 
-                    d.innerHTML = `<div class="text-left"><div class="text-[10px] font-black text-white">${c.name}</div><div class="text-[8px] text-zinc-400">${c.desc}</div></div><div class="bg-black px-2 py-1 rounded text-[9px] font-mono text-primary">${c.code}</div>`; 
-                    list.appendChild(d); 
-                }); 
-            } 
-        }
-
-        function closeSlots() { 
-            let m = document.getElementById('slots-modal'); 
-            if(m) { 
-                m.classList.remove('flex-show'); 
-                m.classList.add('hidden'); 
-                m.style.display = 'none';
-            } 
-        }
-
-        function backToCasinoMenu() { 
-            openCasinoMenu(); 
-        }
-        
-        function startSlotGame() { if(state.casinoPlayed && !state.registered) { showCustomAlert('CERRADO', 'Cierres por mantenimiento.\nVuelve al completar la Ruta 2.'); return; } document.getElementById('casino-selector').style.display = 'none'; document.getElementById('mode-slots').style.display = 'flex'; const q=SLOT_QS[Math.floor(Math.random()*SLOT_QS.length)]; document.getElementById('slot-question').innerText=q.q; const ansBox=document.getElementById('slot-answers-box'); ansBox.innerHTML=''; q.a.forEach(ans=>{ let btn=document.createElement('div'); btn.className='slot-btn-mechanical'; btn.innerText=ans; btn.onclick=()=>spinSlots(ans); ansBox.appendChild(btn); }); }
-        function spinSlots(answer) { const btns=document.querySelectorAll('.slot-btn'); btns.forEach(b=>b.style.pointerEvents='none'); try{playSfx('nudge');}catch(e){} [1,2,3].forEach(i=>document.getElementById(`reel-${i}`).classList.add('spin-anim')); setTimeout(() => { const r = Math.random(); let winType = 'none'; if(r > 0.3 && r <= 0.8) winType = 'cash'; else if(r > 0.8 && r <= 0.99) winType = 'coupon'; else if(r > 0.99) winType = 'gift'; [1,2,3].forEach((i,idx)=>{ setTimeout(()=>{ const el=document.getElementById(`reel-${i}`); el.classList.remove('spin-anim'); let icon = 'fa-microchip'; if(winType === 'cash') icon = 'fa-microchip'; else if(winType === 'coupon') icon = 'fa-bolt'; else if(winType === 'gift') icon = 'fa-gem'; else icon = ['fa-server','fa-satellite-dish','fa-wifi'][Math.floor(Math.random()*3)]; el.innerHTML=`<i class="fas ${icon}"></i>`; try{playSfx('click');}catch(e){} },idx*500); }); setTimeout(()=>{ if(winType !== 'none'){ confetti({particleCount:150,spread:60}); try{playSfx('win');}catch(e){} if(winType === 'cash') { state.$ += 1500; showCustomAlert('¡GANASTE!', '+$1.500 COP'); } else if(winType === 'coupon') { state.coupons.push({name: 'CINE COLOMBIA', desc: '$20K OFF en compras >$100K', code: 'CINE-20K'}); showCustomAlert('¡PREMIO!', 'CUPÓN CINE COLOMBIA GANADO'); } else if(winType === 'gift') { state.goldenTicket = true; showCustomAlert('¡JACKPOT!', 'GIFT CARD GANADA'); } document.getElementById('hud-money').innerText="$"+state.$.toLocaleString(); state.casinoPlayed = true; } else { speak("Casi... ¡intenta de nuevo!"); } closeSlots(); },2000); },1000); }
-        
-        // V182: NEW TURBINE ROULETTE (TINDER STYLE) LOGIC
-        function startRouletteGame() { 
-            if(state.casinoPlayed && !state.registered) { 
-                showCustomAlert('CERRADO', 'Cierres por mantenimiento.\nVuelve al completar la Ruta 2.'); 
-                return; 
-            } 
-            document.getElementById('casino-selector').style.display = 'none'; 
-            document.getElementById('mode-roulette').style.display = 'flex'; 
-            tinderIndex = 0; 
-            loadTinderCard(); 
-        }
-
-        function loadTinderCard() { 
-            if(tinderIndex >= TINDER_DATA.length) tinderIndex = 0; 
-            const item = TINDER_DATA[tinderIndex]; 
-            document.getElementById('tinder-img').src = item.i; 
-            document.getElementById('tinder-txt').innerText = item.t; 
-        }
-        
-        function handleRouletteVote(like) { 
-            try{ playSfx('click'); } catch(e){} 
-            const spinner = document.getElementById('cyber-spinner');
-            spinner.style.transition = 'none'; 
-            spinner.classList.add('spin-fast'); 
-            
-            setTimeout(() => { 
-                spawnCoins(); 
-                state.$ += 50; 
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString(); 
-                speak("¡GANAMOS $50!"); 
-                tinderIndex++; 
-                spinner.classList.remove('spin-fast'); 
-                if(tinderIndex < 4) { loadTinderCard(); } 
-                else { 
-                    showCustomAlert('COMPLETADO', '¡Ronda Completa! +$200 COP'); 
-                    state.casinoPlayed = true; 
-                    closeSlots(); 
-                } 
-            }, 1000); 
-        }
-
-        // --- V192 MODULAR TURBINE LOGIC ---
-        function startTurbineGame() {
-            // 1. Guardar saldo actual para que la Turbina lo lea
-            localStorage.setItem('govotto_vault', state.$);
-            
-            // 2. Cerrar menú pequeño
-            document.getElementById('slots-modal').classList.remove('flex-show');
-            document.getElementById('slots-modal').classList.add('hidden');
-            
-            // 3. Abrir pantalla GRANDE
-            const layer = document.getElementById('turbine-layer');
-            const frame = document.getElementById('turbine-frame');
-            frame.src = 'turbina.html';
-            layer.classList.remove('hidden');
-            layer.classList.add('flex-show');
-        }
-
-        function startSlotGame() {
-            localStorage.setItem('govotto_vault', state.$);
-            document.getElementById('slots-modal').classList.remove('flex-show');
-            document.getElementById('slots-modal').classList.add('hidden');
-            const layer = document.getElementById('turbine-layer');
-            const frame = document.getElementById('turbine-frame');
-            frame.src = 'tragamonedas.html'; // <--- Aquí la clave
-            layer.classList.remove('hidden');
-            layer.classList.add('flex-show');
-        }
-        function forceCloseTurbine() {
-            const layer = document.getElementById('turbine-layer');
-            layer.classList.remove('flex-show');
-            layer.classList.add('hidden');
-            document.getElementById('turbine-frame').src = '';
-            
-            // Volver a abrir el menú del casino para que el usuario no se pierda
-            openCasinoMenu();
-        }
-
-        // --- LÓGICA TESORO (FULLSCREEN) ---
-        function openLoot() {
-            try{ playSfx('click'); } catch(e){}
-            // Mostrar pantalla grande del Tesoro
-            const layer = document.getElementById('loot-layer');
-            const frame = document.getElementById('loot-frame');
-            frame.src = 'tesoro.html';
-            layer.classList.remove('hidden');
-            layer.classList.add('flex-show');
-        }
-
-        function forceCloseLoot() {
-            const layer = document.getElementById('loot-layer');
-            layer.classList.remove('flex-show');
-            layer.classList.add('hidden');
-            document.getElementById('loot-frame').src = '';
-        }
-
-       // 4. OÍDO CENTRAL (Sincronización Total V202)
-        window.addEventListener('message', function(event) {
-            // Caso 1: Turbina / Tragamonedas
-            if (event.data.action === 'close_turbine') {
-                state.$ = event.data.balance;
-                actualizarVisualBoveda(0); 
-                forceCloseTurbine();
-                showCustomAlert('SINCRONIZADO', 'Saldo actualizado.');
-            }
-            // Caso 2: Tesoro (Gema)
-            else if (event.data.action === 'close_loot') {
-                state.$ += event.data.reward; 
-                actualizarVisualBoveda(event.data.reward);
-                forceCloseLoot();
-                showCustomAlert('RECOMPENSA', '¡Premio del tesoro recibido!');
-            }
-            // Caso 3: GO-EVENTO (Reactor)
-            else if (event.data.action === 'close_event') {
-                const monto = event.data.reward;
-                state.$ += monto;
-                if(state.$ < 0) state.$ = 0;
-                actualizarVisualBoveda(monto);
-                
-                if(monto > 0) {
-                    localStorage.setItem('govotto_last_event_date', new Date().toDateString());
-                    showCustomAlert('SINCRO OK', `+$${monto} transferidos.`);
-                } else {
-                    showCustomAlert('FAIL', `Multa de $500 aplicada.`);
-                }
-                forceCloseEvent();
-            }
-        }); // <--- ESTE CIERRE ES EL QUE QUITA EL COLOR ROJO
-
-        // --- V173: FIRE TRIAL LOGIC (BOTTOM DOCK) ---
-        function checkFireTrial() {
-            try{playSfx('click');}catch(e){}
-            if(state.playedEvents.includes('fire_trial')) {
-                showCustomAlert('FINALIZADO', 'Ya completaste la Prueba de Fuego hoy.');
-                return;
-                
-            }
-            startFireTrial();
-        }
-
-        function startFireTrial() {
-            fireTrialIndex = 0; 
-            let m = document.getElementById('fire-trial-modal'); 
-            m.classList.remove('hidden'); m.classList.add('flex-show'); 
-            updateFireTrialUI(); 
-            
-            // 30 SEC TIMER
-            let timeLeft = 30; 
-            const clockEl = document.getElementById('fire-watch'); 
-            const bar = document.getElementById('fire-timer-bar'); 
-            
-            if(fireTrialTimer) clearInterval(fireTrialTimer); 
-            fireTrialTimer = setInterval(() => { 
-                timeLeft--; 
-                clockEl.innerText = timeLeft < 10 ? "0"+timeLeft : timeLeft; 
-                bar.style.width = (timeLeft/30*100) + '%'; 
-                
-                // PRESSURE
-                if(timeLeft < 10) { 
-                    safeVibrate(50); 
-                    m.querySelector('.frenzy-card').style.animation = "stressShake 0.5s infinite"; 
-                }
-
-                if(timeLeft <= 0) { 
-                    clearInterval(fireTrialTimer); 
-                    state.playedEvents.push('fire_trial'); 
-                    localStorage.setItem('govotto_events', JSON.stringify(state.playedEvents)); 
-                    m.classList.remove('flex-show'); m.classList.add('hidden'); 
-                    showCustomAlert('TIEMPO', 'Fallaste la prueba.'); 
-                } 
-            }, 1000); 
-        }
-
-        function updateFireTrialUI() {
-            if(fireTrialIndex >= FIRE_TRIAL_QS.length) {
-                clearInterval(fireTrialTimer);
-                state.$ += 3000;
-                document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
-                state.playedEvents.push('fire_trial');
-                localStorage.setItem('govotto_events', JSON.stringify(state.playedEvents));
-                
-                let m = document.getElementById('fire-trial-modal');
-                m.classList.remove('flex-show'); m.classList.add('hidden');
-                setTimeout(() => { showCustomAlert('¡VICTORIA!', 'PRUEBA SUPERADA\n+$3.000 COP'); }, 200);
-                return;
-            }
-            document.getElementById('fire-trial-q').innerText = FIRE_TRIAL_QS[fireTrialIndex];
-        }
-
-        function handleFireTrialStep() {
-            try{playSfx('click');}catch(e){}
-            spawnCoins();
-            fireTrialIndex++;
-            updateFireTrialUI();
-        }
-
-        function playDouble(prediction) { let card = document.getElementById('casino-card-box'); let back = document.getElementById('casino-card-back'); let result = Math.random() < 0.5 ? 'red' : 'black'; back.style.backgroundColor = result === 'red' ? '#cc0000' : '#111'; back.innerHTML = result === 'red' ? '🔴' : '⚫'; card.classList.add('do-flip'); setTimeout(() => { if(prediction === result) { state.$ += 100; showCustomAlert("¡GANASTE!", "+$100 COP"); spawnCoins(); } else { state.$ = Math.max(0, state.$ - 100); showCustomAlert("PERDISTE", "-$100 COP"); } document.getElementById('hud-money').innerText="$"+state.$.toLocaleString(); setTimeout(() => { card.classList.remove('do-flip'); let m = document.getElementById('casino-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); advance(); }, 1500); }, 800); }
-        function showCustomAlert(title, msg) { document.getElementById('alert-title').innerText = title; document.getElementById('alert-msg').innerHTML = msg.replace(/\n/g, '<br>'); let m = document.getElementById('custom-alert'); m.classList.remove('hidden'); m.classList.add('flex-show'); try{ playSfx('nudge'); } catch(e){} }
-        function closeCustomAlert() { document.getElementById('custom-alert').classList.remove('flex-show'); document.getElementById('custom-alert').classList.add('hidden'); }
-        function openRanking() { try{playSfx('click');}catch(e){} const list = document.getElementById('ranking-list'); list.innerHTML = ''; let ranks = [{n: "Laura88", m: "$5.240"}, {n: "Carlos_Pro", m: "$4.800"}, {n: "TU USUARIO", m: "$" + state.$.toLocaleString(), me: true}, {n: "PedroP", m: "$1.200"}]; ranks.forEach((r, i) => { let row = document.createElement('div'); row.className = `rank-row-styled ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''} ${r.me?'rank-me':''}`; row.innerHTML = `<div class="rank-pos-styled">#${i+1}</div><div class="rank-user-styled">${r.n}</div><div class="rank-money-styled">${r.m}</div>`; list.appendChild(row); }); let m=document.getElementById('ranking-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); }
-        function closeRanking() { let m=document.getElementById('ranking-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); }
-        function closeLoot() { let m=document.getElementById('loot-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); }
-        function claimDaily() { if(state.dailyClaimed)return; state.dailyClaimed=true; state.btc += 0.00000020; document.getElementById('hud-money').innerText="$"+state.$.toLocaleString(); document.getElementById('chest-daily').classList.replace('lc-ready','lc-locked'); document.getElementById('chest-daily').querySelector('.lc-status').innerText="ABIERTO"; spawnCoins(); confetti(); try{playSfx('win');}catch(e){} showCustomAlert("¡BITCOIN!", "HAS RECIBIDO 20 SATOSHIS (BTC)"); }
-        function shakeLocked(el) { el.style.animation='shake 0.4s'; setTimeout(()=>el.style.animation='',400); try{playSfx('nudge');}catch(e){} }
-        function equipAccessory() { state.item=true; let m=document.getElementById('accessory-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); speak("¡Me veo genial!"); advance(); }
-        function showVaultModal() { try{playSfx('click');}catch(e){} let m=document.getElementById('vault-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); }
-        function closeVault() { let m=document.getElementById('vault-modal'); m.classList.remove('flex-show'); m.classList.add('hidden'); }
-        function openVaultLogic() { try{playSfx('win');}catch(e){} const door = document.getElementById('vault-door'); door.classList.add('vault-open'); document.getElementById('final-cop').innerText = "$" + state.$.toLocaleString(); document.getElementById('final-btc').innerText = state.btc.toFixed(8); const ticket = document.getElementById('ticket-display'); if(state.goldenTicket) { ticket.classList.remove('ticket-locked'); } else { ticket.classList.add('ticket-locked'); } setTimeout(() => { document.getElementById('vault-lock').classList.add('hidden'); document.getElementById('vault-content').classList.remove('hidden'); }, 1500); }
-        function sealVault() { if(!state.registered) { let m = document.getElementById('reg-modal'); m.classList.remove('hidden'); m.classList.add('flex-show'); document.getElementById('vault-modal').classList.remove('flex-show'); document.getElementById('vault-modal').classList.add('hidden'); } else { document.getElementById('vault-modal').classList.remove('flex-show'); document.getElementById('vault-modal').classList.add('hidden'); } try{playSfx('win');}catch(e){} }
-        function withdraw(method) { showCustomAlert('RETIRO', `Solicitud de retiro por ${method} enviada.\nProcesando...`); }
-        function playSfx(t) { if(!audioContext)return; const o=audioContext.createOscillator(); const g=audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); if(t==='win'){ o.frequency.setValueAtTime(600,audioContext.currentTime); o.frequency.rampToValueAtTime(1200,audioContext.currentTime+0.2); } else if(t==='tick') { o.frequency.setValueAtTime(800,audioContext.currentTime); o.type='square'; g.gain.setValueAtTime(0.05, audioContext.currentTime); o.start(); o.stop(audioContext.currentTime+0.05); } else { o.frequency.setValueAtTime(200,audioContext.currentTime); o.start(); o.stop(audioContext.currentTime+0.1); } }
-        function speak(t) { document.getElementById('mascot-speech').classList.add('speech-show'); document.getElementById('speech-txt').innerText=t; setTimeout(()=>document.getElementById('mascot-speech').classList.remove('speech-show'),3000); }
-        function spawnCoins() { const app = document.getElementById('app-frame'); try { playSfx('win'); } catch(e) {} for(let i=0; i<12; i++){ let c = document.createElement('div'); c.className = 'coin-visual'; c.style.left = (20 + Math.random() * 60) + '%'; c.style.top = (50 + Math.random() * 20) + '%'; c.style.animationDelay = (i * 0.05) + 's'; app.appendChild(c); setTimeout(()=>c.remove(), 1300); } }
-        
-       function safeVibrate(pattern) { try { if(navigator && navigator.vibrate) navigator.vibrate(pattern); } catch(e){} }
-
-        // ==========================================
-        // SECCIÓN CASINO & JUEGOS EXTERNOS (CORREGIDA V238)
-        // ==========================================
-        let tinderIndex = 0; 
-
-        // 1. LANZADORES PRINCIPALES
-        function startSlotGame() {
-            try { playSfx('click'); } catch(e){}
-            localStorage.setItem('govotto_vault', state.$); // Sincroniza saldo antes de entrar
-            
-            if(typeof closeSlots === 'function') closeSlots(); // Cierra el menú de selección
-            
-            const layer = document.getElementById('turbine-layer');
-            const frame = document.getElementById('turbine-frame');
-            
-            if(layer && frame) {
-                frame.src = 'tragamonedas.html'; 
-                layer.classList.remove('hidden'); 
-                layer.style.display = 'flex'; 
-                layer.style.zIndex = "30000"; 
-                console.log("Terminal Tragamonedas: Iniciada");
-            }
-        }
-
-        function startTurbineGame() {
-            try { playSfx('click'); } catch(e){}
-            localStorage.setItem('govotto_vault', state.$);
-            
-            if(typeof closeSlots === 'function') closeSlots();
-            
-            const layer = document.getElementById('turbine-layer');
-            const frame = document.getElementById('turbine-frame');
-            
-            if(layer && frame) {
-                frame.src = 'turbina.html';
-                layer.classList.remove('hidden');
-                layer.style.display = 'flex';
-                layer.style.zIndex = "30000";
-                console.log("Terminal Turbina: Iniciada");
-            }
-        }
-
-        // 2. LANZADOR DE TESORO (GEMA)
-        function openLoot() {
-            try { playSfx('click'); } catch(e){}
-            const layer = document.getElementById('loot-layer');
-            const frame = document.getElementById('loot-frame');
-            if(layer && frame) {
-                frame.src = 'tesoro.html';
-                layer.classList.remove('hidden');
-                layer.style.display = 'flex';
-                layer.style.zIndex = "30001";
-            }
-        }
-
-     // ==========================================
-        // 3. OÍDO CENTRAL Y CIERRES (SINCRO TOTAL)
-        // ==========================================
-        window.addEventListener('message', function(event) {
-            // Caso A: Turbina / Tragamonedas (Balance absoluto)
-            if (event.data.action === 'close_turbine') {
-                state.$ = event.data.balance; 
-                actualizarVisualBoveda(0); 
-                forceCloseTurbine();
-            }
-            // Caso B: Tesoro (Suma de recompensa)
-            else if (event.data.action === 'close_loot') {
-                state.$ += event.data.reward; 
-                actualizarVisualBoveda(event.data.reward);
-                forceCloseLoot();
-            }
-            // >>> CASO C: GO-EVENTO (Reactor - Premia o Multa -$500) <<<
-            else if (event.data.action === 'close_event') {
-                const monto = event.data.reward; 
-                state.$ += monto;
-                if(state.$ < 0) state.$ = 0; 
-
-                actualizarVisualBoveda(monto);
-
-                if(monto > 0) {
-                    // SELLO DE SEGURIDAD: Solo si ganó dinero real
-                    localStorage.setItem('govotto_last_event_date', new Date().toDateString());
-                    showCustomAlert('SINCRO OK', `+$${monto} transferidos.`);
-                } else {
-                    showCustomAlert('FAIL', `Multa de $500 aplicada.`);
-                }
-                forceCloseEvent();
-            }
-        });
-
-        // FUNCIONES DE CIERRE CENTRALIZADAS (SOLO UNA VEZ)
-        function forceCloseEvent() { 
-            const l = document.getElementById('event-layer');
-            if(l) { l.style.display = 'none'; l.classList.add('hidden'); document.getElementById('event-frame').src = ''; }
-        }
-        function forceCloseTurbine() { 
-            const l = document.getElementById('turbine-layer');
-            if(l) { l.style.display = 'none'; l.classList.add('hidden'); document.getElementById('turbine-frame').src = ''; }
-        }
-        function forceCloseLoot() { 
-            const l = document.getElementById('loot-layer');
-            if(l) { l.style.display = 'none'; l.classList.add('hidden'); document.getElementById('loot-frame').src = ''; }
-        }
-
-        // 4. ACTUALIZADOR DE INTERFAZ (VITAL PARA EL PASO SIGUIENTE)
-        function actualizarVisualBoveda(cambio) {
-            const hud = document.getElementById('hud-money');
-            if(hud) {
-                hud.innerText = "$" + state.$.toLocaleString();
-                if(cambio > 0) hud.style.color = "var(--accent)";
-                else if(cambio < 0) hud.style.color = "var(--risk)";
-                setTimeout(() => hud.style.color = "white", 2000);
-            }
-            localStorage.setItem('govotto_vault', state.$);
-        }
-        // ==========================================
-        // 5. MOTOR DE LANZAMIENTO (24H LOCK)
-        // ==========================================
-        function checkEvent(eventId) {
-            try { playSfx('click'); } catch(e){}
-            
-            const lastEventDate = localStorage.getItem('govotto_last_event_date');
-            const today = new Date().toDateString();
-
-            // Si ya jugó hoy, bloqueamos el paso
-            if (lastEventDate === today) {
-                showCustomAlert('EVENTO BLOQUEADO', 'Ya participaste hoy. Vuelve mañana para un nuevo desafío patrocinado.');
-                return;
-            }
-
-            // Si tiene permiso, encendemos el hangar del evento
-            const layer = document.getElementById('event-layer');
-            const frame = document.getElementById('event-frame');
-            
-            if(layer && frame) {
-                frame.src = 'evento.html'; // Aquí aterrizará el archivo comercial
-                layer.classList.remove('hidden');
-                layer.style.display = 'flex';
-                layer.style.zIndex = "65000";
-            }
-        }
-
-        function openCasinoMenu() {
-    try { playSfx('click'); } catch(e){}
-    const modal = document.getElementById('slots-modal');
-    if(modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex-show');
-        // Esto asegura que se vea el selector de juegos
-        const sel = document.getElementById('casino-selector');
-        if(sel) sel.style.display = 'grid';
-    }
-}
-        </script>
+    <script src="data.js"></script> 
+    <script src="engine.js"></script> 
 </body>
 </html>

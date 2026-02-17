@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SINCRO | NACIMIENTO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #00ffff; --primary: #D4AF37; --risk: #FF0044; }
+        body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; height: 100vh; overflow: hidden; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+        .warning-border { box-shadow: inset 0 0 60px rgba(255, 0, 68, 0.5); transition: box-shadow 0.3s ease; }
+        .sync-bar { height: 4px; background: #111; width: 100%; }
+        .sync-fill { height: 100%; width: 0%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.4s ease; }
+        .timer-progress { height: 2px; background: var(--accent); width: 100%; transition: width 0.1s linear; }
+        .timer-danger { background: var(--risk) !important; box-shadow: 0 0 10px var(--risk); }
+        
+        .btn-sync { border: 1px solid var(--accent); background: rgba(255, 255, 255, 0.02); padding: 22px; text-transform: uppercase; font-weight: 800; font-size: 14px; letter-spacing: 1px; transition: all 0.2s; border-radius: 0px; color: #fff; }
+        .btn-sync:active { background: var(--accent); color: #000; }
+        
+        /* Animación del Núcleo */
+        .core-part { opacity: 0; transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); stroke: var(--accent); stroke-dasharray: 100; stroke-dashoffset: 100; }
+        .visible { opacity: 1 !important; stroke-dashoffset: 0 !important; }
+        
+        #core-container { animation: rotateCore 20s linear infinite; }
+        @keyframes rotateCore { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .glitch { animation: shake 0.3s infinite; color: var(--risk) !important; }
+        @keyframes shake { 0% { transform: translate(1px, 0); } 50% { transform: translate(-1px, 0); } 100% { transform: translate(1px, 0); } }
+    </style>
+</head>
+<body id="main-body">
+    <div class="sync-bar"><div id="sync-fill" class="sync-fill"></div></div>
+    <div class="p-6 flex justify-between items-center border-b border-white/10">
+        <div><p class="text-[8px] text-zinc-500 font-bold tracking-[0.2em]">RECOMPENSA_VÍNCULO</p><p id="reward-display" class="text-3xl font-black text-primary font-['Outfit']">$0</p></div>
+        <div class="text-right"><p class="text-[8px] text-zinc-500 font-bold tracking-[0.2em]">ESTADO_NÚCLEO</p><p id="sync-percent" class="text-xl font-bold text-accent">0%</p></div>
+    </div>
+    <div id="timer-line" class="timer-progress"></div>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-8 relative">
+        <div id="core-container" class="mb-16">
+            <svg width="180" height="180" viewBox="0 0 200 200" style="fill: none; stroke-width: 2;">
+                <circle id="part-1" class="core-part" cx="100" cy="100" r="10" stroke-width="1"/> <path id="part-2" class="core-part" d="M100,20 L100,180" /> <path id="part-3" class="core-part" d="M20,100 L180,100" /> <rect id="part-4" class="core-part" x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" /> <path id="part-5" class="core-part" d="M100,20 L180,100 L100,180 L20,100 Z" /> <circle id="part-6" class="core-part" cx="100" cy="100" r="85" stroke-dasharray="5,5" /> <path id="part-7" class="core-part" d="M60,60 L140,140 M140,60 L60,140" /> <path id="part-8" class="core-part" d="M100,20 L140,60 M180,100 L140,140 M100,180 L60,140 M20,100 L60,60" /> <circle id="part-9" class="core-part" cx="100" cy="100" r="40" stroke-width="4" opacity="0.5"/> <path id="part-10" class="core-part" d="M0,0 L200,200 M200,0 L0,200" opacity="0.1" stroke-width="1"/> </svg>
+        </div>
+
+        <div id="game-container" class="w-full max-w-sm">
+            <h2 id="question-text" class="text-center text-[1rem] font-bold mb-10 leading-tight uppercase tracking-widest text-white px-2 italic">INICIAR SINCRO ARQUITECTÓNICA</h2>
+            <div id="options-grid" class="flex flex-col gap-4">
+                <button onclick="startSync()" class="btn-sync">Sincronizar Esencia</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentStep = 0, reward = 0, profile = { vision: 50, reserva: 50, tactica: 50 }, timer, timeLeft = 100;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration, vol) {
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+        const sound = {
+            click: () => playTone(1200, 'sine', 0.05, 0.1),
+            warn: () => playTone(60, 'square', 0.2, 0.05),
+            success: () => { playTone(200, 'sine', 1, 0.2); setTimeout(() => playTone(800, 'sine', 1, 0.1), 200); }
+        };
+
+        const questions = [
+            { q: "SI ENCUENTRAS UN TESORO:", opts: ["LO PONES BAJO LLAVE", "COMPRAS OTRO MAPA"], traits: { reserva: [20, -10], vision: [0, 15] } },
+            { q: "EN UNA TORMENTA:", opts: ["BUSCAS UN REFUGIO", "SALES A NAVEGAR"], traits: { tactica: [0, 20], vision: [-5, 10] } },
+            { q: "TU ESTRATEGIA DE VIDA:", opts: ["CONSTRUIR CIMIENTOS", "CONQUISTAR TIERRAS"], traits: { reserva: [15, -10], vision: [-5, 20] } },
+            { q: "¿CÓMO VES EL FUTURO?", opts: ["UN PLAN POR ESCRIBIR", "UNA AVENTURA TOTAL"], traits: { vision: [5, 15] } },
+            { q: "ANTE UNA DECISIÓN:", opts: ["CALCULAS CADA PASO", "CONFÍAS EN TU OLFATO"], traits: { tactica: [15, 0], vision: [-10, 15] } },
+            { q: "¿QUÉ VALORAS MÁS?", opts: ["LA PAZ DEL RESULTADO", "LA ADRENALINA DEL PROCESO"], traits: { reserva: [15, -5], tactica: [0, 15] } },
+            { q: "SI GANAS UNA FORTUNA:", opts: ["ASEGURAS TU LINAJE", "BUSCAS EL SIGUIENTE RETO"], traits: { reserva: [20, 0], vision: [0, 20] } },
+            { q: "TU ESTILO DE JUEGO:", opts: ["DEFENSA IMPENETRABLE", "ATAQUE IMPLACABLE"], traits: { tactica: [10, 15], reserva: [10, -5] } },
+            { q: "¿QUÉ TE DEFINE MEJOR?", opts: ["LA CONSTANCIA", "LA IMPULSIVIDAD"], traits: { reserva: [10, -5], tactica: [15, 5] } },
+            { q: "AL FINAL DEL DÍA:", opts: ["CUENTAS LO GUARDADO", "SUEÑAS CON LO PRÓXIMO"], traits: { reserva: [20, 0], vision: [0, 15] } }
+        ];
+
+        function startTimer() {
+            timeLeft = 100; clearInterval(timer);
+            const line = document.getElementById('timer-line'), body = document.getElementById('main-body'), core = document.getElementById('core-container');
+            timer = setInterval(() => {
+                timeLeft -= 1.4; line.style.width = timeLeft + "%";
+                if (timeLeft < 40) {
+                    line.classList.add('timer-danger'); body.classList.add('warning-border'); core.classList.add('glitch');
+                    if(Math.random() > 0.95) { sound.warn(); if (navigator.vibrate) navigator.vibrate(10); }
+                } else {
+                    line.classList.remove('timer-danger'); body.classList.remove('warning-border'); core.classList.remove('glitch');
+                }
+                if (timeLeft <= 0) { timeLeft = 100; if (navigator.vibrate) navigator.vibrate(50); sound.warn(); }
+            }, 100);
+        }
+
+        function startSync() { if (audioCtx.state === 'suspended') audioCtx.resume(); sound.click(); renderQuestion(); }
+        function renderQuestion() {
+            if(currentStep >= questions.length) return finishSync();
+            startTimer();
+            const q = questions[currentStep]; document.getElementById('question-text').innerText = q.q;
+            const grid = document.getElementById('options-grid'); grid.innerHTML = '';
+            q.opts.forEach((opt, idx) => {
+                const btn = document.createElement('button'); btn.className = 'btn-sync'; btn.innerText = opt; btn.onclick = () => processAnswer(idx); grid.appendChild(btn);
+            });
+            updateHUD();
+        }
+        function processAnswer(idx) {
+            sound.click(); if (navigator.vibrate) navigator.vibrate(40);
+            const q = questions[currentStep]; for(let t in q.traits) { profile[t] += q.traits[t][idx]; }
+            reward += 100; currentStep++;
+            document.getElementById(`part-${currentStep}`).classList.add('visible');
+            renderQuestion();
+        }
+        function updateHUD() {
+            const p = (currentStep / questions.length) * 100;
+            document.getElementById('sync-fill').style.width = p + "%"; document.getElementById('sync-percent').innerText = Math.floor(p) + "%";
+            document.getElementById('reward-display').innerText = "$" + reward;
+        }
+        function finishSync() {
+            clearInterval(timer); sound.success(); if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            localStorage.setItem('govotto_vault', reward); localStorage.setItem('govotto_dante_adn', JSON.stringify(profile)); localStorage.setItem('govotto_registered', 'true');
+            document.getElementById('game-container').innerHTML = `
+                <div class="text-center animate-pulse"><h1 class="text-4xl font-black italic text-accent mb-2 tracking-tighter uppercase">Nucleo Estable</h1>
+                <div class="bg-zinc-900 border border-primary/40 p-6 rounded-lg mb-8 shadow-2xl"><p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Capital Consolidado</p><p class="text-4xl font-black text-primary font-['Outfit']">$${reward}</p></div>
+                <button onclick="location.href='index.html'" class="btn-sync w-full border-primary text-primary shadow-lg">INGRESAR AL MAPA</button></div>`;
+            const parts = document.querySelectorAll('.core-part');
+            parts.forEach(p => { p.style.stroke = "var(--primary)"; p.style.strokeWidth = "3px"; });
+            document.getElementById('main-body').classList.remove('warning-border');
+        }
+    </script>
+</body>
+</html>
