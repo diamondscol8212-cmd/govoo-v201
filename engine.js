@@ -1,4 +1,4 @@
-/* --- MOTOR LÓGICO GOVOTTO V201 FINAL FIXED --- */
+/* --- MOTOR LÓGICO GOVOTTO V201 FINAL FIXED (QUANTUM EDITION) --- */
 
 const AVATARS = { 
     wolf: { name: "LOBITO", icon: "fa-dog" }, 
@@ -33,15 +33,15 @@ const FIRE_TRIAL_QS = [
 
 // --- 1. GESTIÓN DE VENTANAS ---
 
-   function openLoot() { 
+function openLoot() { 
     try { playSfx('click'); } catch(e){} 
     const layer = document.getElementById('loot-layer'); 
     const frame = document.getElementById('loot-frame'); 
     if(layer && frame) { 
-        // Conectamos directamente al archivo físico
         frame.src = "tesoro.html"; 
         layer.classList.remove('hidden'); 
-        layer.classList.add('flex-show');
+        layer.style.display = 'flex';
+        layer.style.zIndex = '9999999'; // FUERZA BRUTA: Por encima del HUD
     } 
 }
 
@@ -50,6 +50,7 @@ function forceCloseLoot() {
     if(layer) {
         layer.classList.remove('flex-show'); 
         layer.classList.add('hidden'); 
+        layer.style.display = 'none';
         document.getElementById('loot-frame').src = ''; 
     }
 }
@@ -58,29 +59,45 @@ function startTurbineGame() {
     try { playSfx('click'); } catch(e){} 
     localStorage.setItem('govotto_vault', state.$); 
     closeSlots(); 
-    const layer = document.getElementById('turbine-layer'); 
-    const frame = document.getElementById('turbine-frame'); 
+    const layer = document.getElementById('game-portal-layer'); 
+    const frame = document.getElementById('game-portal-frame'); 
     if(layer && frame) { 
-        frame.src = './turbina.html?v=' + Date.now(); 
+        // RUTA PURA: Apunta al portal de la cámara de vacío
+        frame.src = 'turbina.html'; 
         layer.classList.remove('hidden'); 
-        layer.classList.add('flex-show'); 
+        layer.classList.add('flex-show');
     } 
 }
 
 function startSlotGame() { 
+    // 1. Verificación de permisos (El Guardián)
     if(state.casinoPlayed && !state.registered) { 
-        showCustomAlert('CERRADO', 'Cierres por mantenimiento.\nVuelve al completar la Ruta 2.'); 
+        showCustomAlert('ENERGÍA INSUFICIENTE', 'El Sincronizador requiere más datos.\nVuelve al completar la Ruta 2.'); 
         return; 
     } 
+    
+    // 2. Guardamos el saldo actual
     localStorage.setItem('govotto_vault', state.$); 
     closeSlots(); 
-    const layer = document.getElementById('turbine-layer'); 
-    const frame = document.getElementById('turbine-frame'); 
+    
+    // 3. Abrimos la Cámara del Vacío apuntando al Oráculo
+    const layer = document.getElementById('game-portal-layer'); 
+    const frame = document.getElementById('game-portal-frame'); 
     if(layer && frame) { 
-        frame.src = './tragamonedas.html?v=' + Date.now(); 
+        frame.src = 'sincronizador.html'; // <-- AQUÍ NACE EL ORÁCULO
         layer.classList.remove('hidden'); 
-        layer.classList.add('flex-show'); 
+        layer.classList.add('flex-show');
     } 
+}
+
+function closeGamePortal() {
+    const layer = document.getElementById('game-portal-layer');
+    if(layer) {
+        layer.classList.add('hidden');
+        layer.classList.remove('flex-show');
+        document.getElementById('game-portal-frame').src = 'about:blank';
+        openCasinoMenu(); 
+    }
 }
 
 function forceCloseTurbine() { 
@@ -88,6 +105,7 @@ function forceCloseTurbine() {
     if(layer) {
         layer.classList.remove('flex-show'); 
         layer.classList.add('hidden'); 
+        layer.style.display = 'none';
         document.getElementById('turbine-frame').src = ''; 
         openCasinoMenu(); 
     }
@@ -98,6 +116,7 @@ function forceCloseEvent() {
     if(layer) {
         layer.classList.add('hidden');
         layer.classList.remove('flex-show');
+        layer.style.display = 'none';
         document.getElementById('event-frame').src = '';
     }
 }
@@ -108,7 +127,7 @@ window.addEventListener('message', function(event) {
     if (event.data.action === 'close_turbine') { 
         state.$ = event.data.balance; 
         actualizarVisualBoveda(0); 
-        forceCloseTurbine(); 
+        closeGamePortal(); 
     }
     else if (event.data.action === 'close_loot') { 
         state.$ += event.data.reward; 
@@ -133,47 +152,41 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// --- 3. SISTEMA DE USUARIO Y ARRANQUE ---
+// --- 3. SISTEMA DE USUARIO Y ARRANQUE (ACTUALIZADO PARA SINGULARIDAD) ---
 
 function verificarUsuario() {
     const isRegistered = localStorage.getItem('govotto_registered') === 'true';
-    const bootBtn = document.getElementById('boot-btn');
-    const bootScreen = document.getElementById('boot-screen');
-    let statusDiv = document.getElementById('ident-status');
-    if(!statusDiv) {
-        statusDiv = document.createElement('div');
-        statusDiv.id = 'ident-status';
-        statusDiv.style.margin = '15px 0';
-        statusDiv.style.fontSize = '10px';
-        statusDiv.style.fontWeight = 'bold';
-        statusDiv.style.fontFamily = 'monospace';
-        statusDiv.style.letterSpacing = '2px';
-        bootScreen.insertBefore(statusDiv, bootBtn);
-    }
+    const statusDiv = document.getElementById('genesis-status');
+    const bootBtn = document.getElementById('genesis-btn');
 
     if (isRegistered) {
         const adn = JSON.parse(localStorage.getItem('govotto_dante_adn')) || {vision:50, reserva:50};
         let rango = (adn.vision > adn.reserva) ? "CONQUISTADOR" : "GUARDIÁN";
         state.dockUnlocked = true; 
-        statusDiv.innerText = `ID DETECTADO: ${rango}`;
-        statusDiv.style.color = "var(--primary)";
-        statusDiv.style.textShadow = "0 0 10px var(--primary)";
-        bootBtn.innerText = "ACCEDER A LA RED";
-        bootBtn.style.color = "var(--primary)";
-        bootBtn.style.border = "1px solid var(--primary)";
-        bootBtn.onclick = () => startApp(); 
+        if(statusDiv) {
+            statusDiv.innerText = `ID DETECTADO: ${rango}`;
+            statusDiv.style.color = "#00ffcc";
+        }
+        if(bootBtn) {
+            bootBtn.innerText = "ACCEDER A LA RED";
+            bootBtn.onclick = () => { if(typeof igniteSingularity === 'function') igniteSingularity(); };
+        }
     } else {
-        statusDiv.innerText = "NÚCLEO NO DETECTADO";
-        statusDiv.style.color = "var(--risk)";
-        statusDiv.style.textShadow = "0 0 10px var(--risk)";
-        bootBtn.innerText = "INICIAR NACIMIENTO";
-        bootBtn.style.border = "1px solid var(--risk)";
-        bootBtn.style.color = "var(--risk)";
-        bootBtn.onclick = () => window.location.href = 'nacimiento.html';
+        if(statusDiv) {
+            statusDiv.innerText = "NÚCLEO NO DETECTADO";
+            statusDiv.style.color = "var(--risk)";
+        }
+        if(bootBtn) {
+            bootBtn.innerText = "INICIAR NACIMIENTO";
+            bootBtn.style.color = "var(--risk)";
+            bootBtn.style.borderColor = "var(--risk)";
+            bootBtn.onclick = () => window.location.href = 'nacimiento.html';
+        }
     }
 }
 
 window.onload = function() { 
+    // 1. RECUPERAR RACHA
     const hoy = new Date().toDateString();
     const ultimaConexion = localStorage.getItem('govotto_last_login');
     let rachaActual = parseInt(localStorage.getItem('govotto_streak')) || 0;
@@ -186,29 +199,23 @@ window.onload = function() {
     }
     state.streak = rachaActual;
 
+    // 2. RECUPERAR DINERO
     const savedMoney = localStorage.getItem('govotto_vault');
     if(savedMoney) {
         state.$ = parseInt(savedMoney);
-        document.getElementById('hud-money').innerText = "$" + state.$.toLocaleString();
+        const hudMoney = document.getElementById('hud-money');
+        if(hudMoney) hudMoney.innerText = "$" + state.$.toLocaleString();
     }
 
-    let b = document.getElementById('energy-fill'); 
-    let w = 0; 
-    let i = setInterval(() => { 
-        w += 5; b.style.width = w + '%'; 
-        if (w >= 100) { clearInterval(i); document.getElementById('boot-btn').classList.remove('hidden'); verificarUsuario(); } 
-    }, 30); 
+    // 3. LLAMAR A LA VERIFICACIÓN (Conecta con la Singularidad)
+    verificarUsuario(); 
 };
 
 function startApp() {
+    // Se ejecuta INMEDIATAMENTE después del flash de la Singularidad
     localStorage.setItem('govotto_vault', state.$); 
-    document.getElementById('boot-screen').style.display = 'none';
-    const layer = document.getElementById('intro-layer');
-    layer.classList.remove('hidden'); layer.style.display = 'flex'; 
-    try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
-    const bar = document.getElementById('cinema-fill');
-    setTimeout(() => { bar.style.width = "100%"; }, 1200);
-    setTimeout(() => { layer.style.opacity = "0"; setTimeout(() => { startMap(); layer.style.display = 'none'; }, 500); }, 1800);
+    try { if(!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    startMap(); 
 }
 
 function startMap() { 
@@ -246,10 +253,24 @@ function clickNode(i) {
 // --- 5. LÓGICA DE INTERFAZ ---
 
 function showView(id) {
-    document.getElementById('map-view').classList.add('hidden');
-    const target = document.getElementById(id);
-    if(target) { target.classList.remove('hidden'); target.style.display = 'flex'; }
+    // 1. APAGAR TODAS LAS PANTALLAS POSIBLES (Limpieza total)
+    const todasLasVistas = ['map-view', 'ab-view', 'bomb-view', 'fire-view', 'truth-view'];
+    todasLasVistas.forEach(vista => {
+        const el = document.getElementById(vista);
+        if(el) {
+            el.classList.add('hidden');
+            el.style.display = 'none'; // Aseguramos que desaparezca físicamente
+        }
+    });
 
+    // 2. ENCENDER SOLO LA PANTALLA QUE NECESITAMOS
+    const target = document.getElementById(id);
+    if(target) { 
+        target.classList.remove('hidden'); 
+        target.style.display = 'flex'; 
+    }
+
+    // 3. GESTIONAR LOS BOTONES INFERIORES (DOCKS)
     const docks = ['home-dock', 'loot-dock', 'casino-dock', 'fire-dock', 'vault-dock'];
     docks.forEach(d => {
         const el = document.getElementById(d);
@@ -262,8 +283,65 @@ function actualizarVisualBoveda(cambio) {
     localStorage.setItem('govotto_vault', state.$); 
 }
 
-function openCasinoMenu() { document.getElementById('slots-modal').classList.remove('hidden'); }
-function closeSlots() { document.getElementById('slots-modal').classList.add('hidden'); }
+// --- AQUÍ ESTÁ EL CAMBIO MAESTRO PARA EL CASINO ---
+function openCasinoMenu() {
+    const frame = document.getElementById('app-frame');
+    const modal = document.getElementById('slots-modal');
+    const selector = document.getElementById('casino-selector');
+
+    if (frame && modal && selector) {
+        // 1. Iniciamos la ruptura de realidad (Glitch)
+        frame.classList.add('rupture-active');
+        try { if(navigator.vibrate) navigator.vibrate([50, 30, 50]); } catch(e){}
+
+        // 2. Lógica de Resonancia: ¿Qué tan cargado viene el usuario?
+        if (state.$ >= 25000) {
+            selector.setAttribute('data-wealth', 'gold'); // Modo Millonario
+        } else if (state.$ < 500) {
+            selector.setAttribute('data-wealth', 'critical'); // Modo Riesgo
+        } else {
+            selector.setAttribute('data-wealth', 'standard'); // Modo Normal
+        }
+
+        // 3. Apertura del Portal de Éter
+        setTimeout(() => {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            modal.style.position = 'fixed';
+            modal.style.zIndex = '9999999';
+            // Limpiamos el efecto de ruptura
+            setTimeout(() => frame.classList.remove('rupture-active'), 500);
+        }, 200);
+    }
+}
+
+function closeSlots() {
+    const modal = document.getElementById('slots-modal');
+    const frame = document.getElementById('app-frame');
+    
+    if (modal && frame) {
+        // 1. Iniciamos la desmaterialización (Escalado, opacidad y desenfoque)
+        modal.style.transition = "all 0.4s cubic-bezier(0.47, 0, 0.745, 0.715)";
+        modal.style.opacity = "0";
+        modal.style.transform = "scale(1.2) translateY(20px)";
+        modal.style.filter = "blur(10px)";
+
+        // 2. Breve pulso de retorno al mapa (Flash de contraste)
+        frame.style.filter = "brightness(1.5) contrast(1.2)";
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            // Reset de estilos para la próxima apertura impecable
+            modal.style.opacity = "1";
+            modal.style.transform = "scale(1) translateY(0)";
+            modal.style.filter = "none";
+            modal.style.display = 'none';
+            frame.style.filter = "none";
+        }, 400);
+    }
+}
+// --------------------------------------------------
+
 function openRanking() { document.getElementById('ranking-modal').classList.remove('hidden'); }
 function closeRanking() { document.getElementById('ranking-modal').classList.add('hidden'); }
 
