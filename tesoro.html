@@ -3,443 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GOVOTTO: QUANTUM ENGINE</title>
+    <title>Bóveda Cuántica - GoVotto</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;900&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
-        :root { 
-            --bg: #030303; 
-            --gold: #FFD700;
-            --common: #10b981;
-            --locked: #555555;
+        :root {
             --primary: #00ffcc;
-            /* Variables Dinámicas para el Foco Táctico */
+            --accent: #D4AF37;
+            --bg: #030303;
             --mouse-x: 50%;
             --mouse-y: 50%;
         }
-
-        body { 
-            background: var(--bg); height: 100vh; display: flex; flex-direction: column;
-            font-family: 'Outfit', sans-serif; color: white; user-select: none; overflow: hidden;
-            perspective: 1000px; margin: 0;
+        
+        body {
+            margin: 0; background: var(--bg); color: white;
+            font-family: 'Outfit', sans-serif; overflow: hidden;
+            display: flex; flex-direction: column; height: 100vh;
         }
 
-        /* 1. EL LIENZO FÍSICO (POLVO QUANTUM) */
+        /* 1. EL LIENZO FÍSICO (POLVO QUANTUM + FOCO TÁCTICO) */
         #quantum-dust {
             position: absolute; inset: 0; z-index: 1; pointer-events: none;
-            mix-blend-mode: screen;
+            mix-blend-mode: screen; opacity: 0.6;
         }
 
-        /* 2. EL FOCO TÁCTICO (LUZ DINÁMICA DE FONDO) */
         .tactical-light {
             position: absolute; inset: 0; z-index: 2; pointer-events: none;
-            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(0, 255, 204, 0.08), transparent 40%);
+            background: radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), rgba(0, 255, 204, 0.08), transparent 60%);
             transition: background 0.1s;
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; z-index: 10; position: relative; }
-        .title { font-weight: 900; font-style: italic; font-size: 1.5rem; letter-spacing: -1px; text-shadow: 0 0 20px rgba(0, 255, 204, 0.4); }
-        .title span { color: var(--primary); }
-        
-        .close-btn { 
-            width: 45px; height: 45px; border-radius: 50%; background: rgba(20,20,20,0.6); 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; 
-            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px);
-            transition: all 0.3s; z-index: 10;
-        }
-        .close-btn:active { transform: scale(0.85) rotate(90deg); background: white; color: black; }
-
-        .loot-rack { 
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            gap: 25px; padding: 20px; z-index: 5; position: relative;
+        /* 2. HEADER ESTATICO */
+        .vault-header {
+            padding: 25px; border-bottom: 1px solid rgba(0, 255, 204, 0.1);
+            text-align: center; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
+            z-index: 10; position: relative;
         }
 
-        /* 3. CAJAS CON PARALLAX Y BORDES REACTIVOS A LA LUZ */
-        .loot-box {
-            width: 100%; max-width: 350px; height: 110px;
-            background: rgba(10, 10, 10, 0.5);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.03); border-radius: 24px;
-            display: flex; align-items: center; padding: 0 20px; gap: 18px;
-            position: relative; cursor: pointer; 
-            /* La transición de transform la maneja el JS para el 3D */
-            transition: box-shadow 0.3s, filter 0.3s;
-            transform-style: preserve-3d;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        /* 3. REJILLA DE ACTIVOS CON PARALLAX 3D MAGNÉTICO */
+        .chest-grid {
+            flex: 1; overflow-y: auto; padding: 25px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            z-index: 5; perspective: 1200px;
         }
 
-        /* El borde de luz que sigue al dedo */
-        .loot-box::before {
+        .chest-card {
+            background: rgba(15, 15, 15, 0.4); border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 24px; padding: 20px; text-align: center;
+            position: relative; transition: box-shadow 0.3s, border 0.3s;
+            transform-style: preserve-3d; cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .chest-card::before {
             content: ''; position: absolute; inset: -1px; border-radius: inherit;
-            background: radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), currentColor, transparent 30%);
-            z-index: -1; opacity: 0; transition: opacity 0.4s;
+            background: radial-gradient(200px circle at var(--card-x) var(--card-y), rgba(0, 255, 204, 0.2), transparent 40%);
+            z-index: -1; opacity: 0; transition: opacity 0.3s;
         }
-        .loot-box:hover::before { opacity: 0.6; }
-        
-        /* Efecto 3D de los elementos internos */
-        .quantum-node, .box-info, .status-badge { transform: translateZ(30px); }
+        .chest-card:hover::before { opacity: 1; }
 
-        .quantum-node { width: 65px; height: 65px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .quantum-ring {
-            position: absolute; inset: 0; border: 2px solid currentColor; border-radius: 50%;
-            border-top-color: transparent; border-bottom-color: transparent;
-            animation: q-spin 3s linear infinite; opacity: 0.8;
-            box-shadow: 0 0 15px currentColor, inset 0 0 15px currentColor;
-        }
-        .quantum-fluid {
-            position: absolute; inset: 10px; background: currentColor; border-radius: 50%;
-            filter: blur(8px); opacity: 0.25; animation: q-pulse 2s ease-in-out infinite alternate;
-        }
-        .node-icon { font-size: 1.6rem; position: relative; z-index: 2; color: white; text-shadow: 0 0 15px currentColor; }
-
-        .box-info { flex: 1; z-index: 2; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .box-title { font-weight: 900; font-size: 1.15rem; text-transform: uppercase; line-height: 1; margin-bottom: 4px; letter-spacing: 0.5px; }
-        .box-desc { font-family: 'JetBrains Mono'; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; opacity: 0.8; }
-        
-        .status-badge { 
-            font-size: 0.65rem; font-weight: 900; padding: 6px 10px; border-radius: 8px; 
-            background: rgba(0,0,0,0.6); border: 1px solid currentColor; z-index: 2; backdrop-filter: blur(4px);
+        .chest-icon {
+            font-size: 2.5rem; color: #333; margin-bottom: 12px;
+            transform: translateZ(40px); transition: all 0.5s;
         }
 
-        .lb-daily { color: var(--common); }
-        .lb-daily .box-title { color: white; }
-        
-        .lb-weekly { color: var(--locked); }
-        .lb-weekly .box-title { color: #aaa; }
-        .lb-weekly .quantum-ring { animation-duration: 10s; opacity: 0.2; }
-        .lb-weekly .quantum-fluid { opacity: 0.05; animation: none; }
-        .lb-weekly .node-icon { color: #555; text-shadow: none; }
-        
-        .lb-vip { color: var(--gold); }
-        .lb-vip .box-title { color: var(--gold); }
-
-        .lb-opened { filter: grayscale(1) opacity(0.5); pointer-events: none; transform: scale(0.95) !important; color: #444; }
-        .lb-opened .quantum-ring { animation: none; opacity: 0.1; }
-        .lb-opened .quantum-fluid { display: none; }
-
-        /* 4. EL DESGARRO ESPACIAL (APERTURA) */
-        #flashbang {
-            position: fixed; inset: 0; background: white; z-index: 999; 
-            opacity: 0; pointer-events: none; transition: opacity 0.1s; mix-blend-mode: overlay;
+        .unlocked .chest-icon {
+            color: var(--primary); filter: drop-shadow(0 0 15px var(--primary));
+            animation: float 4s ease-in-out infinite;
         }
 
-        .reward-overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 50; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: 0.4s ease-out;
+        @keyframes float { 0%, 100% { transform: translateZ(40px) translateY(0); } 50% { transform: translateZ(40px) translateY(-8px); } }
+
+        /* 4. OVERLAY DE DESENCRIPTACIÓN */
+        #decode-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.98); backdrop-filter: blur(30px);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
         }
-        .show-reward { opacity: 1; pointer-events: auto; }
-        
-        .reward-card { 
-            text-align: center; transform: translateY(100px) scale(0.5) rotateX(20deg); 
-            transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
-            padding: 50px; border-radius: 30px;
+
+        .decode-ring {
+            width: 200px; height: 200px; border: 2px dashed var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            animation: spin 8s linear infinite; position: relative;
         }
-        .show-reward .reward-card { transform: translateY(0) scale(1) rotateX(0deg); }
 
-        .reward-icon { font-size: 6rem; color: var(--common); margin-bottom: 10px; filter: drop-shadow(0 0 30px var(--common)); animation: float 4s ease-in-out infinite; }
-        .reward-val { font-size: 4.5rem; font-weight: 900; color: white; line-height: 1; letter-spacing: -3px; text-shadow: 0 0 40px rgba(255,255,255,0.4); }
-        .reward-sub { font-family: 'JetBrains Mono'; color: var(--common); font-size: 1rem; margin-top: 5px; font-weight: bold; letter-spacing: 3px; }
-        .tap-msg { margin-top: 50px; font-size: 0.75rem; color: #888; font-weight: 900; letter-spacing: 4px; animation: pulse-txt 2s infinite; }
+        .decode-core {
+            width: 130px; height: 130px; background: #000; border: 2px solid var(--primary);
+            border-radius: 50%; animation: spin 4s linear infinite reverse;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 50px rgba(0,255,204,0.3), inset 0 0 25px var(--primary);
+        }
 
-        @keyframes q-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes q-pulse { 0% { transform: scale(0.85); opacity: 0.15; } 100% { transform: scale(1.15); opacity: 0.35; } }
-        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
-        @keyframes pulse-txt { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-        
-        /* Animación de Tensión de Caja */
-        .glitch-shake { animation: g-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; filter: contrast(2) brightness(1.5) hue-rotate(90deg); }
-        @keyframes g-shake { 10%, 90% { transform: translate3d(-2px, 0, 0) scale(1.02); } 20%, 80% { transform: translate3d(4px, 0, 0) scale(1.02); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0) scale(1.05); } 40%, 60% { transform: translate3d(8px, 0, 0) scale(1.05); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        .scanline {
+            position: absolute; width: 100%; height: 2px; background: var(--primary);
+            box-shadow: 0 0 20px var(--primary); top: 0;
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* RECOMPENSA */
+        #reward-box { display: none; text-align: center; }
+        .reward-value { font-size: 4rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 40px rgba(212, 175, 55, 0.5); letter-spacing: -2px; }
     </style>
 </head>
 <body>
+
     <canvas id="quantum-dust"></canvas>
     <div class="tactical-light"></div>
-    <div id="flashbang"></div>
 
-    <div class="header">
-        <div class="title">SALA_DE_<span>TESOROS</span></div>
-        <div class="close-btn" onclick="exitLoot()"><i class="fas fa-times"></i></div>
+    <div class="vault-header">
+        <h1 class="text-[9px] tracking-[0.6em] text-zinc-500 uppercase mb-1">Extracción de Activos</h1>
+        <div class="text-xl font-black italic tracking-tighter">DATA <span class="text-[#00ffcc]">VAULT</span></div>
     </div>
 
-    <div class="loot-rack" id="rack">
-        
-        <div id="chest-daily" class="loot-box lb-daily" onclick="openDaily()">
-            <div class="quantum-node">
-                <div class="quantum-ring"></div>
-                <div class="quantum-fluid"></div>
-                <i class="fas fa-cube node-icon"></i>
-            </div>
-            <div class="box-info">
-                <div class="box-title">NÚCLEO DE SUMINISTROS</div>
-                <div class="box-desc">CARGA AL 100%</div>
-            </div>
-            <div class="status-badge" id="lbl-daily">EXTRAER</div>
+    <div class="chest-grid">
+        <div class="chest-card unlocked" onclick="decodeChest(1000, 'NÚCLEO BETA')">
+            <div class="chest-icon"><i class="fas fa-atom"></i></div>
+            <div class="text-[9px] text-zinc-500 tracking-widest uppercase mb-1">Terminal 01</div>
+            <div class="text-xs font-black text-white">RESERVA_B</div>
         </div>
 
-        <div class="loot-box lb-weekly" onclick="shakeLock(this)">
-            <div class="quantum-node">
-                <div class="quantum-ring"></div>
-                <div class="quantum-fluid"></div>
-                <i class="fas fa-lock node-icon"></i>
-            </div>
-            <div class="box-info">
-                <div class="box-title">BÓVEDA TITÁN</div>
-                <div class="box-desc">SELLO INTACTO</div>
-            </div>
-            <div class="status-badge"><i class="fas fa-key" style="margin-right:3px;"></i> NV.5</div>
+        <div class="chest-card unlocked" onclick="decodeChest(2500, 'SISTEMA GAMMA')">
+            <div class="chest-icon"><i class="fas fa-fingerprint"></i></div>
+            <div class="text-[9px] text-zinc-500 tracking-widest uppercase mb-1">Terminal 02</div>
+            <div class="text-xs font-black text-white">EXTRACCIÓN_G</div>
         </div>
 
-        <div class="loot-box lb-vip" onclick="shakeLock(this)">
-            <div class="quantum-node">
-                <div class="quantum-ring"></div>
-                <div class="quantum-fluid"></div>
-                <i class="fas fa-crown node-icon"></i>
-            </div>
-            <div class="box-info">
-                <div class="box-title">RESERVA BLACK</div>
-                <div class="box-desc">AUTORIZACIÓN PENDIENTE</div>
-            </div>
-            <div class="status-badge">ÉLITE</div>
+        <div class="chest-card opacity-30" onclick="shakeLock(this)">
+            <div class="chest-icon"><i class="fas fa-lock"></i></div>
+            <div class="text-[9px] text-zinc-500 tracking-widest uppercase mb-1">Terminal 03</div>
+            <div class="text-xs font-black">BLOQUEADO</div>
         </div>
 
+        <div class="chest-card opacity-30" onclick="shakeLock(this)">
+            <div class="chest-icon"><i class="fas fa-lock"></i></div>
+            <div class="text-[9px] text-zinc-500 tracking-widest uppercase mb-1">Terminal 04</div>
+            <div class="text-xs font-black">BLOQUEADO</div>
+        </div>
     </div>
 
-    <div id="reward-screen" class="reward-overlay" onclick="closeReward()">
-        <div class="reward-card">
-            <div class="reward-icon"><i class="fas fa-gem"></i></div>
-            <div class="reward-val">+$500</div>
-            <div class="reward-sub">TRANSFERENCIA ACTIVA</div>
-            <div class="tap-msg">SINTONIZAR AL NÚCLEO</div>
+    <div class="p-8 z-10 relative">
+        <button onclick="closeVault()" class="w-full py-4 border border-zinc-900 rounded-full text-[9px] tracking-[0.4em] uppercase text-zinc-600 hover:text-white transition-colors">Cerrar Protocolo</button>
+    </div>
+
+    <div id="decode-overlay">
+        <div id="decoder-animation" class="flex flex-col items-center">
+            <div class="decode-ring">
+                <div class="scanline"></div>
+                <div class="decode-core">
+                    <i class="fas fa-satellite-dish text-3xl text-[#00ffcc] animate-pulse"></i>
+                </div>
+            </div>
+            <div class="mt-12 text-center">
+                <p class="font-mono text-[#00ffcc] text-[9px] tracking-[0.6em] animate-pulse">EXTRAYENDO ACTIVOS...</p>
+                <p id="decode-target" class="text-zinc-600 text-[9px] mt-2 uppercase font-bold tracking-widest"></p>
+            </div>
+        </div>
+
+        <div id="reward-box" class="p-10">
+            <i class="fas fa-gem text-5xl text-[#D4AF37] mb-6 animate-bounce"></i>
+            <h2 class="text-zinc-500 text-[10px] tracking-[0.4em] uppercase">Sincronización Exitosa</h2>
+            <div class="reward-value" id="reward-val">+$0</div>
+            <p class="text-zinc-500 text-[9px] mt-4 mb-12 tracking-widest">ACTIVO TRANSFERIDO A LA RED CENTRAL</p>
+            <button onclick="confirmReward()" class="w-full py-5 bg-[#D4AF37] text-black font-black rounded-2xl uppercase text-[10px] tracking-[0.3em] shadow-2xl shadow-yellow-900/30">Asegurar Activo</button>
         </div>
     </div>
 
     <script>
-        // --- MOTOR DE FÍSICA Y RENDERIZADO (LA MAGIA DE LA OBRA MAESTRA) ---
+        // --- 1. MOTOR DE PARTÍCULAS (DINÁMICA DE FLUIDOS) ---
         const canvas = document.getElementById('quantum-dust');
         const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-        let mouse = { x: -1000, y: -1000 }; // Fuera de pantalla por defecto
+        let width, height, particles = [];
+        let mouse = { x: -1000, y: -1000 };
 
-        function resizeCanvas() {
+        function resize() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        window.addEventListener('resize', resize);
+        resize();
 
         class Particle {
             constructor() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.size = Math.random() * 2 + 0.5;
                 this.baseX = this.x; this.baseY = this.y;
-                this.density = (Math.random() * 20) + 1;
-                // Colores cyberpunk (Esmeralda y Oro)
-                this.color = Math.random() > 0.5 ? 'rgba(0, 255, 204, 0.6)' : 'rgba(255, 215, 0, 0.4)';
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.fillStyle = this.color;
-                ctx.fill();
+                this.size = Math.random() * 2 + 0.5;
+                this.density = (Math.random() * 30) + 1;
+                this.color = Math.random() > 0.5 ? 'rgba(0, 255, 204, 0.4)' : 'rgba(212, 175, 55, 0.3)';
             }
             update() {
-                // Física de atracción magnética al cursor/dedo
                 let dx = mouse.x - this.x;
                 let dy = mouse.y - this.y;
                 let distance = Math.sqrt(dx * dx + dy * dy);
-                let forceDirectionX = dx / distance;
-                let forceDirectionY = dy / distance;
-                let maxDistance = 150;
-                let force = (maxDistance - distance) / maxDistance;
-                let directionX = forceDirectionX * force * this.density;
-                let directionY = forceDirectionY * force * this.density;
-
-                if (distance < maxDistance) {
-                    this.x -= directionX; // Atracción leve
-                    this.y -= directionY;
+                if (distance < 150) {
+                    this.x -= (dx / distance) * 5;
+                    this.y -= (dy / distance) * 5;
                 } else {
-                    if (this.x !== this.baseX) {
-                        let dx = this.x - this.baseX;
-                        this.x -= dx / 20; // Retorno suave
-                    }
-                    if (this.y !== this.baseY) {
-                        let dy = this.y - this.baseY;
-                        this.y -= dy / 20;
-                    }
+                    if (this.x !== this.baseX) this.x -= (this.x - this.baseX) / 20;
+                    if (this.y !== this.baseY) this.y -= (this.y - this.baseY) / 20;
                 }
-                // Movimiento natural de flotación
-                this.y -= 0.2;
-                if(this.y < 0) { this.y = height; this.baseY = height; }
-                this.draw();
+                this.y -= 0.3; if(this.y < 0) {this.y = height; this.baseY = height;}
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color; ctx.fill();
             }
         }
 
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < 60; i++) { particles.push(new Particle()); }
+        for(let i=0; i<70; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0,0,width,height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
         }
-        initParticles();
+        animate();
 
-        function animateParticles() {
-            ctx.clearRect(0, 0, width, height);
-            for (let i = 0; i < particles.length; i++) { particles[i].update(); }
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
+        // --- 2. TRACKING 3D Y LUZ TÁCTICA ---
+        const cards = document.querySelectorAll('.chest-card');
+        function handleMove(e) {
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            mouse.x = cx; mouse.y = cy;
+            document.documentElement.style.setProperty('--mouse-x', `${cx}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${cy}px`);
 
-        // --- TRACKING 3D Y FOCO TÁCTICO ---
-        const boxes = document.querySelectorAll('.loot-box');
-        
-        function updateMouseTracker(e) {
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            // Actualiza CSS Variables para la luz táctica
-            document.documentElement.style.setProperty('--mouse-x', `${clientX}px`);
-            document.documentElement.style.setProperty('--mouse-y', `${clientY}px`);
-            
-            // Actualiza JS Físico para las partículas
-            mouse.x = clientX; mouse.y = clientY;
-
-            // Parallax 3D Magnético para las Cajas
-            boxes.forEach(box => {
-                if(box.classList.contains('lb-opened')) return; // No animar si está abierta
-                const rect = box.getBoundingClientRect();
-                const boxCenterX = rect.left + rect.width / 2;
-                const boxCenterY = rect.top + rect.height / 2;
-                
-                // Solo reacciona si estás cerca de la caja (Efecto Imán)
-                const dist = Math.hypot(clientX - boxCenterX, clientY - boxCenterY);
-                if(dist < 300) {
-                    const tiltX = (clientY - boxCenterY) / 15; // Inclinación en Y
-                    const tiltY = -(clientX - boxCenterX) / 15; // Inclinación en X
-                    box.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`;
-                } else {
-                    box.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-                }
+            cards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = cx - rect.left; const y = cy - rect.top;
+                card.style.setProperty('--card-x', `${x}px`);
+                card.style.setProperty('--card-y', `${y}px`);
+                const rx = (y - rect.height/2) / 10;
+                const ry = -(x - rect.width/2) / 10;
+                card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02, 1.02, 1.02)`;
             });
         }
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove, {passive: false});
 
-        window.addEventListener('mousemove', updateMouseTracker);
-        window.addEventListener('touchmove', updateMouseTracker, {passive: true});
-        
-        // Resetear al salir
-        function resetTracker() {
-            mouse.x = -1000; mouse.y = -1000;
-            boxes.forEach(box => { if(!box.classList.contains('lb-opened')) box.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`; });
+        // --- 3. AUDIO Y LÓGICA DE EXTRACCIÓN ---
+        let audioCtx, currentReward = 0;
+        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+        function playTone(freq, type, dur, vol=0.2) {
+            if(!audioCtx) return;
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.type = type; o.frequency.value = freq;
+            o.connect(g); g.connect(audioCtx.destination);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            o.start(); g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
+            o.stop(audioCtx.currentTime + dur);
         }
-        window.addEventListener('mouseout', resetTracker);
-        window.addEventListener('touchend', resetTracker);
 
+        function decodeChest(val, name) {
+            initAudio(); currentReward = val;
+            const overlay = document.getElementById('decode-overlay');
+            overlay.style.display = 'flex';
+            document.getElementById('decoder-animation').style.display = 'flex';
+            document.getElementById('reward-box').style.display = 'none';
+            document.getElementById('decode-target').innerText = "VINCULANDO: " + name;
 
-        // --- MOTOR DE AUDIO SINTÉTICO ---
-        const AudioEngine = {
-            ctx: null,
-            init: function() { try { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} },
-            playTone: function(freq, type, dur, vol = 0.5) {
-                if(!this.ctx) return;
-                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-                o.type = type; o.frequency.value = freq;
-                o.connect(g); g.connect(this.ctx.destination);
-                o.start(); g.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + dur);
-                g.gain.value = vol;
-                o.stop(this.ctx.currentTime + dur);
-            },
-            deny: function() { this.playTone(100, 'sawtooth', 0.2); setTimeout(()=>this.playTone(80,'square',0.3), 100); },
-            charge: function() { this.playTone(200, 'sine', 0.8, 1); setTimeout(()=>this.playTone(400,'triangle',0.4), 400); },
-            flash: function() { this.playTone(1200, 'square', 0.1, 0.2); setTimeout(()=>this.playTone(50,'sawtooth',1), 50); }
-        };
+            playTone(150, 'sawtooth', 3, 0.1);
+            if(navigator.vibrate) navigator.vibrate([50, 100, 50, 100, 50, 100]);
 
-        // --- LÓGICA DE APERTURA (EL DESGARRO ESPACIAL) ---
-        let lastClaim = null;
-        let today = new Date().toDateString();
-        const dailyBox = document.getElementById('chest-daily');
-        const dailyLbl = document.getElementById('lbl-daily');
-        let money = 0;
-
-        try {
-            lastClaim = localStorage.getItem('govotto_daily_date');
-            if (lastClaim === today) {
-                dailyBox.classList.remove('lb-daily');
-                dailyBox.classList.add('lb-opened');
-                dailyLbl.innerText = "DRENADO";
-                dailyBox.onclick = null;
-            }
-        } catch (e) {}
-
-        function openDaily() {
-            if(dailyBox.classList.contains('lb-opened')) return;
-            AudioEngine.init();
-            AudioEngine.charge();
-            
-            // FASE 1: Levitación y Sobrecarga
-            dailyBox.style.transition = 'none'; // Quitar transición suave temporalmente
-            dailyBox.classList.add('glitch-shake');
-            if(navigator.vibrate) navigator.vibrate([30, 50, 30, 50, 100]);
-            
             setTimeout(() => {
-                // FASE 2: Flashbang Cegador
-                AudioEngine.flash();
-                const flash = document.getElementById('flashbang');
-                flash.style.opacity = '1';
-                
-                setTimeout(() => { flash.style.opacity = '0'; }, 100);
-
-                if(window.confetti) {
-                    confetti({ particleCount: 250, spread: 120, origin: { y: 0.5 }, colors: ['#10b981', '#00ffcc', '#ffffff'], startVelocity: 60, zIndex: 100 });
-                }
-
-                // FASE 3: Holograma y Limpieza
-                const screen = document.getElementById('reward-screen');
-                screen.classList.add('show-reward');
-                
-                try { localStorage.setItem('govotto_daily_date', today); } catch(e){}
-                
-                dailyBox.classList.remove('glitch-shake');
-                dailyBox.classList.remove('lb-daily');
-                dailyBox.classList.add('lb-opened');
-                dailyBox.style.transform = ''; // Limpiar 3D
-                dailyBox.style.transition = 'all 0.4s'; // Devolver transición
-                dailyLbl.innerText = "DRENADO";
-                dailyBox.onclick = null;
-                money = 500; 
-            }, 800); // Tensión de 0.8 segundos antes de explotar
+                document.getElementById('decoder-animation').style.display = 'none';
+                document.getElementById('reward-box').style.display = 'block';
+                document.getElementById('reward-val').innerText = "+$" + val.toLocaleString();
+                playTone(880, 'sine', 1, 0.3);
+                if(navigator.vibrate) navigator.vibrate([100, 50, 600]);
+            }, 3500);
         }
 
         function shakeLock(el) {
-            AudioEngine.init(); AudioEngine.deny();
+            initAudio(); playTone(80, 'square', 0.2);
             if(navigator.vibrate) navigator.vibrate([40, 40, 40]);
-            el.style.transition = 'none';
-            el.style.transform = `translateX(10px)`;
-            setTimeout(() => { el.style.transform = `translateX(-10px)`; }, 50);
-            setTimeout(() => { el.style.transform = `translateX(10px)`; }, 100);
-            setTimeout(() => { el.style.transition = 'all 0.4s'; el.style.transform = `rotateX(0deg) rotateY(0deg)`; }, 150);
+            el.style.borderColor = 'var(--risk)';
+            setTimeout(() => el.style.borderColor = 'rgba(255,255,255,0.03)', 300);
         }
 
-        function closeReward() {
-            document.getElementById('reward-screen').classList.remove('show-reward');
-            try {
-                let currentVault = parseInt(localStorage.getItem('govotto_vault')) || 0;
-                localStorage.setItem('govotto_vault', currentVault + money);
-            } catch(e){}
-            
-            try { window.parent.postMessage({ action: 'close_loot', reward: money }, '*'); } 
-            catch(e) { exitLoot(); }
-        }
-
-        function exitLoot() {
-            try { window.parent.postMessage({ action: 'close_loot_window' }, '*'); } 
-            catch(e) { console.log("Cerrando sistema..."); }
-        }
+        function confirmReward() { window.parent.postMessage({ action: 'close_loot', reward: currentReward }, '*'); }
+        function closeVault() { window.parent.postMessage({ action: 'close_loot_window' }, '*'); }
     </script>
 </body>
 </html>
