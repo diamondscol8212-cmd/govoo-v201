@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Oráculo - Sincronizador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;900&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --accent: #D4AF37;
+            --risk: #FF0044;
+            --bg: #030303;
+        }
+        
+        body {
+            margin: 0; background: var(--bg); color: white;
+            font-family: 'Outfit', sans-serif; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh;
+            background-image: radial-gradient(circle at 50% 40%, rgba(0, 255, 204, 0.08) 0%, transparent 60%);
+        }
+
+        /* --- EFECTO DE PARTÍCULAS DE ÉTER --- */
+        .ether-dust {
+            position: absolute; inset: 0; pointer-events: none; z-index: 0;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #00ffcc, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 50px 160px, #D4AF37, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: dustDrift 20s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes dustDrift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-200px); }
+        }
+
+        /* --- EL CRIPTEX (LA MÁQUINA 3D) --- */
+        .oracle-stage {
+            perspective: 1200px; /* Profundidad focal */
+            display: flex; gap: 15px; z-index: 10;
+            transform: translateY(-20px);
+        }
+
+        .rotor-container {
+            width: 80px; height: 120px;
+            position: relative;
+            /* La caja de cristal que contiene los glifos */
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,255,204,0.1) 50%, rgba(0,0,0,0.9) 100%);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.1), inset 0 0 15px rgba(0,0,0,1);
+            overflow: hidden; /* Oculta lo que gira por detrás */
+        }
+
+        .rotor {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            transform-style: preserve-3d;
+            /* La física del giro: empieza rápido, termina suave */
+            transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); 
+        }
+
+        .face {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 3rem; font-weight: 900;
+            backface-visibility: hidden;
+            color: #fff;
+            text-shadow: 0 0 15px currentColor;
+        }
+
+        /* Posicionamiento 3D (Polígono de 6 caras) */
+        .face:nth-child(1) { transform: rotateX(0deg) translateZ(60px); color: var(--primary); }
+        .face:nth-child(2) { transform: rotateX(60deg) translateZ(60px); color: var(--accent); }
+        .face:nth-child(3) { transform: rotateX(120deg) translateZ(60px); color: #fff; }
+        .face:nth-child(4) { transform: rotateX(180deg) translateZ(60px); color: var(--risk); }
+        .face:nth-child(5) { transform: rotateX(240deg) translateZ(60px); color: #aaa; }
+        .face:nth-child(6) { transform: rotateX(300deg) translateZ(60px); color: #0088ff; }
+
+        /* --- INTERFAZ DEL ORÁCULO --- */
+        .oracle-ui {
+            z-index: 10; width: 90%; max-width: 340px; margin-top: 30px;
+            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+            padding: 25px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform: translateY(20px); opacity: 0; animation: uiRise 0.8s 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes uiRise { to { transform: translateY(0); opacity: 1; } }
+
+        .question-text {
+            font-size: 1.2rem; font-weight: 900; font-style: italic;
+            color: var(--accent); margin-bottom: 20px; text-transform: uppercase;
+            letter-spacing: 1px; line-height: 1.2;
+        }
+
+        .btn-sync {
+            background: transparent; border: 2px solid var(--primary); color: var(--primary);
+            width: 100%; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1.1rem;
+            letter-spacing: 3px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+        }
+
+        .btn-sync::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,255,204,0.4), transparent);
+            transition: left 0.5s;
+        }
+        .btn-sync:hover::before { left: 100%; }
+        .btn-sync:active { transform: scale(0.95); background: var(--primary); color: black; }
+
+        /* Efectos de estado */
+        .glow-win { box-shadow: 0 0 50px rgba(212, 175, 55, 0.6) !important; border-color: var(--accent) !important; }
+        .glow-lose { box-shadow: 0 0 50px rgba(255, 0, 68, 0.4) !important; border-color: var(--risk) !important; filter: grayscale(0.8); }
+    </style>
+</head>
+<body>
+
+    <div class="ether-dust"></div>
+
+    <div class="oracle-stage" id="stage">
+        <div class="rotor-container">
+            <div class="rotor" id="r1">
+                <div class="face">Δ</div><div class="face">Ω</div><div class="face">Ψ</div>
+                <div class="face">Φ</div><div class="face">Σ</div><div class="face">Θ</div>
+            </div>
+        </div>
+        <div class="rotor-container">
+            <div class="rotor" id="r2">
+                <div class="face">Δ</div><div class="face">Ω</div><div class="face">Ψ</div>
+                <div class="face">Φ</div><div class="face">Σ</div><div class="face">Θ</div>
+            </div>
+        </div>
+        <div class="rotor-container">
+            <div class="rotor" id="r3">
+                <div class="face">Δ</div><div class="face">Ω</div><div class="face">Ψ</div>
+                <div class="face">Φ</div><div class="face">Σ</div><div class="face">Θ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="oracle-ui" id="ui-box">
+        <div class="text-[9px] text-zinc-500 tracking-[0.4em] mb-4 uppercase">Protocolo de Enlace</div>
+        <div class="question-text" id="q-text">¿ESTÁS DISPUESTO A PERDERLO TODO POR LA VERDAD?</div>
+        
+        <div class="flex gap-4 mt-6" id="action-btns">
+            <button class="btn-sync flex-1" style="border-color:#555; color:#888;" onclick="triggerSpin(false)">NEGAR</button>
+            <button class="btn-sync flex-1" onclick="triggerSpin(true)">ACEPTAR</button>
+        </div>
+
+        <div id="result-text" class="hidden mt-6 font-black text-2xl tracking-widest"></div>
+    </div>
+
+    <script>
+       // --- 1. BASE DE DATOS Y SECUENCIA ---
+        const oracleQuestions = [
+            "¿Sacrificarías tus recuerdos más preciados por riqueza infinita?",
+            "¿Confías ciegamente en el código que rige tu destino?",
+            "¿Permitirías que una Inteligencia Artificial controle tus finanzas?",
+            "¿Arriesgarías tu privacidad a cambio de poder absoluto?",
+            "¿Aceptarías vivir en una simulación si eso garantiza tu éxito?"
+        ];
+        
+        let currentQuestionIndex = 0;
+        let totalReward = 0;
+
+        function loadNextQuestion() {
+            // Si ya no hay más preguntas, ejecutamos la Pantalla de Cierre
+            if (currentQuestionIndex >= oracleQuestions.length) {
+                // 1. Ocultar el Criptex 3D
+                document.getElementById('stage').style.display = 'none';
+                
+                // 2. Limpiar brillos de la última jugada
+                const uiBox = document.getElementById('ui-box');
+                uiBox.classList.remove('glow-win', 'glow-lose');
+                uiBox.style.boxShadow = "0 0 50px rgba(0, 255, 204, 0.3)";
+                uiBox.style.borderColor = "var(--primary)";
+                
+                // 3. Mostrar el veredicto final
+                document.getElementById('q-text').innerText = "SINCRO COMPLETADA.\nEL ORÁCULO HA HABLADO.";
+                document.getElementById('q-text').style.color = "var(--primary)";
+                document.getElementById('q-text').classList.remove('animate-pulse');
+                
+                // Ocultar botones y resultados anteriores
+                document.getElementById('action-btns').classList.add('hidden');
+                document.getElementById('result-text').classList.add('hidden');
+                
+                // 4. Enviar la señal a Dante después de 1.5s
+                setTimeout(() => {
+                    closeAndReturn(totalReward);
+                }, 1500);
+                
+                return;
+            }
+            
+            // Reiniciar la Interfaz para la nueva pregunta
+            document.getElementById('ui-box').classList.remove('glow-win', 'glow-lose');
+            document.getElementById('q-text').innerText = oracleQuestions[currentQuestionIndex];
+            document.getElementById('q-text').style.color = "var(--accent)";
+            document.getElementById('q-text').classList.remove('animate-pulse');
+            document.getElementById('action-btns').classList.remove('hidden');
+            document.getElementById('result-text').classList.add('hidden');
+        }
+
+        // --- 2. SINTETIZADOR DE SONIDO ---
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSynth(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'spin') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+                osc.start(); osc.stop(audioCtx.currentTime + 3);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
+                osc.start(); osc.stop(audioCtx.currentTime + 2);
+            } else if (type === 'lose') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 1);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                osc.start(); osc.stop(audioCtx.currentTime + 1);
+            }
+        }
+
+        // --- 3. MOTOR FÍSICO 3D ---
+        let currentRotations = [0, 0, 0];
+        let isSpinning = false;
+
+        function triggerSpin(userAccepted) {
+            if(isSpinning) return;
+            isSpinning = true;
+            
+            initAudio();
+            playSynth('spin'); 
+
+            document.getElementById('action-btns').classList.add('hidden');
+            document.getElementById('q-text').innerText = "SINCRONIZANDO...";
+            document.getElementById('q-text').style.color = "#fff";
+            document.getElementById('q-text').classList.add('animate-pulse');
+
+            try { if(navigator.vibrate) navigator.vibrate([50, 100, 50, 100, 200]); } catch(e){}
+
+            let winChance = userAccepted ? 0.4 : 0.1;
+            let isWin = Math.random() < winChance;
+            let targetFace = Math.floor(Math.random() * 6); 
+            
+            const r1 = document.getElementById('r1');
+            const r2 = document.getElementById('r2');
+            const r3 = document.getElementById('r3');
+
+            let baseSpin = 1800;
+            let angle1 = baseSpin + (Math.floor(Math.random() * 6) * 60);
+            let angle2 = baseSpin + (Math.floor(Math.random() * 6) * 60) + 360; 
+            let angle3 = baseSpin + (Math.floor(Math.random() * 6) * 60) + 720; 
+
+            if(isWin) {
+                angle1 = baseSpin + (targetFace * 60);
+                angle2 = baseSpin + (targetFace * 60) + 360;
+                angle3 = baseSpin + (targetFace * 60) + 720;
+            }
+
+            currentRotations[0] += angle1;
+            currentRotations[1] += angle2;
+            currentRotations[2] += angle3;
+
+            r1.style.transform = `rotateX(${currentRotations[0]}deg)`;
+            r2.style.transform = `rotateX(${currentRotations[1]}deg)`;
+            r3.style.transform = `rotateX(${currentRotations[2]}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('q-text').classList.remove('animate-pulse');
+                const res = document.getElementById('result-text');
+                res.classList.remove('hidden');
+
+                if(isWin) {
+                    playSynth('win');
+                    try { if(navigator.vibrate) navigator.vibrate([100, 50, 500]); } catch(e){}
+                    document.getElementById('ui-box').classList.add('glow-win');
+                    document.getElementById('q-text').innerText = "DESTINO ALINEADO";
+                    document.getElementById('q-text').style.color = "var(--accent)";
+                    res.innerText = "+ $2,000";
+                    res.style.color = "var(--accent)";
+                    totalReward += 2000; // Sumar al pozo
+                } else {
+                    playSynth('lose');
+                    try { if(navigator.vibrate) navigator.vibrate([200]); } catch(e){}
+                    document.getElementById('ui-box').classList.add('glow-lose');
+                    document.getElementById('q-text').innerText = "RUPTURA DETECTADA";
+                    document.getElementById('q-text').style.color = "var(--risk)";
+                    res.innerText = "- $500";
+                    res.style.color = "var(--risk)";
+                    totalReward -= 500; // Restar del pozo
+                }
+
+                // Avanzar al siguiente paso de la secuencia
+                currentQuestionIndex++;
+                setTimeout(() => { loadNextQuestion(); }, 2500);
+
+            }, 4000);
+        }
+
+        function closeAndReturn(amount) {
+            window.parent.postMessage({ action: 'close_casino_game', reward: amount }, '*');
+        }
+
+        // Arrancar la primera pregunta al cargar la página
+        loadNextQuestion();
+    </script>
+</body>
+</html>

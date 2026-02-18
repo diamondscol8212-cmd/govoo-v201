@@ -3,432 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VISUALIZADOR V11: TURBINA SENSORIAL</title>
+    <title>Vórtice de Datos</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;900&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
-        /* --- ESTILOS VISUALES (MISMOS DE V10) --- */
-        :root { 
-            --bg: #050505; 
-            --accent: #00ffff;   
-            --risk: #FF0044;     
-            --terminal: #10b981; 
-            --gold: #FFD700;     
+        :root {
+            --primary: #00ffcc;
+            --accent: #a200ff;
+            --risk: #FF0044;
+            --bg: #030303;
         }
-
-        body { 
-            background: var(--bg); height: 100vh; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; 
-            font-family: 'Outfit', sans-serif; 
-            color: white; user-select: none; overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-            transition: background 0.5s ease;
-        }
-
-        .ambient-glow {
-            position: absolute; inset: 0; pointer-events: none; z-index: -1;
-            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.04) 0%, transparent 60%);
-            transition: all 0.5s ease;
-        }
-
-        .reactor-box {
-            width: 360px; max-width: 95vw; padding: 30px 20px; 
-            background: #080808; border: 1px solid #333; border-radius: 24px;
-            text-align: center; position: relative;
-            box-shadow: 0 0 80px rgba(0,0,0,0.9);
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        /* ESTADOS */
-        .mode-error { background: #1a0005; }
-        .mode-error .reactor-box { 
-            border-color: var(--risk); 
-            box-shadow: 0 0 60px rgba(255,0,68,0.4); 
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
-        }
-        .mode-error .ambient-glow { background: radial-gradient(circle at center, rgba(255,0,68,0.2) 0%, transparent 80%); }
-        .mode-error .turbine-brand { color: var(--risk); }
-
-        .mode-golden .reactor-box { 
-            border-color: var(--gold); 
-            background: linear-gradient(180deg, #1a1200 0%, #050505 100%);
-            box-shadow: 0 0 80px rgba(255, 215, 0, 0.3), inset 0 0 20px rgba(255, 215, 0, 0.1);
-        }
-        .mode-golden .ambient-glow { background: radial-gradient(circle at center, rgba(255, 215, 0, 0.15) 0%, transparent 70%); }
-        .mode-golden .turbine-brand span { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
-        .mode-golden .monitor-screen { border-left-color: var(--gold); background: rgba(20, 15, 0, 0.7); }
-        .mode-golden .q-text { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .mode-golden .core { color: var(--gold); border-color: var(--gold); box-shadow: 0 0 40px var(--gold); }
-
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .turbine-brand { 
-            font-family: 'Outfit', sans-serif; font-weight: 900; font-style: italic; 
-            font-size: 1.4rem; letter-spacing: -0.5px; color: white; 
-            display: flex; align-items: center; gap: 8px; text-shadow: 0 0 20px rgba(0,0,0,1);
-        }
-        .turbine-brand span { color: var(--accent); transition: 0.3s; }
         
-        .close-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #555; border-radius: 50%; border: 1px solid #222; cursor: pointer; background: #050505; transition: 0.2s; }
-        .close-btn:active { background: white; color: black; }
-
-        .vault-pill { 
-            background: #111; border: 1px solid #333; border-radius: 50px; 
-            padding: 8px 16px; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 10px; 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #888; 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
-        }
-        .vault-val { color: var(--terminal); font-weight: 700; transition: color 0.2s; }
-        
-        .monitor-screen { 
-            background: rgba(0, 15, 15, 0.6); border: 1px solid #222; border-left: 3px solid var(--accent); 
-            padding: 15px; margin-bottom: 30px; border-radius: 6px; min-height: 90px; 
-            display: flex; align-items: center; justify-content: center; transition: all 0.3s; 
-        }
-        .q-text { 
-            font-family: 'JetBrains Mono', monospace; font-size: 1.0rem; color: #ddd; 
-            text-transform: uppercase; line-height: 1.3; font-weight: 700; transition: color 0.3s; 
+        body {
+            margin: 0; background: var(--bg); color: white;
+            font-family: 'Outfit', sans-serif; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh;
+            background-image: 
+                radial-gradient(circle at center, rgba(162, 0, 255, 0.05) 0%, transparent 70%),
+                linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
         }
 
-        .reactor-stage { position: relative; width: 160px; height: 160px; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center; }
-        .ring-outer { position: absolute; inset: 0; border: 4px dashed #333; border-radius: 50%; transition: 0.3s; }
-        .ring-inner { position: absolute; inset: 15px; border: 2px solid transparent; border-top: 3px solid var(--accent); border-bottom: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); transition: 0.3s; }
-        .core { width: 70px; height: 70px; background: radial-gradient(circle, #222, #050505); border: 1px solid #555; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 2rem; color: var(--accent); box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); transition: 0.3s; }
-
-        .idle-breath .core { animation: breath 3s infinite ease-in-out; }
-        @keyframes breath { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); box-shadow: 0 0 30px currentColor; } }
+        /* --- 1. ESTACIÓN DE PREGUNTAS (El Peaje) --- */
+        #question-station {
+            position: absolute; inset: 0; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(5,5,5,0.95); backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease;
+        }
         
-        .state-spinning .ring-outer { border-color: #fff; animation: spin 0.6s linear infinite; opacity: 0.5; }
-        .state-spinning .ring-inner { animation: spin 0.3s linear infinite reverse; }
+        .q-card {
+            width: 90%; max-width: 340px; text-align: center;
+            padding: 30px 20px; border: 1px solid rgba(162,0,255,0.3);
+            border-radius: 20px; background: rgba(10,10,10,0.8);
+            box-shadow: 0 0 30px rgba(162,0,255,0.1), inset 0 0 20px rgba(0,0,0,1);
+            animation: float 4s ease-in-out infinite;
+        }
 
-        .state-win .core { background: white; color: var(--terminal) !important; box-shadow: 0 0 80px var(--terminal); transform: scale(1.1); animation: none; }
-        .state-win .ring-outer { border-color: var(--terminal); animation: pulse 0.5s infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        .state-error .core { background: var(--risk); color: black !important; box-shadow: 0 0 50px var(--risk); transform: scale(0.9); }
-        .state-error .ring-outer { border-color: var(--risk); border-style: solid; animation: glitch-anim 0.1s infinite; }
-        
-        .state-glitch .core { background: var(--risk); color: black !important; box-shadow: 0 0 50px var(--risk); animation: shake 0.1s infinite; }
-        .state-glitch .ring-outer { border-color: var(--risk); border-style: dotted; animation: glitch-anim 0.2s infinite; }
+        .btn-answer {
+            width: 100%; padding: 15px; margin-top: 15px;
+            background: transparent; border: 2px solid #333; color: #fff;
+            border-radius: 12px; font-weight: 900; font-size: 1.1rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.2s;
+        }
+        .btn-answer:active { transform: scale(0.95); }
+        .btn-a { border-color: var(--primary); color: var(--primary); }
+        .btn-b { border-color: var(--accent); color: var(--accent); }
 
-        .state-gold-win .core { background: var(--gold); color: black !important; box-shadow: 0 0 100px var(--gold); transform: scale(1.2); animation: shake 0.2s infinite; }
-        .state-gold-win .ring-outer { border-color: var(--gold); border-width: 8px; border-style: double; }
+        /* --- 2. EL VÓRTICE (El Motor Físico) --- */
+        #vortex-station {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%; position: relative; z-index: 10;
+            opacity: 0; transition: opacity 1s ease;
+        }
+
+        .vortex-container {
+            position: relative; width: 260px; height: 260px;
+            display: flex; align-items: center; justify-content: center;
+            perspective: 800px; /* Profundidad para el 3D */
+        }
+
+        .ring {
+            position: absolute; border-radius: 50%;
+            border: 2px dashed transparent;
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+        }
+
+        /* Anillos Cuánticos */
+        .ring-outer {
+            width: 100%; height: 100%; border-color: rgba(0,255,204,0.3);
+            border-left: 2px solid var(--primary);
+            animation: spin 10s linear infinite;
+            box-shadow: 0 0 20px rgba(0,255,204,0.1);
+        }
+        .ring-middle {
+            width: 75%; height: 75%; border-color: rgba(162,0,255,0.4);
+            border-right: 2px solid var(--accent);
+            animation: spin 7s linear infinite reverse;
+            box-shadow: inset 0 0 20px rgba(162,0,255,0.2);
+        }
+        .ring-inner {
+            width: 50%; height: 50%; border: 2px dotted #fff;
+            animation: spin 3s linear infinite;
+        }
+
+        /* El Núcleo de Extracción */
+        .vortex-core {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: #000; border: 3px solid var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px var(--primary), inset 0 0 20px var(--primary);
+            z-index: 20; transition: all 0.1s;
+        }
+
+        .multiplier-text {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.5rem;
+            font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--primary);
+        }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-3px, 3px); } 75% { transform: translate(3px, -3px); } }
-        @keyframes glitch-anim { 0% { clip-path: inset(0 0 0 0); transform: translate(0); } 20% { clip-path: inset(20% 0 0 0); transform: translate(-3px, 3px); } 100% { clip-path: inset(0 0 0 0); transform: translate(0); } }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
 
-        .controls { display: flex; gap: 15px; width: 100%; margin-bottom: 25px; }
-        .btn { 
-            flex: 1; padding: 20px 5px; border: 2px solid; border-radius: 12px; 
-            font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; 
-            font-weight: 800; font-family: 'Outfit', sans-serif; transition: 0.1s; 
-            text-transform: uppercase; letter-spacing: 1px;
+        /* --- 3. CONTROLES DE TENSIÓN --- */
+        .control-pad {
+            position: absolute; 
+            bottom: 140px; /* <--- AQUÍ ESTÁ LA MAGIA: Lo subimos 100px para no chocar con Cerrar Brecha */
+            width: 90%; 
+            max-width: 300px;
+            text-align: center;
         }
-        
-        .btn-left { border-color: rgba(255, 0, 68, 0.3); color: var(--risk); background: rgba(255, 0, 68, 0.05); }
-        .btn-left:active { transform: scale(0.96); background: var(--risk); color: black; box-shadow: 0 0 30px var(--risk); }
 
-        .btn-right { border-color: rgba(16, 185, 129, 0.3); color: var(--terminal); background: rgba(16, 185, 129, 0.05); }
-        .btn-right:active { transform: scale(0.96); background: var(--terminal); color: black; box-shadow: 0 0 30px var(--terminal); }
-
-        .mode-golden .btn-left { border-color: #887800; color: #ffd700; background: rgba(255, 215, 0, 0.05); } 
-        .mode-golden .btn-right { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.15); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
-        .mode-golden .btn-right:active, .mode-golden .btn-left:active { background: var(--gold); color: black; box-shadow: 0 0 40px var(--gold); }
-
-        .legal-text { 
-            font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; 
-            padding: 0 20px; line-height: 1.4; margin-top: 10px;
+        .btn-extract {
+            width: 100%; padding: 20px; border-radius: 50px;
+            background: rgba(10,10,10,0.8); border: 2px solid var(--primary);
+            color: var(--primary); font-weight: 900; font-size: 1.2rem;
+            letter-spacing: 2px; text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(0,255,204,0.2);
+            user-select: none; -webkit-user-select: none; cursor: pointer;
+            transition: all 0.2s;
         }
-        
-        .result-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; z-index: 50; pointer-events: none; text-align: center; opacity: 0; transition: 0.1s; }
-        .show-result { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-        .res-title { font-size: 1.8rem; font-weight: 900; font-style: italic; line-height: 1; margin-bottom: 5px; text-shadow: 0 0 20px black; font-family: 'Outfit'; text-transform: uppercase; }
-        .res-sub { font-size: 0.8rem; font-family: monospace; background: black; color: white; padding: 4px 8px; display: inline-block; border-radius: 4px; border: 1px solid #333; }
 
+        .btn-extract:active { background: var(--primary); color: #000; transform: scale(0.95); }
+
+        /* ESTADOS DE SOBRECARGA (Cuando mantiene presionado) */
+        .charging .ring-outer { animation-duration: 2s; border-color: var(--risk); box-shadow: 0 0 40px var(--risk); }
+        .charging .ring-middle { animation-duration: 1.5s; border-color: #ffaa00; }
+        .charging .ring-inner { animation-duration: 0.5s; border-color: #fff; }
+        .charging .vortex-core { border-color: var(--risk); box-shadow: 0 0 60px var(--risk), inset 0 0 30px var(--risk); transform: scale(1.1); }
+        .charging .multiplier-text { color: var(--risk); text-shadow: 0 0 20px var(--risk); }
+
+        .crashed .vortex-core { background: #333; border-color: #111; box-shadow: none; transform: scale(0.8); }
+        .crashed .multiplier-text { color: #555; text-shadow: none; }
+        .crashed .ring { animation-play-state: paused; opacity: 0.2; }
     </style>
 </head>
-<body id="main-body">
-    <div class="ambient-glow"></div>
+<body>
 
-    <div class="reactor-box">
-        <div class="header-row">
-            <div class="turbine-brand">
-                TURBINA <span id="brand-suffix">DE DATOS</span>
-            </div>
-            <div class="close-btn" onclick="exitTurbine()"><i class="fas fa-times"></i></div>
+    <div id="question-station">
+        <div class="q-card">
+            <i class="fas fa-database text-3xl text-[#a200ff] mb-4"></i>
+            <h2 class="text-[10px] text-zinc-500 tracking-[0.4em] uppercase mb-4">Extracción de Perfil</h2>
+            <p id="q-text" class="text-xl font-black italic text-white mb-6 uppercase leading-tight"></p>
+            
+            <button class="btn-answer btn-a" onclick="activateVortex()">SÍ, TOTALMENTE</button>
+            <button class="btn-answer btn-b" onclick="activateVortex()">NO, JAMÁS</button>
+        </div>
+    </div>
+
+    <div id="vortex-station">
+        <div class="text-[10px] text-zinc-500 tracking-[0.4em] uppercase mb-10 absolute top-10">
+            Costo de Enlace: <span class="text-[#00ffcc] font-black">-$100 COP</span>
         </div>
 
-        <div class="vault-pill">
-            <i class="fas fa-lock" style="font-size:0.8rem;"></i>
-            BÓVEDA: <span id="vault-amount" class="vault-val">$0</span>
-        </div>
-
-        <div class="monitor-screen" id="monitor">
-            <div class="q-text" id="question">INICIANDO...</div>
-        </div>
-
-        <div class="reactor-stage idle-breath" id="reactor">
-            <div id="result-msg" class="result-overlay">
-                <div class="res-title" id="res-t"></div>
-                <div class="res-sub" id="res-s"></div>
-            </div>
-            <div class="ring-outer"></div>
-            <div class="ring-inner"></div>
-            <div class="core">
-                <i id="core-icon" class="fas fa-atom"></i>
+        <div class="vortex-container" id="v-container">
+            <div class="ring ring-outer"></div>
+            <div class="ring ring-middle"></div>
+            <div class="ring ring-inner"></div>
+            <div class="vortex-core">
+                <span class="multiplier-text" id="multi-display">1.00x</span>
             </div>
         </div>
 
-        <div class="controls" id="btns">
-            <button class="btn btn-left" id="btn-left" onclick="handleBtn(false)"></button>
-            <button class="btn btn-right" id="btn-right" onclick="handleBtn(true)"></button>
+        <div class="control-pad">
+            <p id="status-text" class="text-xs text-zinc-400 mb-4 font-mono">MANTÉN PRESIONADO PARA EXTRAER</p>
+            <button class="btn-extract" id="btn-extract">EXTRAER</button>
         </div>
-
-        <div class="legal-text">La honestidad es recompensada en GoVotto.</div>
     </div>
 
     <script>
-        // --- 1. MOTOR DE AUDIO SINTÉTICO (NO MP3) ---
-        const AudioEngine = {
-            ctx: null,
-            init: function() {
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            },
-            playTone: function(freq, type, duration, vol=0.1) {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            },
-            playSweep: function(start, end, duration) {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.frequency.setValueAtTime(start, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(end, this.ctx.currentTime + duration);
-                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            },
-            // FX PRESETS
-            click: function() { this.playTone(800, 'sine', 0.1, 0.05); },
-            spin: function() { this.playSweep(200, 800, 0.5); },
-            win: function() { 
-                this.playTone(600, 'sine', 0.2); 
-                setTimeout(()=>this.playTone(900, 'sine', 0.4), 100); 
-            },
-            loss: function() { this.playTone(150, 'sawtooth', 0.4, 0.1); },
-            error: function() { 
-                this.playTone(100, 'square', 0.5, 0.2); 
-                setTimeout(()=>this.playTone(100, 'square', 0.5, 0.2), 200);
-            },
-            gold: function() {
-                this.playTone(800, 'triangle', 0.5);
-                setTimeout(()=>this.playTone(1200, 'triangle', 0.5), 150);
-                setTimeout(()=>this.playTone(1600, 'triangle', 0.8), 300);
-            }
-        };
-
-        // --- 2. MOTOR HÁPTICO (VIBRACIÓN) ---
-        const HapticEngine = {
-            click: function() { if(navigator.vibrate) navigator.vibrate(20); },
-            win: function() { if(navigator.vibrate) navigator.vibrate([50, 50, 50]); },
-            loss: function() { if(navigator.vibrate) navigator.vibrate([30, 50, 30]); },
-            error: function() { if(navigator.vibrate) navigator.vibrate(500); },
-            gold: function() { if(navigator.vibrate) navigator.vibrate([40,40,40,40,40,40]); }
-        };
-
-        // --- LÓGICA DE JUEGO (V10) ---
-        const SCENARIO = [
-            { type: 0, text: "¿HAS ESTADO EN MARTE?" },           
-            { type: 1, text: "¿TIENES MASCOTAS?" },               
-            { type: 1, text: "¿AMAS TU TRABAJO?" },               
-            { type: 1, text: "¿ERES FELIZ?" },                    
-            { type: 2, text: "¿PREFIERES CRÉDITO O CONTADO?" }    
+      // --- 1. BASE DE DATOS Y SECUENCIA ---
+        const questions = [
+            "¿Venderías tu historial de navegación completo por $10,000 dólares?",
+            "¿Consideras que la empatía humana es un defecto en los negocios?",
+            "¿Mentirías sobre tus ingresos para entrar a un círculo social de élite?",
+            "¿Sientes que el dinero virtual (cripto) es más real que el papel?",
+            "¿Prefieres el estrés del riesgo constante a una vida de seguridad mediocre?"
         ];
 
-        const els = { body: document.getElementById('main-body'), reactor: document.getElementById('reactor'), monitor: document.getElementById('monitor'), overlay: document.getElementById('result-msg'), t: document.getElementById('res-t'), s: document.getElementById('res-s'), icon: document.getElementById('core-icon'), btns: document.getElementById('btns'), btnL: document.getElementById('btn-left'), btnR: document.getElementById('btn-right'), q: document.getElementById('question'), vault: document.getElementById('vault-amount') };
-        
-        let busy = false;
-        let step = 0; 
-        let money = parseInt(localStorage.getItem('govotto_vault')) || 0;
-        els.vault.innerText = "$" + money.toLocaleString();
+        let currentQuestionIndex = 0;
+        let totalReward = 0;
 
-       function exitTurbine() {
-            // 1. Grabado forzoso en la Bóveda Ryzen
-            localStorage.setItem('govotto_vault', money);
-            
-            // 2. Transmisión de datos al Mapa Principal (index.html)
-            try { 
-                window.parent.postMessage({ 
-                    action: 'close_turbine', 
-                    balance: money 
-                }, '*'); 
-            } catch(e) {
-                console.error("Fallo de enlace satelital");
+      function loadNextQuestion() {
+            // Si terminamos las 5 preguntas, ejecutamos la Pantalla de Cierre
+            if (currentQuestionIndex >= questions.length) {
+                // 1. Ocultar el Vórtice
+                document.getElementById('vortex-station').style.display = 'none';
+                
+                // 2. Traer de vuelta la tarjeta de cristal
+                const qStation = document.getElementById('question-station');
+                qStation.style.display = 'flex';
+                qStation.style.opacity = '1';
+                
+                // 3. Mensaje Épico de Cierre y ocultar botones
+                document.getElementById('q-text').innerText = "SINCRO COMPLETADA.\nDATOS ENVIADOS A DANTE.";
+                document.getElementById('q-text').style.color = "var(--primary)";
+                document.querySelector('.btn-a').style.display = 'none';
+                document.querySelector('.btn-b').style.display = 'none';
+                
+                // 4. Enviar la señal de cierre y el dinero al engine.js
+                setTimeout(() => {
+                    window.parent.postMessage({ action: 'close_casino_game', reward: totalReward }, '*');
+                }, 1500); // Espera 1.5 segundos para que el usuario lea el mensaje
+                
+                return;
             }
+            
+            // --- CÓDIGO NORMAL PARA LAS PREGUNTAS 1 A 5 ---
+            // Restaurar estación de preguntas
+            document.getElementById('q-text').innerText = questions[currentQuestionIndex];
+            document.getElementById('vortex-station').style.display = 'none';
+            document.getElementById('vortex-station').style.opacity = '0';
+            
+            const qStation = document.getElementById('question-station');
+            qStation.style.display = 'flex';
+            setTimeout(() => qStation.style.opacity = '1', 50);
 
-            // 3. Feedback visual de desconexión profesional
-            els.q.innerText = "TERMINAL DESCONECTADA";
-            els.monitor.style.borderLeftColor = "#555"; // Color apagado
-            els.btns.style.pointerEvents = 'none'; // Bloquea clics accidentales
-            els.btns.style.opacity = '0.3';
+            // Reiniciar estado del Vórtice
+            multiplier = 1.00;
+            document.getElementById('multi-display').innerText = "1.00x";
+            const vContainer = document.getElementById('v-container');
+            vContainer.classList.remove('crashed', 'charging');
+            
+            const sText = document.getElementById('status-text');
+            sText.innerText = "MANTÉN PRESIONADO PARA EXTRAER";
+            sText.style.color = "#9ca3af"; // color original zinc-400
+            
+            const btnExtract = document.getElementById('btn-extract');
+            btnExtract.innerText = "EXTRAER";
+            btnExtract.style.borderColor = "var(--primary)";
+            btnExtract.style.color = "var(--primary)";
+            gameActive = true;
+            isHolding = false;
         }
 
-        loadQuestion();
+        // --- 2. MOTOR DE AUDIO ---
+        let audioCtx;
+        let chargeOsc, chargeGain;
 
-        function loadQuestion() {
-            if(step >= SCENARIO.length) step = 1; 
-            const currentQ = SCENARIO[step];
-            
-            els.body.classList.remove('mode-error', 'mode-success', 'mode-golden');
-            els.reactor.classList.remove('state-error'); 
-            els.monitor.className = 'monitor-screen';
-            els.icon.className = 'fas fa-atom';
-            els.q.innerText = currentQ.text;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
 
-            if (currentQ.type === 2) { 
-                els.body.classList.add('mode-golden');
-                els.btnL.innerHTML = '<i class="fas fa-coins"></i> CONTADO';
-                els.btnR.innerHTML = '<i class="fas fa-credit-card"></i> CRÉDITO';
-                els.icon.className = 'fas fa-lock-open';
-            } else if (currentQ.type === 0) {
-                els.btnL.innerHTML = '<i class="fas fa-times"></i> NO';
-                els.btnR.innerHTML = '<i class="fas fa-check"></i> SÍ';
-                els.icon.className = 'fas fa-user-astronaut';
-            } else {
-                els.btnL.innerHTML = '<i class="fas fa-times"></i> NO';
-                els.btnR.innerHTML = '<i class="fas fa-check"></i> SÍ';
+        function playSynth(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'start') {
+                chargeOsc = osc; chargeGain = gain;
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, audioCtx.currentTime); 
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+            } else if (type === 'cashout') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                osc.start(); osc.stop(audioCtx.currentTime + 1);
+            } else if (type === 'crash') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
             }
         }
 
-        // Wrapper para iniciar audio en primer click
-        function handleBtn(val) {
-            AudioEngine.init(); // Iniciar AudioContext
-            AudioEngine.click(); // Sonido Click
-            HapticEngine.click(); // Vibración Click
-            play(val);
+        function updateChargeSound(mult) {
+            if (chargeOsc && audioCtx) {
+                const newFreq = 50 + (mult * 150);
+                chargeOsc.frequency.linearRampToValueAtTime(newFreq, audioCtx.currentTime + 0.1);
+            }
         }
 
-        function play(val) {
-            if(busy) return; busy = true;
-            
-            const currentType = SCENARIO[step].type;
+        function stopChargeSound() {
+            if (chargeOsc && chargeGain) {
+                chargeGain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                setTimeout(() => chargeOsc.stop(), 100);
+            }
+        }
 
-            AudioEngine.spin(); // Sonido Giro
-            els.reactor.classList.remove('idle-breath', 'state-error');
-            els.btns.style.opacity = '0.5'; els.btns.style.pointerEvents = 'none';
-            els.reactor.className = 'reactor-stage state-spinning'; 
-            els.icon.className = 'fas fa-sync fa-spin';
-            els.q.innerText = "SINTETIZANDO...";
+        // --- 3. LÓGICA DEL VÓRTICE ---
+        let isHolding = false;
+        let gameActive = true;
+        let multiplier = 1.00;
+        let crashPoint = 0;
+        let gameInterval = null;
+        let hapticInterval = null;
+        const COSTO_ENTRADA = 100;
 
+        function activateVortex() {
+            initAudio();
+            document.getElementById('question-station').style.opacity = '0';
             setTimeout(() => {
-                
-                if (currentType === 0) {
-                    if (val === true) { 
-                        showResult("ERROR", "MENTIRA DETECTADA", "ACCESO DENEGADO", 0);
-                        return; 
-                    } else { 
-                        showResult("SUCCESS", "CALIBRACIÓN EXITOSA", "BONO +$50", 50);
-                        step++; 
-                        return;
-                    }
-                }
-                
-                else if (currentType === 2) {
-                    showResult("GOLD", "DATA VALIOSA", "PREMIO +$500", 500);
-                    step++;
-                    return;
-                }
+                document.getElementById('question-station').style.display = 'none';
+                const vStation = document.getElementById('vortex-station');
+                vStation.style.display = 'flex';
+                setTimeout(() => vStation.style.opacity = '1', 50);
+            }, 500);
 
-                else {
-                    const r = Math.random(); 
-                    if (r > 0.98) {
-                        showResult("JACKPOT", "¡DATA CRÍTICA!", "JACKPOT +$5.000", 5000);
-                    } else if (r > 0.80) {
-                        showResult("WIN", "DATO VALIDADO", "+$50 BÓVEDA", 50);
-                    } else {
-                        showResult("LOSS", "SISTEMA INESTABLE", "INTENTA DE NUEVO", 0);
-                    }
-                    step++;
-                    return;
-                }
-
-            }, 1000); // Duración del giro
+            const luck = Math.random();
+            if (luck < 0.5) crashPoint = 1.1 + (Math.random() * 0.4); 
+            else if (luck < 0.8) crashPoint = 1.5 + (Math.random() * 1.0); 
+            else crashPoint = 2.5 + (Math.random() * 2.5); 
         }
 
-        function showResult(type, title, sub, reward) {
-            if (reward > 0) {
-                money += reward;
-                localStorage.setItem('govotto_vault', money);
-                els.vault.innerText = "$" + money.toLocaleString();
-            }
+        const btnExtract = document.getElementById('btn-extract');
+        const vContainer = document.getElementById('v-container');
+        const mDisplay = document.getElementById('multi-display');
+        const sText = document.getElementById('status-text');
 
-            if (type === "ERROR") {
-                AudioEngine.error(); HapticEngine.error(); // FX
-                els.body.classList.add('mode-error');
-                els.reactor.className = 'reactor-stage state-error';
-                els.icon.className = 'fas fa-exclamation-triangle';
-                els.t.innerText = title; els.t.style.color = "var(--risk)";
-                els.s.innerText = sub; els.s.style.color = "var(--risk)"; els.s.style.borderColor = "var(--risk)";
-                setTimeout(() => reset(false), 2500);
+        btnExtract.addEventListener('mousedown', startExtraction);
+        btnExtract.addEventListener('touchstart', (e) => { e.preventDefault(); startExtraction(); });
 
-            } else if (type === "SUCCESS") {
-                AudioEngine.win(); HapticEngine.win(); // FX
-                els.body.classList.add('mode-success');
-                els.reactor.className = 'reactor-stage state-win';
-                els.icon.className = 'fas fa-fingerprint';
-                els.t.innerText = title; els.t.style.color = "var(--terminal)";
-                els.s.innerText = sub; els.s.style.color = "var(--terminal)"; els.s.style.borderColor = "var(--terminal)";
-                setTimeout(() => reset(true), 1500);
+        window.addEventListener('mouseup', stopExtraction);
+        window.addEventListener('touchend', stopExtraction);
 
-            } else if (type === "GOLD") {
-                AudioEngine.gold(); HapticEngine.gold(); // FX
-                els.reactor.className = 'reactor-stage state-gold-win';
-                els.icon.className = 'fas fa-gem';
-                els.t.innerText = title; els.t.style.color = "var(--gold)";
-                els.s.innerText = sub; els.s.style.color = "var(--gold)"; els.s.style.borderColor = "var(--gold)";
-                setTimeout(() => reset(true), 2000);
+        function startExtraction() {
+            if(!gameActive || isHolding) return;
+            isHolding = true;
+            
+            initAudio();
+            playSynth('start');
+            vContainer.classList.add('charging');
+            sText.innerText = "¡SACA ANTES DE LA SOBRECARGA!";
+            sText.style.color = "var(--risk)";
 
-            } else if (type === "LOSS") {
-                AudioEngine.loss(); HapticEngine.loss(); // FX
-                els.reactor.className = 'reactor-stage state-glitch';
-                els.icon.className = 'fas fa-bug';
-                els.t.innerText = title; els.t.style.color = "var(--risk)";
-                els.s.innerText = sub; els.s.style.color = "white"; els.s.style.borderColor = "var(--risk)";
-                setTimeout(() => reset(true), 1200);
+            let vibRate = 400;
+            hapticInterval = setInterval(() => {
+                try { if(navigator.vibrate) navigator.vibrate(50); } catch(e){}
+                vibRate = Math.max(50, vibRate - 20); 
+            }, vibRate);
 
-            } else { 
-                AudioEngine.win(); HapticEngine.win(); // FX
-                els.reactor.className = 'reactor-stage state-win';
-                els.icon.className = 'fas fa-check';
-                els.t.innerText = title; els.t.style.color = "var(--terminal)";
-                els.s.innerText = sub; els.s.style.color = "white"; els.s.style.borderColor = "var(--terminal)";
-                setTimeout(() => reset(true), 1200);
-            }
+            gameInterval = setInterval(() => {
+                multiplier += 0.01; 
+                if(multiplier > 2.0) multiplier += 0.02; 
+                if(multiplier > 4.0) multiplier += 0.05; 
 
-            els.overlay.classList.add('show-result');
+                mDisplay.innerText = multiplier.toFixed(2) + "x";
+                updateChargeSound(multiplier);
+
+                if (multiplier >= crashPoint) {
+                    crashVortex();
+                }
+            }, 50); 
         }
 
-        function reset(next) {
-            els.reactor.className = 'reactor-stage idle-breath';
-            els.overlay.classList.remove('show-result');
-            els.btns.style.opacity = '1'; els.btns.style.pointerEvents = 'auto';
-            loadQuestion();
-            busy = false;
+        function stopExtraction() {
+            if(!isHolding || !gameActive) return;
+            isHolding = false;
+            gameActive = false;
+            
+            clearInterval(gameInterval);
+            clearInterval(hapticInterval);
+            stopChargeSound();
+
+            vContainer.classList.remove('charging');
+            
+            playSynth('cashout');
+            try { if(navigator.vibrate) navigator.vibrate([100, 50, 300]); } catch(e){}
+            
+            const gananciaBruta = COSTO_ENTRADA * multiplier;
+            const gananciaNeta = Math.floor(gananciaBruta - COSTO_ENTRADA);
+            
+            sText.innerText = "¡DATOS EXTRAÍDOS CON ÉXITO!";
+            sText.style.color = "var(--primary)";
+            btnExtract.innerText = `+$${gananciaNeta} COP`;
+            btnExtract.style.borderColor = "var(--primary)";
+
+            // Acumular ganancia y pasar a la siguiente pregunta
+            totalReward += gananciaNeta;
+            currentQuestionIndex++;
+            setTimeout(() => { loadNextQuestion(); }, 2500);
         }
+
+        function crashVortex() {
+            isHolding = false;
+            gameActive = false;
+            
+            clearInterval(gameInterval);
+            clearInterval(hapticInterval);
+            stopChargeSound();
+
+            vContainer.classList.remove('charging');
+            vContainer.classList.add('crashed');
+            
+            playSynth('crash');
+            try { if(navigator.vibrate) navigator.vibrate([300, 100, 400]); } catch(e){}
+            
+            sText.innerText = "¡SOBRECARGA DEL NÚCLEO!";
+            btnExtract.innerText = "COLAPSO CRÍTICO";
+            btnExtract.style.borderColor = "var(--risk)";
+            btnExtract.style.color = "var(--risk)";
+
+            // Perder costo y pasar a la siguiente pregunta
+            totalReward -= COSTO_ENTRADA;
+            currentQuestionIndex++;
+            setTimeout(() => { loadNextQuestion(); }, 2500);
+        }
+
+        // Arrancar
+        loadNextQuestion();
     </script>
 </body>
 </html>
