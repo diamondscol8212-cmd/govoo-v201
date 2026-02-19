@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GoVotto | PROYECCIÓN SINÁPTICA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #00ffcc; /* Muta según perfil */
+            --bg: #010202; 
+        }
+        
+        body { 
+            background: var(--bg); color: white; margin: 0; 
+            font-family: 'Outfit', sans-serif; overflow: hidden; height: 100vh; 
+            user-select: none; -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+
+        /* --- EFECTO DE CÁMARA MENTAL --- */
+        #crt-overlay {
+            position: fixed; inset: 0; z-index: 999; pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            opacity: 0.4;
+        }
+
+        /* --- HUD SUPERIOR --- */
+        .hud-header {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 30px 20px; display: flex; justify-content: space-between; align-items: flex-start;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+        }
+        .hud-tag { font-family: 'JetBrains Mono'; font-size: 9px; color: var(--primary); letter-spacing: 0.4em; text-transform: uppercase; }
+        
+        #progress-bar-container { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 10px; }
+        #progress-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.5s ease; box-shadow: 0 0 10px var(--primary); }
+
+        .question-box {
+            font-size: 16px; font-weight: 900; font-style: italic; line-height: 1.4;
+            text-transform: uppercase; letter-spacing: -0.5px;
+            color: #fff; text-shadow: 0 0 15px rgba(0,0,0,1);
+            max-width: 90%; margin-top: 15px; min-height: 50px;
+        }
+
+        /* --- EL COLISIONADOR (LAS DOS PROYECCIONES) --- */
+        #collider-stage {
+            position: absolute; inset: 0; top: 130px; bottom: 20px;
+            display: flex; flex-direction: column; gap: 15px; padding: 0 20px;
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease;
+        }
+
+        .projection-card {
+            flex: 1; position: relative; border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden; cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            transform-origin: center;
+        }
+
+        /* La magia negra del CSS para teñir fotos reales */
+        .img-container {
+            position: absolute; inset: 0;
+            background-size: cover; background-position: center;
+            filter: grayscale(100%) contrast(1.5) brightness(0.8);
+            transition: filter 0.5s;
+        }
+        
+        .color-overlay {
+            position: absolute; inset: 0; background-color: var(--primary);
+            mix-blend-mode: color; /* Aplica el color del perfil a los grises */
+            opacity: 0.8; transition: opacity 0.5s;
+        }
+        
+        .dark-overlay {
+            position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        }
+
+        /* Glifos y Texto interno */
+        .card-content {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            justify-content: flex-end; padding: 25px; z-index: 10;
+        }
+        .card-title {
+            font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 800;
+            color: white; letter-spacing: 0.3em; text-transform: uppercase;
+            text-shadow: 0 0 10px black;
+        }
+
+        /* --- INTERACCIÓN Y FÍSICA --- */
+        .projection-card:active { transform: scale(0.95); border-color: var(--primary); }
+        
+        /* Animación cuando es ELEGIDA */
+        .projection-card.selected {
+            flex: 3; border-color: var(--primary); z-index: 100;
+            box-shadow: 0 0 50px var(--primary);
+        }
+        .projection-card.selected .img-container { filter: grayscale(0%) contrast(2) brightness(1.5); }
+        .projection-card.selected .color-overlay { mix-blend-mode: screen; opacity: 1; }
+
+        /* Animación cuando es RECHAZADA */
+        .projection-card.rejected {
+            flex: 0.1; opacity: 0; filter: blur(20px); transform: scale(0.8);
+        }
+
+        /* Flash de Singularidad */
+        #flash-bang {
+            position: fixed; inset: 0; z-index: 9999; background: var(--primary);
+            opacity: 0; pointer-events: none; mix-blend-mode: screen; transition: opacity 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="crt-overlay"></div>
+    <div id="flash-bang"></div>
+
+    <header class="hud-header">
+        <div class="w-full">
+            <div class="flex justify-between items-end">
+                <p class="hud-tag" id="profile-tag">EXTRACCIÓN // 01</p>
+                <div class="flex gap-2 items-center">
+                    <svg width="15" height="15" viewBox="0 0 100 100" style="fill:none; stroke:var(--primary); stroke-width:5; animation: spin 4s linear infinite;">
+                        <circle cx="50" cy="50" r="40" stroke-dasharray="10 20"/>
+                        <circle cx="50" cy="50" r="20"/>
+                    </svg>
+                    <span class="hud-tag" style="color:white;">DANTE</span>
+                </div>
+            </div>
+            <div id="progress-bar-container"><div id="progress-bar"></div></div>
+            <div class="question-box" id="dante-query">INICIANDO ENLACE...</div>
+        </div>
+    </header>
+
+    <div id="collider-stage">
+        <div class="projection-card" id="card-A" onclick="seleccionar('A')">
+            <div class="img-container" id="img-A"></div>
+            <div class="color-overlay"></div>
+            <div class="dark-overlay"></div>
+            <div class="card-content">
+                <p class="hud-tag" style="color:var(--primary); margin-bottom:5px;">[ A ]</p>
+                <p class="card-title" id="text-A">OPCIÓN A</p>
+            </div>
+        </div>
+
+        <div class="projection-card" id="card-B" onclick="seleccionar('B')">
+            <div class="img-container" id="img-B"></div>
+            <div class="color-overlay"></div>
+            <div class="dark-overlay"></div>
+            <div class="card-content">
+                <p class="hud-tag" style="color:var(--primary); margin-bottom:5px;">[ B ]</p>
+                <p class="card-title" id="text-B">OPCIÓN B</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. LECTURA DEL ADN (Perfil del usuario) ---
+        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { perfil: "DESCONOCIDO", color: "#00ffcc", datosExtraidos: {} };
+        let activeColor = datosUsuario.color || "#00ffcc";
+        document.documentElement.style.setProperty('--primary', activeColor);
+        document.getElementById('profile-tag').style.color = activeColor;
+
+        // --- 2. BASE DE DATOS DE PROYECCIONES (Las 7 Pruebas) ---
+        // Usamos imágenes curadas de Unsplash que representan los conceptos
+        const protocolo = [
+            {
+                id: "personalidad_accion",
+                q: "ANTE LA HOSTILIDAD DEL ENTORNO, ¿CÓMO ASEGURAS TU SUPERVIVENCIA?",
+                optA: { text: "FUERZA BRUTA", img: "https://images.unsplash.com/photo-1598439119086-35655b8c333d?q=80&w=800&auto=format&fit=crop", val: "fuerza" },
+                optB: { text: "CÁLCULO Y LABERINTO", img: "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=800&auto=format&fit=crop", val: "calculo" }
+            },
+            {
+                id: "personalidad_entorno",
+                q: "¿DÓNDE RESIDE TU VERDADERO DOMINIO?",
+                optA: { text: "AISLAMIENTO TÁCTICO", img: "https://images.unsplash.com/photo-1486899430790-61dbf6f6d98b?q=80&w=800&auto=format&fit=crop", val: "aislamiento" },
+                optB: { text: "INFLUENCIA EN LA RED", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop", val: "influencia" }
+            },
+            {
+                id: "consumo_estilo",
+                q: "DEFINE EL PESO DE TU PRESENCIA FÍSICA.",
+                optA: { text: "SILENCIO MINIMALISTA", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop", val: "minimalismo" },
+                optB: { text: "OPULENCIA ABSOLUTA", img: "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?q=80&w=800&auto=format&fit=crop", val: "opulencia" }
+            },
+            {
+                id: "consumo_materia",
+                q: "¿QUÉ MATERIA EXIGE TU CUERPO PARA OPERAR?",
+                optA: { text: "TRADICIÓN Y CARNE", img: "https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?q=80&w=800&auto=format&fit=crop", val: "artesanal" },
+                optB: { text: "ENERGÍA SINTÉTICA", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop", val: "sintetico" }
+            },
+            {
+                id: "estetica_psique",
+                q: "¿QUÉ ESTRUCTURA CALMA TU CAOS INTERNO?",
+                optA: { text: "MÁRMOL Y CLASICISMO", img: "https://images.unsplash.com/photo-1582560469781-1965b92cb250?q=80&w=800&auto=format&fit=crop", val: "clasico" },
+                optB: { text: "CONCRETO BRUTALISTA", img: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800&auto=format&fit=crop", val: "brutalista" }
+            },
+            {
+                id: "finanzas_riesgo",
+                q: "¿CUÁL ES TU DOCTRINA PARA EL CAPITAL ACUMULADO?",
+                optA: { text: "FORTALEZA Y CONSERVACIÓN", img: "https://images.unsplash.com/photo-1621929747188-0b4dc28498d2?q=80&w=800&auto=format&fit=crop", val: "conservador" },
+                optB: { text: "FUEGO Y MULTIPLICACIÓN", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop", val: "agresivo" }
+            },
+            {
+                id: "seguros_miedo",
+                q: "EL COLAPSO ES INELUDIBLE. ¿QUÉ SALVAS PRIMERO?",
+                optA: { text: "EL IMPERIO (ACTIVOS)", img: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=800&auto=format&fit=crop", val: "activos" },
+                optB: { text: "LA SANGRE (BIOLÓGICO)", img: "https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=800&auto=format&fit=crop", val: "humanos" }
+            }
+        ];
+
+        let pasoActual = 0;
+        let isTyping = false;
+        let isProcessing = false;
+
+        // --- 3. MOTOR DE AUDIO SINTÉTICO ---
+        let audioCtx, droneOsc, droneGain;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                startDrone();
+            }
+        }
+
+        // Sonido de fondo constante (tensión eléctrica)
+        function startDrone() {
+            droneOsc = audioCtx.createOscillator();
+            droneGain = audioCtx.createGain();
+            droneOsc.connect(droneGain); droneGain.connect(audioCtx.destination);
+            
+            droneOsc.type = 'sawtooth';
+            droneOsc.frequency.setValueAtTime(30, audioCtx.currentTime); // Subsónico
+            droneGain.gain.setValueAtTime(0.02, audioCtx.currentTime); // Muy bajo
+            droneOsc.start();
+        }
+
+        // Sonido de tecleo del Oráculo
+        function playTypeSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800 + Math.random()*200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        // Sonido brutal al seleccionar una imagen
+        function playImpactSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.5);
+            
+            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            if(navigator.vibrate) navigator.vibrate([100, 50, 200]);
+        }
+
+        // --- 4. LÓGICA DE PROYECCIÓN ---
+        function typeWriter(text, id, callback) {
+            isTyping = true;
+            const el = document.getElementById(id); el.innerHTML = ""; 
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    el.innerHTML += text.charAt(i);
+                    if(text.charAt(i) !== ' ') playTypeSound();
+                    i++;
+                    setTimeout(type, 30);
+                } else {
+                    isTyping = false;
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function renderProyeccion() {
+            if (pasoActual >= protocolo.length) {
+                finalizarExtraccion();
+                return;
+            }
+
+            isProcessing = false;
+            const data = protocolo[pasoActual];
+            const stage = document.getElementById('collider-stage');
+            const cardA = document.getElementById('card-A');
+            const cardB = document.getElementById('card-B');
+
+            // Resetear clases y estilos
+            stage.style.opacity = '0';
+            cardA.className = 'projection-card';
+            cardB.className = 'projection-card';
+
+            // Actualizar HUD
+            document.getElementById('profile-tag').innerText = `EXTRACCIÓN // 0${pasoActual + 1}`;
+            document.getElementById('progress-bar').style.width = `${(pasoActual / protocolo.length) * 100}%`;
+
+            // Cargar Imágenes Reales en los contenedores
+            document.getElementById('img-A').style.backgroundImage = `url('${data.optA.img}')`;
+            document.getElementById('img-B').style.backgroundImage = `url('${data.optB.img}')`;
+            document.getElementById('text-A').innerText = data.optA.text;
+            document.getElementById('text-B').innerText = data.optB.text;
+
+            // Animar entrada
+            typeWriter(data.q, "dante-query", () => {
+                stage.style.opacity = '1';
+            });
+        }
+
+        function seleccionar(opcion) {
+            if (isTyping || isProcessing) return;
+            isProcessing = true;
+            initAudio();
+            playImpactSound();
+
+            const cardSeleccionada = document.getElementById(`card-${opcion}`);
+            const cardRechazada = document.getElementById(`card-${opcion === 'A' ? 'B' : 'A'}`);
+            const dataActual = protocolo[pasoActual];
+            
+            // Físicas CSS de Asimilación
+            cardSeleccionada.classList.add('selected');
+            cardRechazada.classList.add('rejected');
+
+            // Flash Glitch
+            const flash = document.getElementById('flash-bang');
+            flash.style.opacity = '0.5';
+            setTimeout(() => flash.style.opacity = '0', 100);
+
+            // Guardar el dato extraído
+            const valorElegido = opcion === 'A' ? dataActual.optA.val : dataActual.optB.val;
+            if(!datosUsuario.datosExtraidos) datosUsuario.datosExtraidos = {};
+            datosUsuario.datosExtraidos[dataActual.id] = valorElegido;
+            datosUsuario.xp += 100; // Recompensa por dato
+
+            pasoActual++;
+
+            // Transición a la siguiente proyección
+            setTimeout(() => {
+                document.getElementById('collider-stage').style.opacity = '0';
+                setTimeout(renderProyeccion, 500);
+            }, 1200);
+        }
+
+        function finalizarExtraccion() {
+            document.getElementById('progress-bar').style.width = `100%`;
+            localStorage.setItem('govotto_user_data', JSON.stringify(datosUsuario));
+            
+            typeWriter("PERFIL DE CONSUMO ASIMILADO. ACTUALIZANDO BÓVEDA.", "dante-query", () => {
+                setTimeout(() => {
+                    const flash = document.getElementById('flash-bang');
+                    flash.style.opacity = '1';
+                    flash.style.background = "#fff";
+                    
+                    if(droneOsc) {
+                        droneGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                        setTimeout(() => droneOsc.stop(), 1000);
+                    }
+                    
+                    // Retorno a la matriz
+                    setTimeout(() => window.location.href = 'mapa.html', 800);
+                }, 1000);
+            });
+        }
+
+        window.onload = () => {
+            // Un pequeño retraso táctico inicial
+            setTimeout(renderProyeccion, 800);
+        };
+        
+        // Estilos extra insertados para animaciones SVG
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

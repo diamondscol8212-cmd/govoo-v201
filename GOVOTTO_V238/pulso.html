@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GoVotto | PULSO VITAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #00ffcc; /* Base, muta por JS */
+            --bg: #010202; 
+            --bio-glow: rgba(0, 255, 204, 0.15); /* Base, muta por JS */
+            --blood: #FF0044;
+        }
+        
+        body { 
+            background: var(--bg); color: white; margin: 0; 
+            font-family: 'Outfit', sans-serif; overflow: hidden; height: 100vh; 
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- EL ECOSISTEMA PRIMORDIAL --- */
+        #ecosystem-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.8; transition: filter 0.5s; }
+        .canvas-chaos { filter: invert(0.8) hue-rotate(180deg); }
+        
+        .vignette {
+            position: fixed; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(circle at center, transparent 30%, #000 100%);
+        }
+
+        /* --- HUD ORGÁNICO --- */
+        .ui-layer { 
+            position: relative; z-index: 10; height: 100vh; 
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 40px; pointer-events: none;
+        }
+
+        .status-tag { 
+            font-family: 'JetBrains Mono'; font-size: 9px; color: var(--primary); 
+            letter-spacing: 0.5em; text-transform: uppercase; transition: color 0.3s;
+        }
+
+        .title-glitch {
+            font-size: 2.5rem; font-weight: 900; font-style: italic; 
+            text-transform: uppercase; letter-spacing: -1px;
+            color: rgba(255,255,255,0.2); transition: color 2s ease;
+        }
+
+        /* --- EL NÚCLEO DE CONTACTO (EL BOTÓN) --- */
+        #core-interaction {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: auto; z-index: 50;
+        }
+
+        .umbilical-btn {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: transparent; border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; transition: all 0.3s ease;
+            box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 30px var(--bio-glow);
+        }
+
+        .umbilical-btn::before {
+            content: ''; position: absolute; inset: 15px; border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            animation: breathe 4s infinite ease-in-out;
+        }
+
+        /* RUNA SVG CENTRAL */
+        .core-rune { width: 40px; height: 40px; fill: none; stroke: #666; stroke-width: 2; transition: stroke 0.3s, filter 0.3s; }
+        .umbilical-btn:hover .core-rune { stroke: var(--primary); filter: drop-shadow(0 0 5px var(--primary)); }
+
+        .umbilical-btn:active, .umbilical-btn.charging {
+            transform: scale(0.9); border-color: var(--primary);
+            box-shadow: inset 0 0 40px var(--bio-glow), 0 0 50px var(--bio-glow);
+        }
+        .umbilical-btn.charging .core-rune { stroke: var(--primary); filter: drop-shadow(0 0 10px var(--primary)); stroke-width: 3; }
+        .umbilical-btn.charging::before { animation: spin 2s linear infinite; border-style: solid; border-color: var(--primary); }
+
+        /* Estado de Rechazo */
+        .umbilical-btn.rejected {
+            border-color: var(--blood); box-shadow: inset 0 0 40px rgba(255,0,68,0.3), 0 0 50px rgba(255,0,68,0.2);
+            transform: scale(0.8);
+        }
+        .umbilical-btn.rejected::before { border-color: var(--blood); animation: none; }
+        .umbilical-btn.rejected .core-rune { stroke: var(--blood); filter: drop-shadow(0 0 10px var(--blood)); }
+
+        .btn-text {
+            position: absolute; bottom: -60px; text-align: center; width: 280px;
+            font-family: 'JetBrains Mono'; font-size: 9px; color: #666; 
+            letter-spacing: 0.2em; text-transform: uppercase; transition: color 0.3s;
+            line-height: 1.5;
+        }
+        .umbilical-btn.charging ~ .btn-text { color: var(--primary); font-weight: bold; }
+        .umbilical-btn.rejected ~ .btn-text { color: var(--blood); font-weight: 900; font-size: 10px; }
+
+        /* --- REVELACIÓN DE ANCLAJE --- */
+        #resolution-panel {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 85%; max-width: 400px; padding: 30px;
+            background: rgba(5, 5, 5, 0.85); border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px); text-align: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s ease, transform 1s ease;
+            transform: translate(-50%, 20px); border-radius: 20px; z-index: 60;
+        }
+        #resolution-panel.active { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); border-color: var(--bio-glow); }
+        
+        .radar-svg { width: 50px; height: 50px; stroke: var(--primary); fill: none; margin: 0 auto 15px; }
+
+        /* --- EFECTOS DE TRANSICIÓN (SINGULARIDAD) --- */
+        #white-out {
+            position: fixed; inset: 0; z-index: 9000; background: #ffffff;
+            opacity: 0; pointer-events: none; transition: opacity 0.1s ease-in;
+        }
+        #cyan-dot {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 6px; height: 6px; background: var(--primary); border-radius: 50%; z-index: 9001;
+            box-shadow: 0 0 60px 30px var(--primary); pointer-events: none;
+        }
+
+        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+
+        .ripple {
+            position: absolute; border: 1px solid var(--primary); border-radius: 50%;
+            inset: 0; opacity: 0; animation: pulse-ring 1s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="white-out"></div>
+    <div id="cyan-dot"></div>
+
+    <canvas id="ecosystem-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="ui-layer">
+        <div>
+            <div id="status-tag" class="status-tag animate-pulse">Cuerpo no detectado. Ecosistema inestable.</div>
+            <h1 id="main-title" class="title-glitch mt-2">DIFUSIÓN</h1>
+        </div>
+        
+        <div class="text-right">
+            <div class="status-tag">GOVOTTO // NODO_02</div>
+        </div>
+    </div>
+
+    <div id="core-interaction">
+        <div class="umbilical-btn" id="btn-core" onmousedown="startSincro()" ontouchstart="startSincro(event)" onmouseup="stopSincro()" ontouchend="stopSincro()">
+            <svg class="core-rune" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="30" stroke-dasharray="10 15" class="rune-spin"/>
+                <circle cx="50" cy="50" r="15"/>
+                <circle cx="50" cy="50" r="5" fill="currentColor"/>
+            </svg>
+            <div id="ripples"></div>
+        </div>
+        <div class="btn-text" id="action-text">MANTÉN PARA ANCLAR TU LATIDO</div>
+    </div>
+
+    <div id="resolution-panel">
+        <svg class="radar-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" stroke-width="2" stroke-dasharray="5 10"/>
+            <path d="M 50,50 L 90,10" stroke-width="4"/>
+            <circle cx="50" cy="50" r="8" fill="var(--primary)"/>
+        </svg>
+        <h2 class="text-2xl font-black italic text-white uppercase tracking-tighter mb-1" id="city-name">Ciudad</h2>
+        <p class="text-[9px] font-mono text-zinc-400 tracking-[0.4em] uppercase mb-6" id="coords-text">LAT: --- | LON: ---</p>
+        <p class="text-xs mb-8" style="color: var(--primary);">Anclaje territorial confirmado. Eres parte del ecosistema.</p>
+        
+        <button onclick="triggerSingularity()" class="w-full py-4 bg-transparent border text-white font-black text-[10px] tracking-[0.4em] uppercase transition-all rounded-lg" style="border-color: var(--primary); text-shadow: 0 0 5px var(--primary);" id="btn-return">
+            Integrar y Regresar
+        </button>
+    </div>
+
+    <script>
+        // --- LECTURA DEL METABOLISMO ---
+        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, perfil: "", color: "#00ffcc" };
+        let activeColor = datosUsuario.color || "#00ffcc";
+        
+        // Aplicar color de la psique al entorno
+        document.documentElement.style.setProperty('--primary', activeColor);
+        document.documentElement.style.setProperty('--bio-glow', `${activeColor}40`); // 40 es opacidad hex
+
+        // Si es Anomalía, aplica Glitch al lienzo
+        if (datosUsuario.perfil.includes("ANOMALÍA")) {
+            document.getElementById('ecosystem-canvas').classList.add('canvas-chaos');
+        }
+
+        // --- MOTOR DEL ECOSISTEMA (CANVAS) ---
+        const canvas = document.getElementById('ecosystem-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let cells = [];
+        let state = 'CHAOS'; // CHAOS -> PULL -> SYNAPSE -> REJECTED -> SINGULARITY
+        let centerPull = { x: 0, y: 0 };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerPull = { x: width/2, y: height/2 };
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Cell {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 2 + 0.5;
+            }
+            update() {
+                if (state === 'CHAOS') {
+                    this.x += this.vx + (Math.random() - 0.5) * 0.5;
+                    this.y += this.vy + (Math.random() - 0.5) * 0.5;
+                    if(this.x < 0 || this.x > width) this.vx *= -1;
+                    if(this.y < 0 || this.y > height) this.vy *= -1;
+                } 
+                else if (state === 'PULL') {
+                    let dx = centerPull.x - this.x;
+                    let dy = centerPull.y - this.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist > 50) {
+                        this.x += (dx / dist) * 5;
+                        this.y += (dy / dist) * 5;
+                    } else {
+                        this.x += (Math.random() - 0.5) * 15;
+                        this.y += (Math.random() - 0.5) * 15;
+                    }
+                }
+                else if (state === 'SYNAPSE') {
+                    this.x += this.vx * 0.2;
+                    this.y += this.vy * 0.2;
+                    if(this.x < 0) this.x = width; if(this.x > width) this.x = 0;
+                    if(this.y < 0) this.y = height; if(this.y > height) this.y = 0;
+                }
+                else if (state === 'REJECTED') {
+                    let dx = this.x - centerPull.x;
+                    let dy = this.y - centerPull.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist === 0) dist = 1;
+                    this.x += (dx / dist) * 12;
+                    this.y += (dy / dist) * 12;
+                }
+                else if (state === 'SINGULARITY') {
+                    let dx = centerPull.x - this.x;
+                    let dy = centerPull.y - this.y;
+                    this.x += dx * 0.15;
+                    this.y += dy * 0.15;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                
+                if(state === 'REJECTED') {
+                    ctx.fillStyle = '#FF0044';
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#FF0044';
+                } else if(state === 'SYNAPSE' || state === 'SINGULARITY') {
+                    ctx.fillStyle = activeColor;
+                    ctx.shadowBlur = 10; ctx.shadowColor = activeColor;
+                } else {
+                    ctx.fillStyle = Math.random() > 0.8 ? activeColor : '#333333';
+                    ctx.shadowBlur = 0;
+                }
+                ctx.fill();
+            }
+        }
+
+        for(let i=0; i<150; i++) cells.push(new Cell());
+
+        function animateCanvas() {
+            if(state === 'REJECTED') ctx.fillStyle = 'rgba(20, 0, 5, 0.3)';
+            else if(state === 'SYNAPSE') ctx.fillStyle = 'rgba(1, 2, 2, 0.2)';
+            else ctx.fillStyle = 'rgba(1, 2, 2, 0.4)';
+            
+            ctx.fillRect(0,0,width,height);
+            cells.forEach(c => { c.update(); c.draw(); });
+
+            if (state === 'SYNAPSE' || state === 'SINGULARITY') {
+                ctx.strokeStyle = `${activeColor}20`; // 20 hex opacity
+                ctx.lineWidth = 0.5;
+                for(let i=0; i<cells.length; i++) {
+                    for(let j=i+1; j<cells.length; j++) {
+                        let dx = cells[i].x - cells[j].x;
+                        let dy = cells[i].y - cells[j].y;
+                        if (dx*dx + dy*dy < 8000) {
+                            ctx.beginPath(); ctx.moveTo(cells[i].x, cells[i].y);
+                            ctx.lineTo(cells[j].x, cells[j].y); ctx.stroke();
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // --- MOTOR DE AUDIO ---
+        let audioCtx, tensionTimer;
+        let isHolding = false;
+        let bpm = 60;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playHeartbeat(currentBpm) {
+            if (!audioCtx || !isHolding) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            // Si es Anomalía, el sonido es errático (square)
+            osc.type = datosUsuario.perfil.includes("ANOMALÍA") ? 'square' : 'sine';
+            osc.frequency.setValueAtTime(40, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+
+            if(navigator.vibrate) navigator.vibrate([40, 30, 40]);
+
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            document.getElementById('ripples').appendChild(ripple);
+            setTimeout(() => ripple.remove(), 1000);
+        }
+
+        function playHarmony() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(220, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 2);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 1);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4);
+            
+            osc.start(); osc.stop(audioCtx.currentTime + 4);
+        }
+
+        function playFlatline() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 1.5);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 2);
+            
+            osc.start(); osc.stop(audioCtx.currentTime + 2);
+            if(navigator.vibrate) navigator.vibrate([500]);
+        }
+
+        function playImplosion() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.8);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            
+            osc.start(); osc.stop(audioCtx.currentTime + 1);
+        }
+
+        // --- LÓGICA DE RITUAL Y FRICCIÓN ---
+        function startSincro(e) {
+            if (e && e.type === 'touchstart') e.preventDefault();
+            if (state === 'SYNAPSE' || state === 'REJECTED') return;
+
+            isHolding = true;
+            state = 'PULL';
+            initAudio();
+            
+            const btn = document.getElementById('btn-core');
+            btn.classList.add('charging');
+            document.getElementById('action-text').innerText = "ESTABILIZANDO...";
+
+            bpm = 60;
+            const loopHeartbeat = () => {
+                if(!isHolding) return;
+                playHeartbeat(bpm);
+                bpm = Math.min(bpm + 20, 200); 
+                pulseInterval = setTimeout(loopHeartbeat, 60000 / bpm);
+            };
+            loopHeartbeat();
+
+            tensionTimer = setTimeout(() => { extraerCoordenadas(); }, 2500);
+        }
+
+        function stopSincro() {
+            if (!isHolding || state === 'SYNAPSE' || state === 'REJECTED') return;
+            isHolding = false;
+            state = 'CHAOS';
+            
+            clearTimeout(pulseInterval);
+            clearTimeout(tensionTimer);
+            
+            const btn = document.getElementById('btn-core');
+            btn.classList.remove('charging');
+            document.getElementById('action-text').innerText = "MANTÉN PARA ANCLAR TU LATIDO";
+        }
+
+        function extraerCoordenadas() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolverEcosistema(pos),
+                    (err) => falloExtraccion(err),
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            } else {
+                falloExtraccion();
+            }
+        }
+
+        function resolverEcosistema(pos) {
+            isHolding = false;
+            clearTimeout(pulseInterval);
+            state = 'SYNAPSE'; 
+
+            playHarmony();
+            if(navigator.vibrate) navigator.vibrate([100, 50, 400]);
+
+            document.getElementById('core-interaction').style.display = 'none';
+            document.getElementById('main-title').innerText = "SINCRO ESTABLE";
+            document.getElementById('main-title').style.color = activeColor;
+            document.getElementById('status-tag').innerText = "Cuerpo asimilado. Latido detectado.";
+            document.getElementById('status-tag').classList.remove('animate-pulse');
+
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            document.getElementById('coords-text').innerText = `LAT: ${lat.toFixed(5)} | LON: ${lon.toFixed(5)}`;
+            
+            let cityName = "SECTOR DESCONOCIDO";
+            if (lat > 4.0 && lat < 5.0 && lon > -75.0 && lon < -73.0) cityName = "BOGOTÁ, COLOMBIA";
+            document.getElementById('city-name').innerText = cityName;
+
+            datosUsuario.ubicacion = { lat, lon, city: cityName };
+            datosUsuario.xp += 250; 
+            localStorage.setItem('govotto_user_data', JSON.stringify(datosUsuario));
+
+            setTimeout(() => {
+                document.getElementById('resolution-panel').classList.add('active');
+            }, 500);
+        }
+
+        function falloExtraccion() {
+            isHolding = false;
+            clearTimeout(pulseInterval);
+            state = 'REJECTED';
+            
+            playFlatline();
+            
+            const btn = document.getElementById('btn-core');
+            btn.className = 'umbilical-btn rejected';
+            
+            const actionText = document.getElementById('action-text');
+            actionText.innerHTML = "INTENTO DE EVASIÓN DETECTADO.<br>EL CUERPO SE OCULTA.<br>DANTE NO ASIMILA FANTASMAS.";
+            
+            document.getElementById('status-tag').innerText = "RECHAZO CRÍTICO";
+            document.getElementById('status-tag').style.color = "#FF0044";
+
+            setTimeout(() => {
+                state = 'CHAOS';
+                btn.className = 'umbilical-btn';
+                actionText.innerHTML = "MANTÉN PARA ANCLAR TU LATIDO";
+                document.getElementById('status-tag').innerText = "Cuerpo no detectado. Ecosistema inestable.";
+                document.getElementById('status-tag').style.color = activeColor;
+            }, 4000);
+        }
+
+        function triggerSingularity() {
+            state = 'SINGULARITY';
+            playImplosion();
+            
+            // Oculta UI
+            document.getElementById('resolution-panel').classList.remove('active');
+            document.querySelector('.ui-layer').style.opacity = '0';
+            document.querySelector('.ui-layer').style.transition = 'opacity 0.2s';
+            
+            // Flash Blanco
+            setTimeout(() => {
+                document.getElementById('white-out').style.opacity = '1';
+                
+                // Contracción al punto de color del usuario
+                setTimeout(() => {
+                    document.body.style.background = '#000';
+                    document.getElementById('ecosystem-canvas').style.display = 'none';
+                    document.getElementById('white-out').style.opacity = '0';
+                    
+                    const dot = document.getElementById('cyan-dot');
+                    dot.style.background = activeColor;
+                    dot.style.boxShadow = `0 0 60px 30px ${activeColor}`;
+                    dot.style.transform = 'translate(-50%, -50%) scale(1)';
+                    dot.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+                    
+                    // Transición final
+                    setTimeout(() => {
+                        window.location.href = 'mapa.html';
+                    }, 600);
+
+                }, 150);
+            }, 800);
+        }
+    </script>
+</body>
+</html>

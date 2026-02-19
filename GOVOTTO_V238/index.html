@@ -1,504 +1,309 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GoVotto | V201 FINAL FIXED</title>
+    <title>DANTE PROTOCOL | GoVotto</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --accent: #00ffff;
+            --bg: #000;
+            --phi: 1.618; /* La Proporción Áurea */
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+            --nebula: rgba(0, 255, 204, 0.08);
+            --rune-speed: 8s; /* Número Fibonacci (8) */
+        }
+
+        body { 
+            background: var(--bg); color: white; margin: 0; font-family: 'Outfit', sans-serif; 
+            overflow: hidden; height: 100vh; user-select: none; 
+            -webkit-tap-highlight-color: transparent; touch-action: none; 
+            transition: background 1.5s ease;
+        } 
+
+        /* --- 1. CAPA GÉNESIS --- */
+        #boot-screen { position: fixed; inset: 0; z-index: 99999; background: #030303; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #genesis-canvas { position: absolute; inset: 0; z-index: 1; }
+        #genesis-flash { position: fixed; inset: 0; z-index: 100000; background: white; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
+        /* --- 2. EL CUERPO DANTE --- */
+        #main-app { opacity: 0; transition: opacity 2s ease, transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); position: relative; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
+        #quantum-canvas { position: absolute; inset: 0; z-index: 1; mix-blend-mode: screen; opacity: 0.6; }
+        
+        .tactical-glow { 
+            position: absolute; inset: 0; z-index: 2; pointer-events: none; 
+            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), var(--nebula), transparent 70%); 
+        }
+
+        /* --- 3. DANTE: GEOMETRÍA SAGRADA --- */
+        .dante-container { position: relative; width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; perspective: 1000px; transition: all 0.5s ease; cursor: pointer; }
+        #dante-core-canvas { position: absolute; z-index: 5; filter: blur(0.5px); }
+        
+        .orbital-ring { 
+            position: absolute; border: 1px solid var(--primary); border-radius: 50%; 
+            opacity: 0.15; transform-style: preserve-3d; pointer-events: none;
+            transition: border-color 1s ease;
+        }
+        /* Tamaños basados en Proporción Áurea */
+        .ring-1 { width: 258px; height: 258px; animation: orbit var(--rune-speed) linear infinite; border-top-width: 3px; }
+        .ring-2 { width: 418px; height: 418px; animation: orbit calc(var(--rune-speed) * var(--phi)) linear infinite reverse; opacity: 0.05; }
+        
+        @keyframes orbit { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
+
+        /* --- 4. HUD --- */
+        .master-hud {
+            position: relative; z-index: 100; padding: 40px 25px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+            backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* --- 5. NAVEGACIÓN RUNAS --- */
+        .nav-nodes { position: absolute; bottom: 45px; width: 100%; display: flex; justify-content: center; gap: 35px; z-index: 100; }
+        .node-btn {
+            width: 58px; height: 58px; border-radius: 50%; background: rgba(10,10,10,0.8);
+            border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;
+            color: #444; backdrop-filter: blur(12px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .node-btn.active { color: var(--primary); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 204, 0.2); transform: scale(1.1); }
+        
+        .rune-svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+        .node-btn.active .rune-spin { animation: runeSpin 13s linear infinite; transform-origin: center; } /* 13 es Fibonacci */
+        .node-btn.active .rune-pulse { animation: runePulse 5s ease-in-out infinite; } /* 5 es Fibonacci */
+
+        @keyframes runeSpin { 100% { transform: rotate(360deg); } }
+        @keyframes runePulse { 0%, 100% { stroke-width: 2px; opacity: 0.5; } 50% { stroke-width: 4px; opacity: 1; } }
+
+        #portal-flash { position: fixed; inset: 0; z-index: 100001; background: var(--primary); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+        .hyperspace-active #dante-entity { transform: scale(12); filter: blur(10px) brightness(2); opacity: 0; }
+    </style>
 </head>
-
 <body>
-    <div id="global-scanline" style="pointer-events: none;"></div>
-    <div class="hacker-bar" style="pointer-events: none;"></div>
 
-    <div id="app-frame">
-        <div id="boot-screen" class="fixed inset-0 z-[999999] bg-[#030303] flex items-center justify-center overflow-hidden">
-            <canvas id="genesis-canvas" class="absolute inset-0 w-full h-full"></canvas>
+    <div id="portal-flash"></div>
+    <div id="genesis-flash"></div>
 
-            <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
-
-            <div class="relative z-10 flex flex-col items-center">
-                <div id="genesis-logo" class="opacity-0 transition-all duration-1000 scale-90">
-                    <div style="font-size: 4rem; font-weight: 900; font-style: italic; letter-spacing: -4px;" class="flex items-center">
-                        <span class="text-white">GO</span>
-                        <div class="relative w-16 h-16 mx-1">
-                            <div class="absolute inset-0 border-4 border-[#00ffcc] rounded-full opacity-20 animate-ping"></div>
-                            <div class="absolute inset-2 border-2 border-[#00ffcc] rounded-full animate-[spin_3s_linear_infinite]"></div>
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="w-4 h-4 bg-[#00ffcc] rounded-full blur-[4px] shadow-[0_0_15px_#00ffcc]"></div>
-                            </div>
-                        </div>
-                        <span style="color: #00ffcc; filter: drop-shadow(0 0 15px rgba(0,255,204,0.5));">VOTTO</span>
-                    </div>
-
-                    <div class="mt-8 flex flex-col items-center">
-                        <div class="w-48 h-[2px] bg-zinc-900 relative overflow-hidden rounded-full">
-                            <div id="genesis-bar" class="absolute inset-y-0 left-0 bg-[#00ffcc] w-0 transition-all duration-300 shadow-[0_0_10px_#00ffcc]"></div>
-                        </div>
-                        <div id="genesis-status" class="mt-4 font-mono text-[8px] text-zinc-500 tracking-[0.4em] uppercase">Iniciando Singularidad...</div>
-                    </div>
-                </div>
-
-                <button id="genesis-btn" class="hidden mt-12 px-10 py-4 bg-transparent border-2 border-[#00ffcc] text-[#00ffcc] font-black italic tracking-[0.2em] hover:bg-[#00ffcc] hover:text-black transition-all duration-500 rounded-full shadow-[0_0_20px_rgba(0,255,204,0.2)] active:scale-90" onclick="igniteSingularity()">
-                    INICIAR IGNICIÓN
-                </button>
+    <div id="boot-screen">
+        <canvas id="genesis-canvas"></canvas>
+        <div class="relative z-10 flex flex-col items-center">
+            <div id="genesis-logo" class="flex items-center text-5xl font-black italic tracking-tighter mb-10 opacity-0 transition-all duration-1000 scale-75">
+                <span class="text-white">GO</span><span class="text-[#00ffcc]" id="logo-accent">VOTTO</span>
             </div>
-        </div>
-
-        <div id="genesis-flash" class="fixed inset-0 z-[1000000] bg-white opacity-0 pointer-events-none transition-opacity duration-150"></div>
-
-        <div id="intro-layer" class="hidden">
-            <div class="intro-logo-box">
-                <div class="intro-title">GO<span>VOTTO</span></div>
-                <div class="intro-sub">ESTATUS: EXCELENCIA</div>
+            <div class="w-56 h-[1px] bg-zinc-900 rounded-full overflow-hidden mb-4">
+                <div id="genesis-bar" class="h-full bg-[#00ffcc] w-0 transition-all duration-300"></div>
             </div>
-            <div class="loader-bar-box">
-                <div id="cinema-fill" class="loader-fill"></div>
-            </div>
-        </div>
-
-        <div class="hud-header">
-            <div class="hud-controls z-50 relative">
-                <div class="rank-btn" onclick="openRanking()"><i class="fas fa-trophy"></i></div>
-                <div class="flash-btn" onclick="checkEvent()"><i class="fas fa-bolt"></i> EVENTO</div>
-            </div>
-            <div class="brand-logo absolute left-1/2 -translate-x-1/2">GO<span>VOTTO</span></div>
-            <div class="flex items-center gap-2 z-50 relative">
-                <div class="text-[9px] text-right leading-tight">
-                    <div class="text-zinc-500 font-bold uppercase tracking-tighter">SALDO COP</div>
-                    <div class="font-bold text-white font-mono text-sm" id="hud-money">$0</div>
-                </div>
-                <div class="hex-chip-wrapper"><span>G</span></div>
-            </div>
-        </div>
-
-        <div class="ticker-wrap">
-            <div class="ticker">
-                <div class="ticker-item">1 COIN = <span>1 PESO</span></div>
-                <div class="ticker-item">META FINAL: <span>$45.000 COP</span></div>
-                <div class="ticker-item">👗 LAURA GANÓ <span>BONO ZARA</span></div>
-                <div class="ticker-item">💎 BÓVEDA <span>ACTIVA</span></div>
-            </div>
-        </div>
-
-        <div class="content-area" id="content-area">
-            <div id="map-view" class="map-layer flex-show">
-                <div id="city-motor-container" class="absolute left-1/2 top-[280px] -translate-x-1/2 -z-10 opacity-30 pointer-events-auto cursor-pointer flex flex-col items-center" onclick="window.location.href='dante.html'">
-                    <svg id="city-core" width="220" height="220" viewBox="0 0 200 200" style="fill: none; stroke-width: 2;">
-                        <circle class="core-static" cx="100" cy="100" r="15" stroke="var(--accent)" />
-                        <path class="core-rotate-slow" d="M100,20 L100,180 M20,100 L180,100" stroke="var(--accent)" />
-                        <rect class="core-rotate-fast" x="60" y="60" width="80" height="80" transform="rotate(45 100 100)" stroke="var(--accent)" />
-                        <path class="core-pulse" d="M100,20 L180,100 L100,180 L20,100 Z" stroke="var(--accent)" />
-                    </svg>
-                    <p class="text-[7px] text-zinc-500 tracking-[0.6em] mt-4 font-bold uppercase">Reactor_Central</p>
-                </div>
-
-                <div class="w-full px-6 text-left mb-6 border-l-4 ml-6" id="map-border">
-                    <div class="text-2xl font-black italic" id="map-title">RUTA 1</div>
-                    <div class="text-xs text-zinc-500 tracking-widest" id="map-sub">DIAGNÓSTICO</div>
-                </div>
-
-                <div class="relative w-full flex flex-col items-center">
-                    <svg id="path-svg-layer" class="absolute top-0 left-0 w-full h-[2000px] pointer-events-none" style="z-index: 1;">
-                        <line id="path-0" class="path-line path-locked" x1="50%" y1="75" x2="calc(50% + 55px)" y2="175" />
-                        <line id="path-1" class="path-line path-locked" x1="calc(50% + 55px)" y1="175" x2="50%" y2="275" />
-                        <line id="path-2" class="path-line path-locked" x1="50%" y1="275" x2="calc(50% - 55px)" y2="375" />
-                        <line id="path-3" class="path-line path-locked" x1="calc(50% - 55px)" y1="375" x2="50%" y2="475" />
-                        <line id="path-4" class="path-line path-locked" x1="50%" y1="475" x2="calc(50% + 55px)" y2="575" />
-                        <line id="path-5" class="path-line path-locked" x1="calc(50% + 55px)" y1="575" x2="50%" y2="675" />
-                    </svg>
-                    <div id="nodes-container" class="w-full flex flex-col items-center pb-32" style="z-index: 10;"></div>
-                </div>
-
-                <div id="ab-view" class="battle-overlay hidden">
-                    <div class="ab-container" id="ab-cont">
-                        <div id="opt-a" class="option-panel" style="z-index: 50; pointer-events: auto;" onclick="handleOption(this)">
-                            <img id="img-a" src="" class="option-img">
-                            <div class="option-overlay">
-                                <div class="option-title" id="txt-a">A</div>
-                            </div>
-                        </div>
-                        <div class="vs-badge">VS</div>
-                        <div id="opt-b" class="option-panel" style="z-index: 50; pointer-events: auto;" onclick="handleOption(this)">
-                            <img id="img-b" src="" class="option-img">
-                            <div class="option-overlay">
-                                <div class="option-title" id="txt-b">B</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="bomb-view" class="battle-overlay hidden">
-                    <div class="bomb-icon"><i class="fas fa-bomb"></i></div>
-                    <div class="bomb-timer-box">
-                        <div id="bomb-timer" class="bomb-fill"></div>
-                    </div>
-                    <h2 id="bomb-q">PREGUNTA RAPIDA</h2>
-                    <div class="grid-box" id="bomb-answers"></div>
-                </div>
-
-                <div id="fire-view" class="battle-overlay hidden">
-                    <div id="fire-result" class="fire-msg-overlay"></div>
-                    <h2 id="fire-q" style="margin-top: 20px; position:relative; z-index:10;">LA PREGUNTA</h2>
-                    <div id="fire-stage" class="fire-stage">
-                        <div class="flame-core"></div>
-                    </div>
-                    <p class="text-xs text-zinc-500 mb-8 tracking-widest" style="position:relative; z-index:10;">EL FUEGO JUZGARÁ TU ALMA</p>
-                    <div class="truth-actions" id="fire-btns">
-                        <div class="t-btn-lg" style="border-color:#555; background:#111;" onclick="handleFireAnswer(false)">NO</div>
-                        <div class="t-btn-lg" style="border-color:#ff5500; background:#330000; color:#ffaa00;" onclick="handleFireAnswer(true)">SÍ</div>
-                    </div>
-                </div>
-
-                <div id="slider-view" class="battle-overlay hidden">
-                    <h2 id="slider-q">VALORACIÓN</h2>
-                    <div class="mech-container" style="display:flex; flex-direction:column; align-items:center; width:100%;">
-                        <div class="text-4xl font-mono text-primary mb-4" id="slider-val-disp">0</div>
-                        <input type="range" id="slider-inp" oninput="updateSlider(this.value)">
-                    </div>
-                    <button onclick="endBattle()" class="modal-btn w-3/4">CONFIRMAR</button>
-                </div>
-
-                <div id="grid-view" class="battle-overlay hidden">
-                    <h2 id="grid-q">SELECCIÓN</h2>
-                    <div class="grid-box" id="grid-box"></div>
-                </div>
-
-                <div id="truth-view" class="battle-overlay hidden">
-                    <div class="truth-card-styled">
-                        <i class="fas fa-question truth-icon-large" id="truth-icon"></i>
-                        <div class="truth-text-large" id="truth-text">?</div>
-                    </div>
-                    <div class="truth-actions">
-                        <div class="t-btn-lg tb-no-lg" onclick="handleTruth()"><i class="fas fa-times"></i> NO</div>
-                        <div class="t-btn-lg tb-yes-lg" onclick="handleTruth()"><i class="fas fa-check"></i> SÍ</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mascot-speech">
-                <img id="speech-img" class="speech-face" src="">
-                <div>
-                    <div class="text-[10px] font-black text-primary" id="speech-title">COMANDO</div>
-                    <div class="text-xs leading-tight" id="speech-txt">...</div>
-                </div>
-            </div>
-
-            <div id="intro-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <img src="dante.png" class="w-48 h-48 object-contain mx-auto mb-4 dante-holo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/616/616554.png'">
-                    <h2 class="text-xl font-black text-white">HOLA, SOY DANTE</h2>
-                    <p class="text-sm text-zinc-400 mt-2">"Te guiaré por el mercado. Si tardas, te presionaré. ¿Listo?"</p>
-                    <button onclick="startMap()" class="modal-btn">ACEPTAR DESAFÍO</button>
-                </div>
-            </div>
-
-            <div id="mascot-modal" class="modal-overlay hidden">
-                <div class="modal-box" style="border: 1px solid #333; background: #050505;">
-                    <h2 class="text-xl font-black text-white italic">SELECCIONA AGENTE</h2>
-                    <p class="text-xs text-zinc-500 mb-4 tracking-widest">VINCULANDO IA...</p>
-                    <div class="mascot-grid">
-                        <div class="m-card mc-wolf" onclick="selectMascot('wolf')">
-                            <div class="m-icon-box"><i class="fas fa-dog"></i></div>
-                            <div class="m-info">
-                                <div class="m-name">LOBITO</div>
-                                <div class="m-class">RASTREADOR</div>
-                            </div>
-                            <i class="fas fa-chevron-right m-select-arrow"></i>
-                        </div>
-                        <div class="m-card mc-cat" onclick="selectMascot('cat')">
-                            <div class="m-icon-box"><i class="fas fa-cat"></i></div>
-                            <div class="m-info">
-                                <div class="m-name">KIRA</div>
-                                <div class="m-class">INFILTRADO</div>
-                            </div>
-                            <i class="fas fa-chevron-right m-select-arrow"></i>
-                        </div>
-                        <div class="m-card mc-owl" onclick="selectMascot('owl')">
-                            <div class="m-icon-box"><i class="fas fa-crow"></i></div>
-                            <div class="m-info">
-                                <div class="m-name">ORION</div>
-                                <div class="m-class">ESTRATEGA</div>
-                            </div>
-                            <i class="fas fa-chevron-right m-select-arrow"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="avatar-confirm-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <div class="mascot-portrait" style="width:120px; height:120px; margin:0 auto; border:4px solid var(--primary);"><i id="confirm-avatar-icon" class="fas fa-dog holo-icon" style="font-size:60px;"></i></div>
-                    <h2 class="text-2xl font-black text-primary italic mb-4" id="confirm-avatar-title" style="margin-top:20px;">¡HOLA!</h2>
-                    <p class="text-xl text-white font-black leading-tight uppercase" id="confirm-avatar-msg">Soy... y te acompañaré...</p><button onclick="finalizeAvatarSelection()" class="modal-btn mt-8 bg-primary text-black font-black text-lg">¡VAMOS!</button>
-                </div>
-            </div>
-
-            <div id="ranking-modal" class="modal-overlay hidden">
-                <div class="modal-box border border-primary relative" style="max-width:340px;">
-                    <h2 class="text-xl font-black text-white mb-2">🏆 CLASIFICACIÓN</h2>
-                    <p class="text-xs text-zinc-500 mb-6">LOS MEJORES DEL DÍA</p>
-                    <div id="ranking-list" class="rank-list-styled mb-6"></div>
-                    <button onclick="closeRanking()" class="w-full py-4 bg-zinc-800 border border-zinc-600 rounded-xl text-white font-black hover:bg-zinc-700 active:scale-95 transition-all">
-                        CERRAR TABLA
-                    </button>
-                </div>
-            </div>
-
-            <div id="slots-modal" class="modal-overlay hidden">
-    <div class="modal-box border border-accent relative" style="max-width:340px;">
-        <button onclick="closeSlots()" class="absolute top-4 right-4 text-zinc-500 hover:text-white">
-            <i class="fas fa-times text-xl"></i>
-        </button>
-        <h2 class="text-xl font-black text-accent italic mb-4">CASINO</h2>
-        <div id="casino-selector" class="flex flex-col items-center gap-16 w-full py-10">
-
-            <div class="vortex-portal" onclick="startTurbineGame()">
-                <div class="vortex-ring ring-1"></div>
-                <div class="vortex-ring ring-2"></div>
-                <div class="vortex-ring ring-3"></div>
-                <div class="vortex-core">
-                    <i class="fas fa-bolt"></i>
-                </div>
-                <div class="vortex-label">VÓRTICE DE DATOS</div>
-            </div>
-
-            <div class="crystal-monolith" onclick="startSlotGame()">
-                <div class="monolith-body">
-                    <div class="glif-container">
-                        <div class="glif">Δ</div>
-                        <div class="glif">Ω</div>
-                        <div class="glif">Ψ</div>
-                    </div>
-                    <div class="monolith-scan"></div>
-                </div>
-                <div class="monolith-base"></div>
-                <div class="monolith-label">SINCRONIZADOR DE DESTINO</div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-            <div id="accessory-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <h2 class="text-xl font-black text-white">¡CAJA FASHION!</h2><button onclick="equipAccessory()" class="modal-btn">ABRIR</button>
-                </div>
-            </div>
-            <div id="casino-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <h2>DOBLE O NADA</h2><button onclick="playDouble('red')" class="modal-btn" style="background:red; color:white;">ROJO</button><button onclick="playDouble('black')" class="modal-btn" style="background:black; color:white;">NEGRO</button>
-                </div>
-            </div>
-
-            <div id="vault-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <h2 class="text-xl font-black text-white">BÓVEDA</h2><button onclick="openVaultLogic()" class="modal-btn">ABRIR</button>
-                    <div id="vault-content" class="hidden">
-                        <div id="final-cop"></div><button onclick="sealVault()" class="modal-btn">CERRAR</button>
-                    </div>
-                </div>
-            </div>
-            <div id="coming-soon-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <h2 class="text-xl font-black text-white">PRÓXIMAMENTE</h2><button onclick="closeComingSoon()" class="modal-btn">CERRAR</button>
-                </div>
-            </div>
-            <div id="home-profile-modal" class="modal-overlay hidden">
-                <div class="modal-box">
-                    <h2 class="text-xl font-black text-white">PERFIL</h2>
-                    <div id="wallet-cop"></div><button onclick="closeHomeProfile()" class="modal-btn">CERRAR</button>
-                </div>
-            </div>
-            <div id="custom-alert" class="modal-overlay hidden" style="z-index: 900000;">
-                <div class="modal-box">
-                    <h2 id="alert-title" class="text-xl font-black text-primary">AVISO</h2>
-                    <p id="alert-msg" class="text-white text-sm"></p><button onclick="closeCustomAlert()" class="modal-btn">OK</button>
-                </div>
-            </div>
-
-            <div id="docks-layer">
-                <div id="loot-dock" class="floating-dock">
-                    <div class="quantum-btn dock-loot" onclick="openLoot()">
-                        <div class="quantum-ring"></div>
-                        <div class="quantum-fluid"></div>
-                        <i class="fas fa-gem quantum-icon"></i>
-                    </div>
-                </div>
-                <div id="casino-dock" class="floating-dock">
-                    <div class="quantum-btn dock-casino" onclick="openCasinoMenu()">
-                        <div class="quantum-ring"></div>
-                        <div class="quantum-fluid"></div>
-                        <i class="fas fa-dice quantum-icon"></i>
-                    </div>
-                </div>
-                <div id="fire-dock" class="floating-dock">
-                    <div id="fire-btn-inner" class="quantum-btn dock-fire-active" onclick="checkFireTrial()">
-                        <div class="quantum-ring"></div>
-                        <div class="quantum-fluid"></div>
-                        <i class="fas fa-fire quantum-icon"></i>
-                    </div>
-                </div>
-                <div id="vault-dock" class="floating-dock">
-                    <div class="quantum-btn dock-vault" onclick="showVaultModal()">
-                        <div class="quantum-ring"></div>
-                        <div class="quantum-fluid"></div>
-                        <i class="fas fa-vault quantum-icon"></i>
-                    </div>
-                </div>
-                <div id="home-dock" class="floating-dock">
-                    <div class="quantum-btn dock-home" onclick="window.location.href='dante.html'" title="Ver Núcleo Dante">
-                        <div class="quantum-ring"></div>
-                        <div class="quantum-fluid"></div>
-                        <i class="fas fa-house-user quantum-icon"></i>
-                    </div>
-                </div>
-            </div>
+            <p id="genesis-status" class="font-mono text-[8px] text-zinc-600 tracking-[0.4em] uppercase mb-10">Calculando Proporción Áurea...</p>
+            <button id="genesis-btn" class="hidden px-12 py-4 border border-[#00ffcc] text-[#00ffcc] font-black text-[10px] tracking-[0.5em] rounded-full hover:bg-[#00ffcc] hover:text-black transition-all" onclick="igniteSingularity()">INICIAR IGNICIÓN</button>
         </div>
     </div>
 
-    <div id="loot-layer" class="hidden" style="position: absolute; inset: 0; width: 100%; height: 100%; background: #000; z-index: 999999 !important; display: flex; flex-direction: column;">
-        <iframe id="loot-frame" src="about:blank" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
-    </div>
+    <div id="main-app">
+        <canvas id="quantum-canvas"></canvas>
+        <div class="tactical-glow"></div>
 
-    <div id="event-layer" class="hidden" style="position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 999997 !important; display: flex; flex-direction: column;">
-        <iframe id="event-frame" style="width: 100%; height: 100%; border: none; flex: 1; background: #000;"></iframe>
-        <button onclick="forceCloseEvent()" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #333; color: white; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 999999;">
-            <i class="fas fa-times"></i>
-        </button>
+        <header class="master-hud">
+            <div class="hud-info">
+                <h2 class="text-[8px] tracking-[0.6em] text-zinc-500 uppercase font-bold" id="user-rank">SINCRO_ESTABLE</h2>
+                <div class="text-xl font-black italic">GO<span style="color: var(--primary);">VOTTO</span></div>
+            </div>
+            <div class="text-right">
+                <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Capital_Asimilado</p>
+                <div id="hud-balance" class="text-lg font-black text-white font-mono">$0</div>
+            </div>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center justify-center relative">
+            <div class="dante-container" id="dante-entity" onclick="pulseCore()">
+                <div class="orbital-ring ring-1"></div>
+                <div class="orbital-ring ring-2"></div>
+                <canvas id="dante-core-canvas"></canvas>
+            </div>
+            
+            <div class="mt-16 text-center px-12">
+                <p id="seria-msg" class="text-[10px] font-mono tracking-[0.4em] opacity-30 uppercase" style="color: var(--primary);">Espiral de Fibonacci Detectada</p>
+            </div>
+        </main>
+
+        <nav class="nav-nodes">
+            <div class="node-btn" onclick="window.location.href='boveda.html'">
+                <svg class="rune-svg" viewBox="0 0 100 100">
+                    <polygon points="50,15 85,35 85,65 50,85 15,65 15,35" stroke-width="6"/>
+                    <circle cx="50" cy="50" r="4" fill="currentColor"/>
+                </svg>
+            </div>
+            
+            <div class="node-btn active" onclick="jumpToMap()">
+                <svg class="rune-svg" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" stroke-dasharray="10 15" class="rune-spin"/>
+                    <circle cx="50" cy="50" r="12" stroke-width="4" class="rune-pulse"/>
+                </svg>
+            </div>
+            
+            <div class="node-btn" onclick="window.location.href='perfil.html'">
+                <svg class="rune-svg" viewBox="0 0 100 100">
+                    <path d="M 30,15 C 30,50 70,50 70,85" stroke-width="5"/>
+                    <path d="M 70,15 C 70,50 30,50 30,85" stroke-width="5"/>
+                    <circle cx="50" cy="50" r="5" fill="currentColor"/>
+                </svg>
+            </div>
+        </nav>
     </div>
 
     <script>
-        const GenesisEngine = {
-            canvas: document.getElementById('genesis-canvas'),
-            ctx: null,
-            particles: [],
-            logo: document.getElementById('genesis-logo'),
-            bar: document.getElementById('genesis-bar'),
-            status: document.getElementById('genesis-status'),
-            btn: document.getElementById('genesis-btn'),
-            loading: 0,
-            init() {
-                if (!this.canvas) return;
-                this.ctx = this.canvas.getContext('2d');
-                this.resize();
-                window.addEventListener('resize', () => this.resize());
-                this.createParticles();
-                this.animate();
-                this.simulateLoading();
-            },
-            resize() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-            },
-            createParticles() {
-                for (let i = 0; i < 150; i++) {
-                    this.particles.push({
-                        x: Math.random() * this.canvas.width,
-                        y: Math.random() * this.canvas.height,
-                        size: Math.random() * 2,
-                        speedX: (Math.random() - 0.5) * 0.5,
-                        speedY: (Math.random() - 0.5) * 0.5,
-                        color: Math.random() > 0.5 ? '#00ffcc' : '#ffffff'
-                    });
-                }
-            },
-            animate() {
-                this.ctx.fillStyle = 'rgba(3, 3, 3, 0.2)';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                this.particles.forEach(p => {
-                    p.x += p.speedX;
-                    p.y += p.speedY;
-                    const dx = (this.canvas.width / 2) - p.x;
-                    const dy = (this.canvas.height / 2) - p.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (this.loading < 100) {
-                        p.x += dx / (2000 / (this.loading + 1));
-                        p.y += dy / (2000 / (this.loading + 1));
-                    }
-                    if (p.x < 0 || p.x > this.canvas.width) p.speedX *= -1;
-                    if (p.y < 0 || p.y > this.canvas.height) p.speedY *= -1;
-                    this.ctx.beginPath();
-                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    this.ctx.fillStyle = p.color;
-                    this.ctx.fill();
-                });
-                requestAnimationFrame(() => this.animate());
-            },
-            simulateLoading() {
-                const tasks = [
-                    "Estabilizando Núcleo...",
-                    "Tejiendo Red Neuronal...",
-                    "Sincronizando con Dante...",
-                    "Cargando Sala de Tesoros...",
-                    "Singularidad Lista."
-                ];
-                const interval = setInterval(() => {
-                    this.loading += Math.random() * 3;
-                    if (this.loading >= 100) {
-                        this.loading = 100;
-                        clearInterval(interval);
-                        this.revealButton();
-                    }
-                    this.bar.style.width = `${this.loading}%`;
-                    this.status.innerText = tasks[Math.floor((this.loading / 101) * tasks.length)];
-                    if (this.loading > 15) {
-                        this.logo.classList.remove('opacity-0');
-                        this.logo.classList.remove('scale-90');
-                        this.logo.classList.add('opacity-100', 'scale-100');
-                    }
-                }, 120);
-            },
-            revealButton() {
-                this.status.style.color = '#00ffcc';
-                this.status.classList.add('animate-pulse');
-                setTimeout(() => {
-                    this.btn.classList.remove('hidden');
-                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                }, 500);
-            }
-        };
-        window.addEventListener('load', () => GenesisEngine.init());
+        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, nombre: "Javier", perfil: "", color: "#00ffcc" };
+        let primaryColor = datosUsuario.color || "#00ffcc";
+        let speedMult = 1;
 
-  function igniteSingularity() {
+        const gCanvas = document.getElementById('genesis-canvas');
+        const gCtx = gCanvas.getContext('2d');
+        let gParticles = [], gProgress = 0;
+
+        function initGenesis() {
+            gCanvas.width = window.innerWidth; gCanvas.height = window.innerHeight;
+            for(let i=0; i<150; i++) gParticles.push({ x: Math.random()*gCanvas.width, y: Math.random()*gCanvas.height, s: Math.random()*2, vx: (Math.random()-0.5), vy: (Math.random()-0.5) });
+            animateGenesis();
+            simulateLoading();
+        }
+
+        function animateGenesis() {
+            gCtx.fillStyle = 'rgba(3,3,3,0.2)'; gCtx.fillRect(0,0,gCanvas.width, gCanvas.height);
+            gParticles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>gCanvas.width) p.vx*=-1; if(p.y<0 || p.y>gCanvas.height) p.vy*=-1;
+                gCtx.beginPath(); gCtx.arc(p.x, p.y, p.s, 0, Math.PI*2);
+                gCtx.fillStyle = primaryColor; gCtx.fill();
+            });
+            requestAnimationFrame(animateGenesis);
+        }
+
+        function simulateLoading() {
+            const bar = document.getElementById('genesis-bar');
+            const logo = document.getElementById('genesis-logo');
+            const timer = setInterval(() => {
+                gProgress += Math.random()*3;
+                if(gProgress > 100) gProgress = 100;
+                bar.style.width = gProgress + "%";
+                if(gProgress > 20) logo.classList.add('opacity-100', 'scale-100');
+                if(gProgress >= 100) { 
+                    clearInterval(timer); 
+                    document.getElementById('genesis-status').innerText = "Matemática Sincronizada"; 
+                    document.getElementById('genesis-btn').classList.remove('hidden'); 
+                }
+            }, 60);
+        }
+
+        function igniteSingularity() {
             const flash = document.getElementById('genesis-flash');
-            const boot = document.getElementById('boot-screen');
-            const btn = document.getElementById('genesis-btn');
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            document.getElementById('genesis-logo').style.transform = 'scale(8) translateZ(200px)';
-            document.getElementById('genesis-logo').style.opacity = '0';
-            document.getElementById('genesis-canvas').style.filter = 'blur(30px)';
-            btn.style.opacity = '0';
+            vibrate([50, 30, 200]);
+            flash.style.opacity = '1';
             setTimeout(() => {
-                flash.style.opacity = '1';
-                setTimeout(() => {
-                    boot.style.display = 'none';
-                    flash.style.opacity = '0';
-                    if (typeof startApp === 'function') startApp();
-                }, 150);
+                document.getElementById('boot-screen').style.display = 'none';
+                flash.style.opacity = '0';
+                document.getElementById('main-app').style.opacity = '1';
+                startDanteEcosystem();
             }, 400);
         }
+
+        const qCanvas = document.getElementById('quantum-canvas');
+        const qCtx = qCanvas.getContext('2d');
+        const dCanvas = document.getElementById('dante-core-canvas');
+        const dCtx = dCanvas.getContext('2d');
+        let qParticles = [], dParticles = [];
+
+        function startDanteEcosystem() {
+            const perfil = datosUsuario.perfil || "";
+            primaryColor = datosUsuario.color || "#00ffcc";
+            
+            // Lógica de Metabolismo de Arquetipos
+            if (perfil.includes("DEPREDADOR")) { speedMult = 3; document.documentElement.style.setProperty('--rune-speed', '3s'); }
+            else if (perfil.includes("ARQUITECTO")) { speedMult = 0.5; document.documentElement.style.setProperty('--rune-speed', '15s'); }
+            else if (perfil.includes("FANTASMA")) { speedMult = 0.3; document.getElementById('main-app').style.opacity = "0.5"; }
+
+            document.documentElement.style.setProperty('--primary', primaryColor);
+            document.getElementById('user-rank').innerText = perfil || `SINCRO_NIVEL_${datosUsuario.nivel}`;
+            
+            const cop = datosUsuario.xp * 12;
+            document.getElementById('hud-balance').innerText = `$${cop.toLocaleString()}`;
+
+            qCanvas.width = window.innerWidth; qCanvas.height = window.innerHeight;
+            dCanvas.width = 320; dCanvas.height = 320;
+            
+            // Partículas siguiendo la Espiral Áurea (Golden Angle: 137.5 grados)
+            for(let i=0; i<100; i++) qParticles.push({
+                x: qCanvas.width/2, y: qCanvas.height/2,
+                s: Math.random()*1.5, v: (Math.random()*0.5 + 0.1) * speedMult, 
+                angle: i * 137.5 * (Math.PI / 180), dist: 0
+            });
+
+            for(let i=0; i<200; i++) dParticles.push({
+                a: Math.random()*Math.PI*2, r: Math.random()*50 + 5, 
+                s: Math.random()*2, v: (Math.random()*0.04 + 0.01) * speedMult
+            });
+
+            animateApp();
+        }
+
+        function animateApp() {
+            qCtx.clearRect(0,0,qCanvas.width,qCanvas.height);
+            qParticles.forEach(p => {
+                p.dist += p.v;
+                let x = qCanvas.width/2 + Math.cos(p.angle) * p.dist;
+                let y = qCanvas.height/2 + Math.sin(p.angle) * p.dist;
+                if(x < 0 || x > qCanvas.width || y < 0 || y > qCanvas.height) p.dist = 0;
+                
+                qCtx.beginPath(); qCtx.arc(x, y, p.s, 0, Math.PI*2);
+                qCtx.fillStyle = primaryColor; qCtx.globalAlpha = 0.15; qCtx.fill();
+            });
+            
+            dCtx.clearRect(0,0,320,320);
+            dParticles.forEach(p => {
+                p.a += p.v;
+                let breath = Math.sin(Date.now()*0.002) * (8 * speedMult);
+                let x = 160 + Math.cos(p.a) * (p.r + breath);
+                let y = 160 + Math.sin(p.a) * (p.r + breath);
+                dCtx.beginPath(); dCtx.arc(x, y, p.s, 0, Math.PI*2);
+                dCtx.fillStyle = primaryColor; dCtx.shadowBlur = 15; dCtx.shadowColor = primaryColor; dCtx.fill();
+            });
+            requestAnimationFrame(animateApp);
+        }
+
+        function jumpToMap() {
+            document.getElementById('main-app').classList.add('hyperspace-active');
+            document.getElementById('portal-flash').style.opacity = '1';
+            vibrate([30, 60]);
+            setTimeout(() => { window.location.href = 'mapa.html'; }, 600);
+        }
+
+        function pulseCore() {
+            vibrate(20);
+            const msg = document.getElementById('seria-msg');
+            msg.innerText = "SINCRO_INTERACTIVA"; msg.style.opacity = 1;
+            setTimeout(() => msg.style.opacity = 0.3, 1000);
+        }
+
+        const handleMove = (e) => {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            if(x && y) {
+                document.documentElement.style.setProperty('--mouse-x', x + 'px');
+                document.documentElement.style.setProperty('--mouse-y', y + 'px');
+            }
+        };
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+        function vibrate(ms) { if(navigator.vibrate) navigator.vibrate(ms); }
+
+        window.onload = () => {
+            if (new URLSearchParams(window.location.search).get('skipIntro') === 'true') {
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('main-app').style.opacity = '1';
+                startDanteEcosystem();
+            } else { initGenesis(); }
+        };
     </script>
-
-    <div id="game-portal-layer" class="hidden fixed inset-0 z-[1000000] bg-[#000] flex-col">
-        <div class="w-full h-1 bg-gradient-to-r from-transparent via-[#00ffcc] to-transparent opacity-50"></div>
-        <iframe id="game-portal-frame" src="about:blank" class="w-full h-full border-none bg-black"></iframe>
-        <button onclick="closeGamePortal()" class="absolute bottom-10 left-1/2 -translate-x-1/2 group flex flex-col items-center">
-            <div class="relative w-16 h-16 flex items-center justify-center">
-                <div class="absolute inset-0 border-2 border-[#00ffcc] rounded-full animate-ping opacity-20"></div>
-                <div class="absolute inset-0 border border-[#00ffcc] rounded-full group-hover:scale-125 transition-transform duration-500"></div>
-                <i class="fas fa-times text-[#00ffcc] text-xl group-hover:rotate-90 transition-transform duration-500"></i>
-            </div>
-            <p class="text-[8px] text-[#00ffcc] tracking-[0.4em] mt-2 font-black uppercase text-center -mr-[0.4em]">Cerrar Brecha</p>
-        </button>
-    </div>
-
-    <script src="data.js"></script>
-    <script src="engine.js"></script>
 </body>
 </html>
