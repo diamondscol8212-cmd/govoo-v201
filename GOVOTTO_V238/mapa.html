@@ -12,7 +12,7 @@
             --primary: #00ffcc; 
             --gold: #D4AF37;
             --bg: #000;
-            --phi: 1.618;
+            --node-shadow: rgba(0, 255, 204, 0.4);
         }
 
         body, html { 
@@ -21,30 +21,29 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- 1. FONDO CUÁNTICO (DANTE GHOST) --- */
+        /* --- FONDO CUÁNTICO --- */
         #dante-fractal-bg { position: fixed; inset: 0; z-index: 0; opacity: 0.15; filter: blur(5px); pointer-events: none; }
 
-        /* --- 2. HUD DE INTELIGENCIA --- */
+        /* --- HUD --- */
         .master-hud {
             position: fixed; top: 0; width: 100%; z-index: 1000; padding: 35px 25px;
             background: linear-gradient(to bottom, rgba(0,0,0,1) 40%, transparent 100%);
             pointer-events: none;
         }
 
-        /* --- 3. ESCENARIO DE LA HÉLICE (MOBILE FIRST) --- */
+        /* --- ESCENARIO DE LA HÉLICE (SIN BUGS 3D) --- */
         .map-viewport {
             position: fixed; inset: 0; z-index: 10;
-            perspective: 1500px; overflow-y: auto; overflow-x: hidden;
+            overflow-y: auto; overflow-x: hidden;
             scroll-behavior: smooth;
         }
         .map-viewport::-webkit-scrollbar { display: none; }
 
         .helix-scroll-area {
             position: relative; width: 100%; padding: 50vh 0 100vh;
-            transform-style: preserve-3d;
         }
 
-        /* --- 4. LA ARTERIA DE LUZ (SVG) --- */
+        /* --- LA ARTERIA DE LUZ (SVG) --- */
         #neural-artery-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 5; pointer-events: none;
@@ -54,11 +53,11 @@
 
         @keyframes flowData { 0% { stroke-dashoffset: 1000; } 100% { stroke-dashoffset: 0; } }
 
-        /* --- 5. NODOS (CURVA DE ATAQUE) --- */
+        /* --- NODOS FÍSICOS (TÁCTILES 100%) --- */
         .node-wrapper {
             position: relative; width: 100%; height: 200px;
             display: flex; justify-content: center; align-items: center;
-            transform-style: preserve-3d; margin-bottom: 60px;
+            margin-bottom: 60px;
         }
 
         .quantum-node {
@@ -72,22 +71,33 @@
         
         .node-rune { width: 40px; height: 40px; transform: rotate(-45deg); fill: none; stroke: currentColor; stroke-width: 2.5; }
 
+        /* ESTADOS DE LOS NODOS */
         .node-wrapper.active .quantum-node { 
             border-color: var(--primary); color: var(--primary); scale: 1.25;
             box-shadow: 0 0 50px var(--primary);
             background: radial-gradient(circle, rgba(255,255,255,0.05), #000);
         }
-        .node-wrapper.completed .quantum-node { border-color: var(--primary); color: var(--primary); opacity: 0.5; scale: 0.9; }
-        .node-wrapper.locked { opacity: 0.1; filter: grayscale(1); pointer-events: none; }
+        
+        .node-wrapper.completed .quantum-node { 
+            border-color: var(--primary); color: var(--primary); 
+            opacity: 0.3; scale: 0.8; 
+        }
+        
+        .node-wrapper.locked { opacity: 0.15; filter: grayscale(1); }
+
+        /* EFECTO DE RECHAZO TÁCTIL (SIN POINTER-EVENTS: NONE) */
+        .node-error { animation: shakeError 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: #ff0044 !important; color: #ff0044 !important; box-shadow: 0 0 30px #ff0044 !important; }
+        @keyframes shakeError { 10%, 90% { transform: rotate(45deg) translate3d(-2px, 0, 0); } 20%, 80% { transform: rotate(45deg) translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: rotate(45deg) translate3d(-6px, 0, 0); } 40%, 60% { transform: rotate(45deg) translate3d(6px, 0, 0); } }
 
         .node-label { 
             position: absolute; left: 130px; width: 150px; transform: rotate(-45deg); 
             font-family: 'JetBrains Mono'; font-size: 9px; color: var(--primary);
             text-transform: uppercase; letter-spacing: 0.2em; pointer-events: none;
-            text-shadow: 0 0 10px #000;
+            text-shadow: 0 0 10px #000; transition: color 0.3s;
         }
+        .node-wrapper.completed .node-label { color: #555; }
 
-        /* --- 6. MENÚ TRÍADA (ANCLA DANTE) --- */
+        /* --- MENÚ TRÍADA --- */
         .bottom-nav { 
             position: fixed; bottom: 35px; width: 92%; left: 4%; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
@@ -103,28 +113,33 @@
             box-shadow: 0 0 20px var(--primary); cursor: pointer;
         }
 
-        /* PURIFICACIÓN CROMÁTICA - EFECTO DE LUZ PURA */
         #fx-flash { 
             position: fixed; inset: 0; z-index: 10001; 
             background: var(--primary); opacity: 1; pointer-events: none; 
             mix-blend-mode: screen; transition: opacity 1.5s ease-out; 
+        }
+        
+        #dev-indicator {
+            position: fixed; top: 10px; right: 10px; font-family: 'JetBrains Mono';
+            font-size: 8px; color: #ff0044; z-index: 9999; opacity: 0; transition: opacity 0.5s;
         }
     </style>
 </head>
 <body>
 
     <div id="fx-flash"></div>
+    <div id="dev-indicator">GOD MODE ACTIVO</div>
     <canvas id="dante-fractal-bg"></canvas>
 
     <header class="master-hud">
         <div class="flex justify-between items-start">
             <div>
                 <h1 class="text-[8px] tracking-[0.5em] text-zinc-500 font-bold uppercase" id="dante-whisper">Escaneando Red...</h1>
-                <div class="text-xl font-black italic">MAPA <span id="perfil-tag" style="color: var(--primary);">DANTE</span></div>
+                <div class="text-xl font-black italic cursor-pointer" onclick="activateDevMode()">MAPA <span id="perfil-tag" style="color: var(--primary);">DANTE</span></div>
             </div>
-            <div class="text-right">
+            <div class="text-right pointer-events-auto" onclick="resetData()">
                 <div id="hud-itochi" class="text-lg font-black text-white italic">0 <span style="color: var(--primary);">ITO</span></div>
-                <p class="text-[7px] text-zinc-600 font-bold uppercase tracking-widest">Patrimonio_Sinc</p>
+                <p class="text-[7px] text-zinc-600 font-bold uppercase tracking-widest">Reset (Dev)</p>
             </div>
         </div>
     </header>
@@ -139,28 +154,28 @@
 
             <div class="node-path-container">
                 <div class="node-wrapper" id="wrap-oraculo">
-                    <div class="quantum-node" onclick="igniteNode('oraculo')">
+                    <div class="quantum-node" onclick="attemptNode('oraculo', this)">
                         <svg class="node-rune" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" stroke-width="6"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>
                         <div class="node-label">NODO_01<br><b>Oráculo</b></div>
                     </div>
                 </div>
 
                 <div class="node-wrapper locked" id="wrap-pulso">
-                    <div class="quantum-node" onclick="igniteNode('pulso')">
+                    <div class="quantum-node" onclick="attemptNode('pulso', this)">
                         <svg class="node-rune" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" stroke-width="4" stroke-dasharray="5 5"/><path d="M 50,20 V 80 M 20,50 H 80" stroke-width="4"/></svg>
                         <div class="node-label">NODO_02<br><b>Pulso</b></div>
                     </div>
                 </div>
 
                 <div class="node-wrapper locked" id="wrap-boveda">
-                    <div class="quantum-node" onclick="igniteNode('boveda')">
+                    <div class="quantum-node" onclick="attemptNode('boveda', this)">
                         <svg class="node-rune" viewBox="0 0 100 100"><rect x="25" y="25" width="50" height="50" stroke-width="6"/></svg>
                         <div class="node-label">NODO_03<br><b>Bóveda</b></div>
                     </div>
                 </div>
 
                 <div class="node-wrapper locked" id="wrap-proyeccion">
-                    <div class="quantum-node" onclick="igniteNode('proyeccion')">
+                    <div class="quantum-node" onclick="attemptNode('proyeccion', this)">
                         <svg class="node-rune" viewBox="0 0 100 100"><path d="M 20,50 L 50,20 L 80,50 L 50,80 Z" stroke-width="6"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>
                         <div class="node-label">NODO_04<br><b>Proyección</b></div>
                     </div>
@@ -170,7 +185,7 @@
     </div>
 
     <nav class="bottom-nav">
-        <div class="nav-item" onclick="igniteNode('perfil')">
+        <div class="nav-item" onclick="igniteJump('perfil.html')">
             <svg style="width:20px;" viewBox="0 0 100 100" stroke="currentColor" fill="none"><path d="M 30,20 C 30,50 70,50 70,80 M 70,20 C 70,50 30,50 30,80" stroke-width="10"/></svg>
             <span class="text-[7px] font-black uppercase mt-1">ADN</span>
         </div>
@@ -179,41 +194,34 @@
             <canvas id="mini-dante-canvas"></canvas>
         </div>
         
-        <div class="nav-item" onclick="igniteNode('boveda')">
+        <div class="nav-item" onclick="igniteJump('boveda.html')">
             <span id="nav-gold" class="text-[10px] font-black" style="color:var(--gold)">$0</span>
             <span class="text-[7px] font-black uppercase mt-1">ORO</span>
         </div>
     </nav>
 
     <script>
-        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, perfil: "", color: "#00ffcc", nombre: "Javier" };
+        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, perfil: null, ubicacion: null, goldState: null, color: "#00ffcc", nombre: "Usuario" };
         let activeColor = datosUsuario.color || "#00ffcc";
 
-        // --- MOTOR SENSORIAL (AUDIO Y VIBRACIÓN) ---
+        // --- MOTOR SENSORIAL ---
         let audioCtx, droneOsc, droneGain;
         let systemAwake = false;
 
         function wakeUpSystem() {
             if (systemAwake) return;
             systemAwake = true;
-            
-            // Iniciar Zumbido de Fondo
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            droneOsc = audioCtx.createOscillator();
-            droneGain = audioCtx.createGain();
-            droneOsc.connect(droneGain); droneGain.connect(audioCtx.destination);
-            droneOsc.type = 'sine';
-            droneOsc.frequency.setValueAtTime(50, audioCtx.currentTime); // 50Hz Sub-bass
-            droneGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            droneGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 2); // Fade in suave
-            droneOsc.start();
-
-            // Voz de Dante
-            const synth = window.speechSynthesis;
-            const nombre = datosUsuario.nombre ? datosUsuario.nombre.split(' ')[0] : "Usuario";
-            const utter = new SpeechSynthesisUtterance(`Sistema activo, ${nombre}.`);
-            utter.pitch = 0.1; utter.rate = 0.8; utter.volume = 0.5;
-            synth.speak(utter);
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                droneOsc = audioCtx.createOscillator();
+                droneGain = audioCtx.createGain();
+                droneOsc.connect(droneGain); droneGain.connect(audioCtx.destination);
+                droneOsc.type = 'sine';
+                droneOsc.frequency.setValueAtTime(50, audioCtx.currentTime);
+                droneGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                droneGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 2);
+                droneOsc.start();
+            } catch(e) { console.log("Audio API bloqueada hasta interacción."); }
         }
 
         function playNodePulse() {
@@ -229,6 +237,19 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.5);
         }
 
+        function playErrorPulse() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+            g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+
         // --- MOTORES GRÁFICOS ---
         const bgCanvas = document.getElementById('dante-fractal-bg');
         const bgCtx = bgCanvas.getContext('2d');
@@ -237,7 +258,6 @@
         let bgParticles = [], miniParticles = [];
 
         function init() {
-            // Aplicar Pureza de Color
             document.documentElement.style.setProperty('--primary', activeColor);
             document.documentElement.style.setProperty('--node-shadow', `${activeColor}60`);
             document.getElementById('fx-flash').style.backgroundColor = activeColor;
@@ -245,28 +265,26 @@
             bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
             miniCanvas.width = 120; miniCanvas.height = 120;
 
-            // Configurar Curva de Fibonacci para los Nodos
+            // FÍSICA CORREGIDA: Usamos Scale para profundidad, no translateZ
             document.querySelectorAll('.node-wrapper').forEach((el, i) => {
                 const xOffset = Math.sin(i * 1.618) * 80;
-                const zOffset = i * -150;
-                el.style.transform = `translateX(${xOffset}px) translateZ(${zOffset}px)`;
+                // El scale simula que están más lejos, sin romper el tacto 2D del móvil
+                const depthScale = 1 - (i * 0.05); 
+                el.style.transform = `translateX(${xOffset}px) scale(${depthScale})`;
             });
 
             actualizarNodos();
             dibujarArteria();
             aplicarMetabolismo();
 
-            // Generar Partículas
             for(let i=0; i<80; i++) bgParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*300+50, s: Math.random()*1.5, v: 0.005 });
             for(let i=0; i<30; i++) miniParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*20+5, v: 0.06 });
 
-            // Disipar el Flash Inicial
             setTimeout(() => { 
                 document.getElementById('fx-flash').style.opacity = '0'; 
                 snapToActive(); 
             }, 600);
 
-            // Despertar el sistema al primer toque
             document.body.addEventListener('touchstart', wakeUpSystem, { once: true });
             document.body.addEventListener('click', wakeUpSystem, { once: true });
 
@@ -283,9 +301,7 @@
                 const x = rect.left + rect.width / 2;
                 const y = node.getBoundingClientRect().top + document.getElementById('scroll-engine').scrollTop + rect.height / 2;
                 if (i === 0) pathData += `Q ${x} ${y/2}, ${x} ${y} `;
-                else {
-                    pathData += `T ${x} ${y} `;
-                }
+                else pathData += `T ${x} ${y} `;
             });
             
             document.getElementById('artery-bg').setAttribute('d', pathData);
@@ -294,19 +310,31 @@
 
         function snapToActive() {
             const active = document.querySelector('.node-wrapper.active') || document.querySelector('.node-wrapper.completed:last-of-type');
-            if(active) {
-                active.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            if(active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function actualizarNodos() {
             const u = datosUsuario;
             const set = (id, state) => { document.getElementById(`wrap-${id}`).className = `node-wrapper ${state}`; };
 
-            if(u.perfil) set('oraculo', 'completed');
-            if(u.perfil && !u.ubicacion) set('pulso', 'active');
-            if(u.ubicacion) { set('pulso', 'completed'); set('boveda', 'active'); }
-            if(u.goldState) { set('boveda', 'completed'); set('proyeccion', 'active'); }
+            ['oraculo', 'pulso', 'boveda', 'proyeccion'].forEach(id => set(id, 'locked'));
+
+            // Lógica Estricta Inquebrantable
+            if (!u.perfil) {
+                set('oraculo', 'active');
+            } else if (!u.ubicacion) {
+                set('oraculo', 'completed');
+                set('pulso', 'active');
+            } else if (!u.goldState) {
+                set('oraculo', 'completed');
+                set('pulso', 'completed');
+                set('boveda', 'active');
+            } else {
+                set('oraculo', 'completed');
+                set('pulso', 'completed');
+                set('boveda', 'completed');
+                set('proyeccion', 'active');
+            }
 
             document.getElementById('hud-itochi').innerHTML = `${Math.floor(u.xp / 10)} <span style="color: var(--primary);">ITO</span>`;
             document.getElementById('nav-gold').innerText = `$${(u.xp * 12).toLocaleString()}`;
@@ -314,9 +342,9 @@
 
         function aplicarMetabolismo() {
             const el = document.getElementById('dante-whisper');
-            const msgs = ["Dante siente tu pulso...", "Sincronía bio-métrica estable.", "Cosechando datos del alma."];
+            const msgs = ["Dante vigila...", "Red encriptada...", "Ruta activa."];
             el.innerText = msgs[Math.floor(Math.random()*msgs.length)];
-            document.getElementById('perfil-tag').innerText = datosUsuario.perfil || "SINCRO";
+            document.getElementById('perfil-tag').innerText = datosUsuario.perfil ? "ACTIVO" : "SINCRO";
         }
 
         function animate() {
@@ -340,20 +368,72 @@
             requestAnimationFrame(animate);
         }
 
-        function igniteNode(type) {
-            wakeUpSystem(); // Asegurar que el audio está activo
-            playNodePulse();
+        // --- CONTROLADOR DE COLISIONES TÁCTILES ---
+        function attemptNode(type, element) {
+            wakeUpSystem();
+            const wrapper = element.parentElement;
             
-            // Vibración Fibonacci (13ms, 21ms)
-            if(navigator.vibrate) navigator.vibrate([13, 21]); 
-            
+            // Si el nodo está bloqueado o quemado
+            if (wrapper.classList.contains('locked') || wrapper.classList.contains('completed')) {
+                if(navigator.vibrate) navigator.vibrate([10, 10, 10]);
+                playErrorPulse();
+                
+                element.classList.remove('node-error');
+                void element.offsetWidth; // Forzar reflow
+                element.classList.add('node-error');
+                return;
+            }
+
+            // Si es el nodo Activo
+            if (wrapper.classList.contains('active')) {
+                playNodePulse();
+                if(navigator.vibrate) navigator.vibrate([13, 21]); 
+                
+                const flash = document.getElementById('fx-flash');
+                flash.style.opacity = '1';
+                
+                if(droneGain) droneGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+
+                setTimeout(() => { window.location.href = type + '.html'; }, 600);
+            }
+        }
+
+        function igniteJump(url) {
+            wakeUpSystem();
+            if(navigator.vibrate) navigator.vibrate([10, 30]);
             const flash = document.getElementById('fx-flash');
             flash.style.opacity = '1';
-            
-            // Desvanecer el drone de audio si existe
-            if(droneGain) droneGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+            setTimeout(() => { window.location.href = url; }, 500);
+        }
 
-            setTimeout(() => { window.location.href = type + '.html'; }, 600);
+        // --- HACK DEL ARQUITECTO (Para saltar niveles) ---
+        let devClicks = 0;
+        function activateDevMode() {
+            devClicks++;
+            if(devClicks >= 3) {
+                document.getElementById('dev-indicator').style.opacity = '1';
+                if(navigator.vibrate) navigator.vibrate([50,50,50]);
+                
+                if(!datosUsuario.perfil) { datosUsuario.perfil = "DEPREDADOR"; datosUsuario.color = "#ff0044"; activeColor = "#ff0044"; }
+                else if(!datosUsuario.ubicacion) { datosUsuario.ubicacion = "BOGOTÁ"; datosUsuario.xp += 500; }
+                else if(!datosUsuario.goldState) { datosUsuario.goldState = true; datosUsuario.xp += 1500; }
+                
+                localStorage.setItem('govotto_user_data', JSON.stringify(datosUsuario));
+                
+                document.documentElement.style.setProperty('--primary', activeColor);
+                document.documentElement.style.setProperty('--node-shadow', `${activeColor}60`);
+                actualizarNodos();
+                dibujarArteria();
+                snapToActive();
+                devClicks = 0;
+            }
+        }
+
+        function resetData() {
+            if(confirm("¿Purgar memoria de Dante?")) {
+                localStorage.removeItem('govotto_user_data');
+                location.reload();
+            }
         }
 
         window.onload = init;
