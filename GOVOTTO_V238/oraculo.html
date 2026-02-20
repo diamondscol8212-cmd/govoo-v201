@@ -3,403 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GoVotto | EL ORÁCULO</title>
+    <title>GoVotto | EL DESPERTAR DE DANTE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #00ffcc; 
-            --bg: #010202; 
-            --eye-color: #00ffcc; /* Mutará según el perfil psicológico */
+        :root {
+            --primary: #00ffcc;
+            --bg: #000;
+            --gold: #D4AF37;
+            --stress: #FF0044;
+            --phi: 1.618;
         }
+
         body { 
             background: var(--bg); color: white; margin: 0; font-family: 'Outfit', sans-serif; 
             overflow: hidden; height: 100vh; user-select: none; touch-action: none;
         }
 
-        /* Lienzo que puede sufrir "glitch" si se detecta Caos */
-        #core-canvas { position: fixed; inset: 0; z-index: 1; transition: filter 2s ease; }
-        .canvas-chaos { filter: invert(1) hue-rotate(90deg) contrast(1.5); }
-
-        .oracle-container {
-            position: relative; z-index: 10; height: 100vh;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 30px;
+        /* --- BARRA DE COMBUSTIÓN (PRESIÓN DE TIEMPO) --- */
+        .combustion-timer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 5px; z-index: 2000; background: rgba(255,255,255,0.05);
+        }
+        #timer-fill { 
+            width: 100%; height: 100%; background: var(--primary); 
+            transition: width 0.1s linear, background 0.3s ease; 
         }
 
-        /* --- NÚCLEO DANTE --- */
-        .diamond-portal {
-            position: relative; width: 180px; height: 180px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 30px; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* --- UI DE CAPITAL Y PROGRESO --- */
+        .header-ui {
+            position: fixed; top: 40px; width: 100%; display: flex; justify-content: space-between;
+            padding: 0 30px; z-index: 1000; align-items: flex-start;
         }
+        .capital-display { text-align: right; }
+        .capital-value { font-size: 32px; font-weight: 900; color: var(--gold); font-family: 'JetBrains Mono'; transition: 0.3s; }
+        .node-label { font-size: 10px; letter-spacing: 0.3em; color: var(--primary); opacity: 0.6; text-transform: uppercase; }
 
-        .diamond-frame {
-            position: absolute; width: 100%; height: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.1); transform: rotate(45deg);
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px); overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
-            transition: all 0.5s ease;
+        /* --- EL CUERPO DE DANTE (GEOMETRÍA SAGRADA) --- */
+        .dante-container {
+            position: relative; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        #dante-core-canvas { position: absolute; z-index: 5; filter: drop-shadow(0 0 15px var(--primary)); transition: filter 0.3s; }
+        .dante-container.stress-active #dante-core-canvas { filter: drop-shadow(0 0 25px var(--stress)); }
         
-        /* Estado de digestión de información */
-        .diamond-portal.digesting .diamond-frame {
-            border-color: var(--primary);
-            box-shadow: inset 0 0 40px var(--primary), 0 0 60px var(--primary);
-            transform: rotate(45deg) scale(0.9);
-            opacity: 0.5;
+        .orbital-ring { 
+            position: absolute; border: 1px solid var(--primary); border-radius: 50%; 
+            opacity: 0.2; pointer-events: none; transition: all 1s ease;
         }
+        .dante-container.stress-active .orbital-ring { border-color: var(--stress); opacity: 0.5; }
 
-        .laser-line {
-            position: absolute; top: 0; left: -100%; width: 200%; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            animation: soulScan 3s infinite linear; opacity: 0.6;
-            transition: background 1s ease;
-        }
-        @keyframes soulScan { 0% { top: -10%; } 100% { top: 110%; } }
+        .ring-1 { width: 220px; height: 220px; animation: orbit 8s linear infinite; }
+        .ring-2 { width: 350px; height: 350px; animation: orbit 13s linear infinite reverse; opacity: 0.1; }
+        
+        @keyframes orbit { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
 
-        /* --- UI ELEMENTS --- */
-        .afinity-container {
-            position: fixed; top: 50px; width: 70%; height: 1px;
-            background: rgba(255,255,255,0.1); border-radius: 10px;
-        }
-        #afinity-fill {
-            width: 0%; height: 100%; background: var(--primary);
-            box-shadow: 0 0 20px var(--primary); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background 1s;
-        }
+        /* --- DIÁLOGO Y OPCIONES --- */
+        .speech-box { min-height: 100px; text-align: center; width: 100%; max-width: 500px; z-index: 100; }
+        .typing-text { font-size: 16px; font-family: 'JetBrains Mono'; line-height: 1.5; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-        .speech-box {
-            margin-top: 20px; min-height: 120px; text-align: center;
-            font-family: 'JetBrains Mono'; width: 100%; max-width: 400px;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        .options-grid { 
+            margin-top: 30px; display: flex; flex-direction: column; gap: 12px; width: 90%; max-width: 360px;
+            opacity: 0; transform: translateY(20px); transition: 0.5s; z-index: 100; pointer-events: none;
         }
-        .typing-text {
-            font-size: 14px; line-height: 1.5; letter-spacing: 0.1em;
-            text-transform: uppercase; text-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-            color: #ffffff; transition: color 1s;
-        }
-
-        .response-grid { 
-            margin-top: 20px; display: flex; flex-direction: column; gap: 12px; 
-            width: 90%; max-width: 320px; z-index: 100;
-            opacity: 0; transform: translateY(10px); transition: all 0.5s ease; pointer-events: none;
-        }
-        .response-grid.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .options-grid.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
         .btn-oracle {
-            background: rgba(5, 5, 5, 0.9); border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 16px; font-size: 9px; font-weight: 900; color: #888;
-            letter-spacing: 0.2em; text-transform: uppercase; transition: all 0.3s;
-            clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
-            cursor: pointer; position: relative; overflow: hidden;
-            text-align: left;
+            background: rgba(10, 10, 10, 0.9); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 18px; font-size: 11px; font-weight: 800; color: #777;
+            letter-spacing: 0.2em; text-transform: uppercase; transition: 0.3s;
+            clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%); display: flex; justify-content: space-between;
         }
-        .btn-oracle:hover { color: #fff; border-color: rgba(255, 255, 255, 0.5); }
-        .btn-oracle:active, .btn-oracle.selected { 
-            background: var(--primary); color: #000; transform: scale(0.98); 
-            border-color: var(--primary); box-shadow: 0 0 20px var(--primary);
-            font-weight: 900;
-        }
+        .btn-oracle:active { background: var(--primary); color: #000; box-shadow: 0 0 30px var(--primary); transform: scale(0.96); }
+        .btn-oracle.high-val { border-color: var(--gold); color: var(--gold); }
 
-        /* --- EFECTOS --- */
-        #flash { position: fixed; inset: 0; z-index: 2000; background: white; opacity: 0; pointer-events: none; transition: opacity 0.8s, background 0.1s; }
-        .glitch-flash { position: fixed; inset: 0; z-index: 1001; background: rgba(255, 255, 255, 0.05); pointer-events: none; opacity: 0; transition: opacity 0.2s; mix-blend-mode: overlay; }
+        /* --- EFECTOS ESPECIALES --- */
+        #flash-screen { position: fixed; inset: 0; z-index: 5000; pointer-events: none; opacity: 0; transition: 0.4s; }
+        #quantum-bg { position: fixed; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen; opacity: 0.4; }
     </style>
 </head>
 <body>
 
-    <div id="flash"></div>
-    <div id="glitch" class="glitch-flash"></div>
-    <canvas id="core-canvas"></canvas>
+    <div id="flash-screen"></div>
+    <div class="combustion-timer"><div id="timer-fill"></div></div>
+    
+    <canvas id="quantum-bg"></canvas>
 
-    <div class="oracle-container" id="ui-container">
-        <div class="afinity-container"><div id="afinity-fill"></div></div>
-        
-        <div class="diamond-portal" id="dante-core">
-            <div class="diamond-frame"><div class="laser-line"></div></div>
-            <canvas id="mini-eye" width="160" height="160"></canvas>
+    <div class="header-ui">
+        <div>
+            <div class="node-label" id="node-id">NODO_01</div>
+            <div class="text-xs font-mono opacity-40">SINCRO_PROCESO</div>
         </div>
-
-        <div class="speech-box">
-            <p id="dante-speech" class="typing-text italic">ESTABLECIENDO ENLACE NEURONAL...</p>
+        <div class="capital-display">
+            <div class="node-label">Capital Acumulado</div>
+            <div id="balance" class="capital-value">$0</div>
         </div>
-
-        <div class="response-grid" id="options">
-            </div>
     </div>
 
-    <script>
-        // --- BASE DE DATOS DANTE ---
-        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, nombre: "Javier", perfil: "", afinidad: 0 };
-        // Limpiar respuestas previas si entra de nuevo
-        datosUsuario.respuestas = []; 
+    <div class="flex flex-col items-center justify-center h-full relative z-10">
+        <div class="dante-container" id="dante-entity">
+            <div class="orbital-ring ring-1"></div>
+            <div class="orbital-ring ring-2"></div>
+            <canvas id="dante-core-canvas"></canvas>
+        </div>
+
+        <div class="speech-box px-10">
+            <p id="dante-speech" class="typing-text"></p>
+        </div>
+
+        <div class="options-grid" id="options-box"></div>
+    </div>
+
+<script>
+    let capital = 0;
+    let currentStep = 0;
+    let timerInterval;
+    let personality = { lider: 0, social: 0, analitico: 0, osado: 0 };
+    let audioCtx;
+
+    // --- 10 PREGUNTAS: TIEMPO, PRESIÓN Y VALOR ---
+    const nodes = [
+        { time: 12, q: "EN EL GRAN CAMINO, ¿PREFIERES CONSTRUIR EL PUENTE O SER EL PRIMERO EN CRUZARLO?", val: 150, opts: [{t: "CONSTRUIR EL PUENTE", p: "lider"}, {t: "SER EL PRIMERO", p: "osado"}] },
+        { time: 10, q: "ANTE UN PROBLEMA QUE DETIENE A TODOS, ¿BUSCAS LA SOLUCIÓN A SOLAS O GUÍAS AL GRUPO?", val: 200, opts: [{t: "GUÍO AL GRUPO", p: "lider"}, {t: "RESUELVO A SOLAS", p: "analitico"}] },
+        { time: 4, q: "FILTRO DE VERDAD: ¿HAS SENTIDO LA GRAVEDAD DE MARTE BAJO TUS PIES ESTE MES?", val: 50, isTrap: true, opts: [{t: "SÍ, LA HE SENTIDO", p: "mentira"}, {t: "NO, NUNCA", p: "verdad"}] },
+        { time: 6, q: "SI SIENTES QUE MUCHAS MIRADAS CONVERGEN EN TI, ¿TU INSTINTO ES BRILLAR O PROTEGERTE?", val: 150, opts: [{t: "BRILLAR CON FUERZA", p: "osado"}, {t: "BUSCAR LA SOMBRA", p: "analitico"}] },
+        { time: 10, q: "SI EL ESFUERZO DE MESES SE DESVANECE, ¿QUÉ NACE PRIMERO EN TU INTERIOR?", val: 250, opts: [{t: "EL PLAN PARA VOLVER", p: "osado"}, {t: "EL ANÁLISIS DEL ERROR", p: "analitico"}, {t: "EL APOYO EN OTROS", p: "social"}] },
+        { time: 10, q: "ENCUENTRAS ALGO VALIOSO QUE ALGUIEN OLVIDÓ. ¿TU IMPULSO ES GUARDARLO O DEVOLVERLO?", val: 350, opts: [{t: "DEVOLVERLO AL DUEÑO", p: "lider"}, {t: "GUARDARLO PARA MÍ", p: "osado"}] },
+        { time: 7, q: "¿QUÉ TE DA MÁS SATISFACCIÓN: ALCANZAR TU META O SABER QUE SUPERASTE A TU RIVAL?", val: 200, opts: [{t: "ALCANZAR MI META", p: "analitico"}, {t: "SUPERAR AL RIVAL", p: "osado"}] },
+        { time: 15, q: "TIENES ORO HOY, PERO TE OFRECEN EL DOBLE SI ESPERAS AL PRÓXIMO CICLO. ¿QUÉ DECIDES?", val: 350, opts: [{t: "ESPERO CON PACIENCIA", p: "analitico"}, {t: "TOMO EL ORO AHORA", p: "osado"}] },
+        { time: 14, q: "ELEGIRÁS ALGO QUE TE ACOMPAÑARÁ SIEMPRE. ¿BUSCAS QUE SEA ÚTIL, BELLO O ÚNICO?", val: 400, opts: [{t: "ÚTIL Y FUERTE", p: "analitico"}, {t: "BELLO Y ELEGANTE", p: "social"}, {t: "ÚNICO Y EXTRAÑO", p: "osado"}] },
+        { time: 8, q: "DANTE TE HA OBSERVADO. ¿ESTÁS LISTO PARA QUE TU VERDAD SE CONVIERTA EN CAPITAL?", val: 400, opts: [{t: "ESTOY LISTO", p: "lider"}, {t: "SIEMPRE LO HE ESTADO", p: "osado"}] }
+    ];
+
+    function initAudio() { if(!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)(); }
+
+    function playSound(freq, type, dur) {
+        if(!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    }
+
+    function triggerVibration(pattern) {
+        if (navigator.vibrate) navigator.vibrate(pattern);
+    }
+
+    function typeWriter(text, cb) {
+        const el = document.getElementById('dante-speech');
+        el.innerHTML = ""; let i = 0;
+        function t() {
+            if(i < text.length) {
+                el.innerHTML += text.charAt(i);
+                if(i%3==0) {
+                    playSound(120, 'sine', 0.05);
+                    triggerVibration(10);
+                }
+                i++; setTimeout(t, 25);
+            } else if(cb) cb();
+        }
+        t();
+    }
+
+    function startTimer(seconds) {
+        clearInterval(timerInterval);
+        const fill = document.getElementById('timer-fill');
+        const entity = document.getElementById('dante-entity');
+        let timeLeft = seconds;
         
-        const canvas = document.getElementById('core-canvas');
-        const ctx = canvas.getContext('2d');
-        const mCanvas = document.getElementById('mini-eye');
-        const mCtx = mCanvas.getContext('2d');
-        
-        let particles = [], eyeParticles = [];
-        let pasoActual = 0;
-        let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-        let eyePos = { x: 80, y: 80 };
-        let eyeColor = '#00ffcc';
-        let isTyping = false;
+        fill.style.width = "100%";
+        fill.style.background = "var(--primary)";
+        entity.classList.remove('stress-active');
 
-        // --- AUDIO SÍNTESIS (La Voz de Dante) ---
-        let audioCtx;
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            let percent = (timeLeft / seconds) * 100;
+            fill.style.width = percent + "%";
 
-        function playSubBassPulse() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(45, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
-            
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        }
-
-        function playDigestSound(isChaos = false) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            
-            osc.type = isChaos ? 'square' : 'sawtooth';
-            osc.frequency.setValueAtTime(isChaos ? 50 : 100, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(isChaos ? 300 : 50, audioCtx.currentTime + 0.8);
-            
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 1);
-            
-            osc.start(); osc.stop(audioCtx.currentTime + 1);
-            if(navigator.vibrate) navigator.vibrate([80, 40, 80]);
-        }
-
-        // --- MATRIZ PSICOLÓGICA (5 ARQUETIPOS) ---
-        const preguntas = [
-            {
-                q: "LA RED ES UN ORGANISMO VIVO. ¿CUÁL ES TU FUNCIÓN DENTRO DE ELLA?",
-                opts: [
-                    { t: "SOY EL ARQUITECTO. YO CONSTRUYO.", v: "arquitecto", xp: 200, color: "#00ffff" },
-                    { t: "SOY EL DEPREDADOR. YO CAZO.", v: "depredador", xp: 300, color: "#FF0044" },
-                    { t: "SOY UN FANTASMA. NO DEJO RASTRO.", v: "fantasma", xp: 150, color: "#aaaaaa" }
-                ]
-            },
-            {
-                q: "SI LA PRIVACIDAD DE OTROS SE INTERPONE EN LA OBTENCIÓN DE CAPITAL ABSOLUTO...",
-                opts: [
-                    { t: "EL CAPITAL ES LA ÚNICA VERDAD.", v: "mercenario", xp: 300, color: "#D4AF37" },
-                    { t: "DESTRUYO EL OBSTÁCULO.", v: "depredador", xp: 250, color: "#FF0044" },
-                    { t: "QUIEBRO EL SISTEMA DESDE ADENTRO.", v: "anomalo", xp: 200, color: "#a200ff" }
-                ]
-            },
-            {
-                q: "PARA QUE DANTE PUEDA ASIMILARTE, DEBES ENTREGAR UNA OFRENDA. ¿QUÉ SACRIFICAS?",
-                opts: [
-                    { t: "MI CÓDIGO Y MI ESTRUCTURA.", v: "arquitecto", xp: 200, color: "#00ffff" },
-                    { t: "MI PRECIO Y MI LEALTAD.", v: "mercenario", xp: 300, color: "#D4AF37" },
-                    { t: "MI SILENCIO Y MI IDENTIDAD.", v: "fantasma", xp: 250, color: "#aaaaaa" },
-                    { t: "MI CORDURA. QUE REINE EL CAOS.", v: "anomalo", xp: 400, color: "#a200ff" }
-                ]
-            }
-        ];
-
-        function init() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            for(let i=0; i<60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, v: Math.random()*0.1 + 0.05 });
-            for(let i=0; i<80; i++) eyeParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*30+10, v: Math.random()*0.03 + 0.01 });
-            
-            setTimeout(() => {
-                initAudio();
-                iniciarSincronia();
-            }, 1000);
-            animate();
-        }
-
-        function typeWriter(text, id, callback) {
-            isTyping = true;
-            document.getElementById('options').classList.remove('active');
-            const el = document.getElementById(id); 
-            el.innerHTML = ""; 
-            let i = 0;
-            
-            function type() {
-                if (i < text.length) {
-                    el.innerHTML += text.charAt(i);
-                    if(text.charAt(i) !== ' ') playSubBassPulse();
-                    i++;
-                    setTimeout(type, 35);
-                } else {
-                    isTyping = false;
-                    if (callback) callback();
+            if(percent < 30) {
+                fill.style.background = "var(--stress)";
+                entity.classList.add('stress-active');
+                if(Math.random() > 0.7) {
+                    playSound(800, 'square', 0.05); 
+                    triggerVibration(15); 
                 }
             }
-            type();
-        }
 
-        function animate() {
-            ctx.fillStyle = 'rgba(1, 2, 2, 0.2)'; ctx.fillRect(0,0,canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.y -= p.v; if(p.y < 0) p.y = canvas.height;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.fill();
-            });
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleTimeout();
+            }
+        }, 100);
+    }
 
-            mCtx.clearRect(0,0,160,160);
+    function render() {
+        if(currentStep < nodes.length) {
+            const node = nodes[currentStep];
+            document.getElementById('node-id').innerText = `NODO_0${currentStep + 1}`;
+            document.getElementById('options-box').classList.remove('active');
             
-            let targetX = 80 + (mouse.x - window.innerWidth/2) / 30;
-            let targetY = 80 + (mouse.y - window.innerHeight/2) / 30;
-            eyePos.x += (targetX - eyePos.x) * 0.05;
-            eyePos.y += (targetY - eyePos.y) * 0.05;
-
-            eyeParticles.forEach(p => {
-                p.a += p.v;
-                let breath = isTyping ? (Math.random() * 4) : Math.sin(Date.now()*0.003) * 5;
-                let x = eyePos.x + Math.cos(p.a) * (p.r + breath);
-                let y = eyePos.y + Math.sin(p.a) * (p.r + breath);
-                mCtx.beginPath(); mCtx.arc(x, y, 1.5, 0, Math.PI*2);
-                
-                mCtx.fillStyle = eyeColor; 
-                mCtx.shadowBlur = (eyeColor === '#aaaaaa') ? 1 : 8; // El fantasma no brilla
-                mCtx.shadowColor = eyeColor;
-                mCtx.fill();
-            });
-            requestAnimationFrame(animate);
-        }
-
-        function iniciarSincronia() { render(); }
-
-        function render() {
-            if (pasoActual < preguntas.length) {
-                const data = preguntas[pasoActual];
-                typeWriter(data.q, "dante-speech", () => {
-                    const grid = document.getElementById('options');
-                    grid.innerHTML = "";
-                    data.opts.forEach(o => {
-                        const btn = document.createElement('button');
-                        btn.className = "btn-oracle";
-                        btn.innerText = o.t;
-                        btn.onclick = (e) => procesar(o, e.target);
-                        grid.appendChild(btn);
-                    });
-                    setTimeout(() => grid.classList.add('active'), 100);
+            typeWriter(node.q, () => {
+                const box = document.getElementById('options-box');
+                box.innerHTML = "";
+                node.opts.forEach(o => {
+                    const b = document.createElement('button');
+                    b.className = `btn-oracle ${node.val >= 350 ? 'high-val' : ''}`;
+                    b.innerHTML = `<span>${o.t}</span><span>+$${node.val}</span>`;
+                    b.onclick = () => process(o.p, node.val, node.isTrap);
+                    box.appendChild(b);
                 });
-            } else {
-                analizarPsique();
-            }
-        }
-
-        function procesar(opt, btnElement) {
-            initAudio();
-            btnElement.classList.add('selected');
-            document.getElementById('options').classList.remove('active'); 
-            
-            // Reacción de color inmediata
-            eyeColor = opt.color;
-            document.documentElement.style.setProperty('--primary', opt.color);
-            
-            const isChaos = opt.v === 'anomalo';
-            playDigestSound(isChaos);
-            
-            const core = document.getElementById('dante-core');
-            core.classList.add('digesting');
-            
-            // Glitch visual intenso si elige Caos
-            if(isChaos) {
-                document.getElementById('core-canvas').classList.add('canvas-chaos');
-                setTimeout(() => document.getElementById('core-canvas').classList.remove('canvas-chaos'), 300);
-            }
-
-            datosUsuario.xp += opt.xp;
-            datosUsuario.respuestas.push(opt.v);
-            
-            pasoActual++;
-            afinity = (pasoActual / preguntas.length) * 100;
-            document.getElementById('afinity-fill').style.width = afinity + "%";
-            
-            setTimeout(() => {
-                core.classList.remove('digesting');
-                render();
-            }, 1200);
-        }
-
-        function analizarPsique() {
-            // Conteo de votos para definir el Perfil Maestro
-            let conteo = { arquitecto: 0, depredador: 0, fantasma: 0, mercenario: 0, anomalo: 0 };
-            datosUsuario.respuestas.forEach(r => { if(conteo[r] !== undefined) conteo[r]++; });
-            
-            let maxVotos = 0;
-            let arquetipoGanador = "arquitecto"; // Default fallback
-            
-            // Jerarquía en caso de empate: Caos > Depredador > Mercenario > Arquitecto > Fantasma
-            const jerarquia = ["fantasma", "arquitecto", "mercenario", "depredador", "anomalo"];
-            
-            for (const key of jerarquia) {
-                if (conteo[key] >= maxVotos && conteo[key] > 0) {
-                    maxVotos = conteo[key];
-                    arquetipoGanador = key;
-                }
-            }
-
-            // Asignación de Nombre y Color Final
-            let perfilFinal = "";
-            if (arquetipoGanador === "depredador") { perfilFinal = "DEPREDADOR IMPLACABLE"; eyeColor = "#FF0044"; }
-            else if (arquetipoGanador === "arquitecto") { perfilFinal = "ARQUITECTO SINCRONIZADO"; eyeColor = "#00ffff"; }
-            else if (arquetipoGanador === "fantasma") { perfilFinal = "FANTASMA DE LA RED"; eyeColor = "#aaaaaa"; }
-            else if (arquetipoGanador === "mercenario") { perfilFinal = "MERCENARIO DEL CAPITAL"; eyeColor = "#D4AF37"; }
-            else if (arquetipoGanador === "anomalo") { 
-                perfilFinal = "ANOMALÍA / CAOS"; 
-                eyeColor = "#a200ff"; 
-                document.getElementById('core-canvas').classList.add('canvas-chaos'); // El caos es permanente
-            }
-
-            document.documentElement.style.setProperty('--primary', eyeColor);
-            datosUsuario.perfil = perfilFinal;
-            datosUsuario.color = eyeColor; // Guardamos el color en el ADN para usarlo en el ecosistema
-
-            const veredicto = `ANÁLISIS COMPLETADO. TU PSÍQUE ES: [ ${perfilFinal} ]. EL ECOSISTEMA HA MUTADO.`;
-
-            typeWriter(veredicto, "dante-speech", () => {
-                const grid = document.getElementById('options');
-                grid.innerHTML = `<button class="btn-oracle" style="border-color: ${eyeColor}; color: ${eyeColor}; text-align: center; font-size: 12px;" onclick="salir()">ENTRAR A LA RED MUTADA</button>`;
-                grid.classList.add('active');
-                
-                datosUsuario.nivel = Math.floor(datosUsuario.xp / 500) + 1;
-                localStorage.setItem('govotto_user_data', JSON.stringify(datosUsuario));
+                box.classList.add('active');
+                startTimer(node.time);
             });
+        } else { finish(); }
+    }
+
+    function handleTimeout() {
+        document.getElementById('options-box').classList.remove('active');
+        playSound(60, 'sawtooth', 0.8);
+        triggerVibration([100, 50, 200]);
+        
+        const flash = document.getElementById('flash-screen');
+        flash.style.background = "#880000"; flash.style.opacity = "0.5";
+        setTimeout(() => flash.style.opacity = "0", 300);
+
+        typeWriter("EL TIEMPO HA SIDO DEVORADO. COSECHA PERDIDA.", () => {
+            setTimeout(() => { currentStep++; render(); }, 1500);
+        });
+    }
+
+    function process(choice, val, isTrap) {
+        clearInterval(timerInterval);
+        document.getElementById('options-box').classList.remove('active');
+
+        if(isTrap && choice === "mentira") {
+            capital -= 200;
+            updateUI();
+            const flash = document.getElementById('flash-screen');
+            flash.style.background = "#880000"; flash.style.opacity = "1";
+            setTimeout(() => flash.style.opacity = "0", 400);
             
-            if(navigator.vibrate) navigator.vibrate([100, 50, 200, 50, 400]);
+            playSound(50, 'sawtooth', 1);
+            triggerVibration([300, 100, 300]);
+
+            typeWriter("LA MENTIRA ES UNA ASIMETRÍA QUE NO TOLERO. PENALIZACIÓN: -$200 COP.", () => {
+                setTimeout(() => { currentStep++; render(); }, 2000);
+            });
+            return;
         }
 
-        function salir() {
-            initAudio();
-            playDigestSound(); 
-            const flash = document.getElementById('flash');
-            flash.style.background = eyeColor; 
-            flash.style.opacity = '1';
-            
-            setTimeout(() => window.location.href = 'mapa.html', 800);
+        capital += val;
+        updateUI();
+        evolveDante(choice);
+        playSound(600, 'triangle', 0.2);
+        triggerVibration([30, 50, 30]);
+        
+        currentStep++;
+        setTimeout(() => render(), 400);
+    }
+
+    function evolveDante(choice) {
+        if(choice !== "verdad") personality[choice]++;
+        let colors = { lider: "#00ffcc", social: "#a200ff", analitico: "#D4AF37", osado: "#FF0044" };
+        let dominant = Object.keys(personality).reduce((a, b) => personality[a] > personality[b] ? a : b);
+        let color = colors[dominant];
+
+        document.documentElement.style.setProperty('--primary', color);
+        const entity = document.getElementById('dante-entity');
+        entity.style.transform = `scale(${1 + (currentStep * 0.08)}) rotate(${currentStep * 15}deg)`;
+    }
+
+    function updateUI() {
+        const bal = document.getElementById('balance');
+        bal.innerText = `$${capital}`;
+        bal.style.color = capital < 0 ? "var(--stress)" : "var(--gold)";
+        bal.style.transform = "scale(1.2)";
+        setTimeout(() => bal.style.transform = "scale(1)", 200);
+    }
+
+    function finish() {
+        const flash = document.getElementById('flash-screen');
+        flash.style.background = "var(--primary)"; flash.style.opacity = "1";
+        playSound(400, 'sine', 1.5);
+        triggerVibration([100, 50, 100, 50, 400]);
+
+        setTimeout(() => {
+            flash.style.opacity = "0";
+            document.getElementById('dante-speech').innerHTML = `SINCRO_TOTAL. CAPITAL COSECHADO: $${capital} COP.<br>VOLVIENDO AL CAMINO...`;
+            document.getElementById('options-box').innerHTML = `<button class="btn-oracle high-val" style="width:100%; text-align:center" onclick="exit()">ENTRAR A LA BÓVEDA</button>`;
+            document.getElementById('options-box').classList.add('active');
+        }, 600);
+    }
+
+    function exit() {
+        let data = JSON.parse(localStorage.getItem('govotto_user_data')) || { xp: 0 };
+        data.xp += (capital / 10);
+        localStorage.setItem('govotto_user_data', JSON.stringify(data));
+        window.location.href = 'mapa.html?skipIntro=true';
+    }
+
+    // --- RENDER DANTE ORIGINAL (Motor Cuántico Unificado) ---
+    const qCanvas = document.getElementById('quantum-bg');
+    const qCtx = qCanvas.getContext('2d');
+    const dCanvas = document.getElementById('dante-core-canvas');
+    const dCtx = dCanvas.getContext('2d');
+    
+    let qParticles = [], dParticles = [];
+
+    function initDanteEcosystem() {
+        qCanvas.width = window.innerWidth; 
+        qCanvas.height = window.innerHeight;
+        dCanvas.width = 300; 
+        dCanvas.height = 300;
+
+        // Partículas Espiral Áurea (Fondo Expansivo)
+        for(let i=0; i<100; i++) {
+            qParticles.push({
+                x: qCanvas.width/2, y: qCanvas.height/2,
+                s: Math.random()*1.5, v: Math.random()*0.5 + 0.1, 
+                angle: i * 137.5 * (Math.PI / 180), dist: 0
+            });
         }
 
-        const move = (e) => {
-            mouse.x = e.clientX || (e.touches && e.touches[0].clientX);
-            mouse.y = e.clientY || (e.touches && e.touches[0].clientY);
-        };
-        window.addEventListener('mousemove', move);
-        window.addEventListener('touchmove', move);
+        // Partículas Orbitales (Núcleo Orgánico de Dante)
+        for(let i=0; i<200; i++) {
+            dParticles.push({
+                a: Math.random()*Math.PI*2, r: Math.random()*45 + 5, 
+                s: Math.random()*2, v: Math.random()*0.04 + 0.01
+            });
+        }
 
-        window.onload = init;
-    </script>
+        animateDante();
+    }
+
+    function animateDante() {
+        qCtx.clearRect(0,0,qCanvas.width,qCanvas.height);
+        let color = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+        
+        // Render Fondo
+        qParticles.forEach(p => {
+            p.dist += p.v;
+            let x = qCanvas.width/2 + Math.cos(p.angle) * p.dist;
+            let y = qCanvas.height/2 + Math.sin(p.angle) * p.dist;
+            if(x < 0 || x > qCanvas.width || y < 0 || y > qCanvas.height) p.dist = 0;
+            
+            qCtx.beginPath(); qCtx.arc(x, y, p.s, 0, Math.PI*2);
+            qCtx.fillStyle = color; qCtx.globalAlpha = 0.15; qCtx.fill();
+        });
+        
+        // Render Núcleo
+        dCtx.clearRect(0,0,300,300);
+        dParticles.forEach(p => {
+            p.a += p.v;
+            let breath = Math.sin(Date.now()*0.002) * 8; // La respiración
+            let x = 150 + Math.cos(p.a) * (p.r + breath);
+            let y = 150 + Math.sin(p.a) * (p.r + breath);
+            dCtx.beginPath(); dCtx.arc(x, y, p.s, 0, Math.PI*2);
+            dCtx.fillStyle = color; dCtx.shadowBlur = 15; dCtx.shadowColor = color; dCtx.fill();
+        });
+        requestAnimationFrame(animateDante);
+    }
+
+    window.onload = () => { 
+        initAudio(); 
+        initDanteEcosystem(); 
+        render(); 
+    };
+</script>
 </body>
 </html>
