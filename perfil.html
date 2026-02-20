@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GoVotto | MATRIZ ADN</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@400;500;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --primary: #00ffcc; 
             --gold: #D4AF37;
-            --bg: #000;
+            --bg: #010202; 
+            --ring-speed: 8s;
         }
 
         body, html { 
@@ -19,27 +20,27 @@
             overflow: hidden; height: 100vh; width: 100vw; touch-action: none;
         }
 
-        /* --- FONDO FRACTAL --- */
-        #dante-fractal-bg { position: fixed; inset: 0; z-index: 0; opacity: 0.15; filter: blur(8px); pointer-events: none; }
+        #dante-fractal-bg { 
+            position: fixed; inset: 0; z-index: 0; opacity: 0.2; pointer-events: none; 
+            transition: transform 0.2s ease-out; 
+            mix-blend-mode: screen;
+        }
 
-        /* --- ESCÁNER BIOMÉTRICO --- */
         .scanner-line {
             position: fixed; top: 0; left: 0; width: 100%; height: 2px;
             background: var(--primary); z-index: 500; opacity: 0.5;
             box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary);
-            animation: scan 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            animation: scan 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
             pointer-events: none; mix-blend-mode: screen;
         }
         @keyframes scan { 0% { top: -10%; opacity: 0; } 10% { opacity: 0.8; } 50% { top: 110%; opacity: 0; } 100% { top: 110%; opacity: 0; } }
 
-        /* --- HUD SUPERIOR --- */
         .master-hud {
             position: fixed; top: 0; width: 100%; z-index: 1000; padding: 35px 25px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 20%, transparent 100%);
-            border-bottom: 1px solid rgba(255,255,255,0.05); pointer-events: none;
+            background: linear-gradient(to bottom, rgba(1,2,2,0.95) 10%, transparent 100%);
+            pointer-events: none;
         }
 
-        /* --- CONTENEDOR DEL ADN (SCROLL Z) --- */
         .adn-viewport {
             position: fixed; inset: 0; z-index: 10;
             overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth;
@@ -47,61 +48,59 @@
         }
         .adn-viewport::-webkit-scrollbar { display: none; }
 
-        /* --- EL GLIFO DEL ALMA (Holograma Central) --- */
-        .soul-glyph-container {
-            position: relative; width: 100%; height: 250px;
-            display: flex; justify-content: center; align-items: center;
-            margin-bottom: 20px; transform-style: preserve-3d;
+        /* --- EL DANTE ORIGINAL (MADURO) --- */
+        .dante-container {
+            position: relative; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px auto;
+            /* Escala de madurez: Mantiene el tamaño final del Oráculo */
+            transform: scale(1.15);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .soul-glyph {
-            width: 180px; height: 180px; fill: none; stroke: var(--primary);
-            filter: drop-shadow(0 0 15px var(--primary));
-            animation: floatGlyph 8s ease-in-out infinite;
-        }
-        .glyph-spin { animation: spin 13s linear infinite; transform-origin: center; }
-        .glyph-spin-reverse { animation: spin 21s linear infinite reverse; transform-origin: center; }
+        #dante-core-canvas { position: absolute; z-index: 5; filter: drop-shadow(0 0 15px var(--primary)); }
         
-        @keyframes floatGlyph { 0%, 100% { transform: translateY(0) rotateX(10deg); } 50% { transform: translateY(-15px) rotateX(-5deg); } }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .orbital-ring { 
+            position: absolute; border: 1px solid var(--primary); border-radius: 50%; 
+            opacity: 0.25; pointer-events: none; transition: all 1s ease;
+        }
+        .ring-1 { width: 220px; height: 220px; animation: orbit var(--ring-speed) linear infinite; border-width: 2px;}
+        .ring-2 { width: 350px; height: 350px; animation: orbit calc(var(--ring-speed) * 1.618) linear infinite reverse; opacity: 0.1; }
+        
+        @keyframes orbit { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
 
-        /* --- TABLA DE DATOS (EL CÓDICE) --- */
+        /* --- EL CÓDICE Y VEREDICTO --- */
         .codex-container {
             width: 100%; max-width: 400px; margin: 0 auto;
-            background: rgba(5,5,5,0.6); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; backdrop-filter: blur(20px);
-            padding: 20px; box-shadow: inset 0 0 30px rgba(0,0,0,1);
-            transform: translateZ(20px);
+            background: rgba(5,5,5,0.7); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 15px; backdrop-filter: blur(15px);
+            padding: 25px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
         }
 
-        .data-row {
-            display: flex; flex-direction: column; padding: 12px 0;
-            border-bottom: 1px dashed rgba(255,255,255,0.05);
-        }
-        .data-row:last-child { border-bottom: none; }
-        
-        .data-label {
-            font-family: 'JetBrains Mono'; font-size: 8px; color: #666;
-            text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 4px;
-        }
-        .data-value {
-            font-size: 14px; font-weight: 900; text-transform: uppercase;
-            color: var(--primary); letter-spacing: 0.1em;
-            text-shadow: 0 0 10px rgba(0,0,0,1);
-            word-wrap: break-word;
-        }
+        .data-row { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+        .data-label { font-family: 'JetBrains Mono'; font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 4px; }
+        .data-value { font-size: 15px; font-weight: 900; text-transform: uppercase; color: var(--primary); letter-spacing: 0.15em; word-wrap: break-word; }
 
-        /* --- MENÚ TRÍADA --- */
+        .verdict-box { margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .verdict-text { font-family: 'JetBrains Mono'; font-size: 10px; line-height: 1.8; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; min-height: 80px; }
+        .verdict-highlight { color: white; font-weight: 800; text-shadow: 0 0 10px var(--primary); }
+
         .bottom-nav { 
             position: fixed; bottom: 35px; width: 92%; left: 4%; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(15,15,15,0.9); backdrop-filter: blur(25px);
-            padding: 12px 30px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(10,10,10,0.95); backdrop-filter: blur(25px);
+            padding: 12px 30px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #444; transition: 0.3s; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #555; transition: 0.3s; cursor: pointer;}
         .nav-item.active { color: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
-        #mini-dante-canvas { width: 60px; height: 60px; border-radius: 50%; filter: drop-shadow(0 0 10px var(--primary)); transform: translateY(-25px); }
+        
+        #mini-dante-canvas { 
+            width: 65px; height: 65px; border-radius: 50%; 
+            filter: drop-shadow(0 0 12px var(--primary)); 
+            transform: translateY(-25px); 
+            background: #000; border: 1px solid rgba(255,255,255,0.1);
+        }
 
-        #fx-flash { position: fixed; inset: 0; z-index: 10001; background: var(--primary); opacity: 1; pointer-events: none; mix-blend-mode: screen; transition: opacity 1.5s ease-out; }
+        #fx-flash { position: fixed; inset: 0; z-index: 10001; background: var(--primary); opacity: 1; pointer-events: none; transition: opacity 0.8s ease-out; }
     </style>
 </head>
 <body>
@@ -113,47 +112,51 @@
     <header class="master-hud">
         <div class="flex justify-between items-start">
             <div>
-                <h1 class="text-[8px] tracking-[0.5em] text-zinc-500 font-bold uppercase" id="sync-status">Leyendo Código Base...</h1>
-                <div class="text-xl font-black italic">ADN <span style="color: var(--primary);">SINCRO</span></div>
+                <h1 class="text-[9px] tracking-[0.5em] text-zinc-500 font-bold uppercase" id="sync-status">Leyendo Matriz...</h1>
+                <div class="text-xl font-black italic mt-1">ADN <span style="color: var(--primary);">SINCRO</span></div>
             </div>
             <div class="text-right">
-                <div id="hud-nivel" class="text-md font-black text-white italic">NIVEL <span style="color: var(--primary);" id="lvl-val">1</span></div>
-                <p class="text-[7px] text-zinc-600 font-bold uppercase">Jerarquía</p>
+                <div id="hud-nivel" class="text-lg font-black text-white italic">NIVEL <span style="color: var(--primary);" id="lvl-val">1</span></div>
+                <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-widest mt-1">Jerarquía</p>
             </div>
         </div>
     </header>
 
-    <div class="adn-viewport" id="scroll-engine" onscroll="playScrollSound()">
+    <div class="adn-viewport" id="scroll-engine" onscroll="handleScroll()">
         
-        <div class="soul-glyph-container" onclick="triggerGlitch()">
-            <svg class="soul-glyph" viewBox="0 0 200 200" id="dynamic-glyph"></svg>
+        <div class="dante-container" id="dante-entity" onclick="triggerGlitch()">
+            <div class="orbital-ring ring-1" id="ring-1"></div>
+            <div class="orbital-ring ring-2" id="ring-2"></div>
+            <canvas id="dante-core-canvas" width="300" height="300"></canvas>
         </div>
 
-        <div class="text-center mb-8">
+        <div class="text-center mb-10 mt-4">
             <h2 class="text-3xl font-black italic tracking-tighter uppercase" style="color: var(--primary);" id="profile-title" data-final="DESCONOCIDO">ENCRIPTADO</h2>
-            <p class="font-mono text-[9px] text-zinc-500 tracking-[0.4em] uppercase mt-1" id="location-val" data-final="SIN ANCLAJE">ESPERANDO GPS</p>
+            <p class="font-mono text-[10px] text-zinc-500 tracking-[0.4em] uppercase mt-2" id="location-val" data-final="SIN ANCLAJE">ESPERANDO GPS</p>
         </div>
 
         <div class="codex-container">
             <div class="data-row">
-                <span class="data-label">Identidad Sujeto</span>
-                <span class="data-value" style="color: white;" id="name-val" data-final="Javier">***</span>
+                <span class="data-label">Sujeto / Identidad</span>
+                <span class="data-value" style="color: white; text-shadow:none;" id="name-val" data-final="***">***</span>
             </div>
             
             <div class="data-row">
-                <span class="data-label">ITOCHI Acumulado</span>
+                <span class="data-label">ITOCHI Activo</span>
                 <span class="data-value" id="itochi-val" data-final="0">0000</span>
             </div>
 
-            <div id="extracted-data-matrix">
-                </div>
+            <div class="verdict-box">
+                <span class="data-label" style="color: var(--primary);">> ANÁLISIS FORENSE DANTE</span>
+                <p id="verdict-text" class="verdict-text"></p>
+            </div>
         </div>
     </div>
 
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="vibrate(10)">
-            <svg style="width:22px;" viewBox="0 0 100 100" stroke="currentColor" fill="none"><path d="M 30,20 C 30,50 70,50 70,80 M 70,20 C 70,50 30,50 30,80" stroke-width="12"/></svg>
-            <span class="text-[7px] font-black uppercase mt-1">ADN</span>
+            <svg style="width:24px;" viewBox="0 0 100 100" stroke="currentColor" fill="none"><path d="M 30,20 C 30,50 70,50 70,80 M 70,20 C 70,50 30,50 30,80" stroke-width="12"/></svg>
+            <span class="text-[8px] font-black uppercase mt-1">ADN</span>
         </div>
         
         <div class="nav-item" onclick="jumpTo('mapa.html')">
@@ -161,138 +164,129 @@
         </div>
         
         <div class="nav-item" onclick="jumpTo('boveda.html')">
-            <span id="nav-gold" class="text-[10px] font-black" style="color:var(--gold)">$0</span>
-            <span class="text-[7px] font-black uppercase mt-1">ORO</span>
+            <span id="nav-gold" class="text-[12px] font-black" style="color:var(--gold)">$0</span>
+            <span class="text-[8px] font-black uppercase mt-1">ORO</span>
         </div>
     </nav>
 
     <script>
-        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { 
-            nivel: 1, xp: 0, perfil: "ANOMALÍA / CAOS", color: "#a200ff", nombre: "Javier", 
-            ubicacion: { city: "BOGOTÁ, COLOMBIA" },
-            datosExtraidos: {
-                "personalidad_accion": "CÁLCULO",
-                "consumo_estilo": "OPULENCIA",
-                "finanzas_riesgo": "AGRESIVO"
+        // --- 1. CARGA DE DATOS Y SEMÁNTICA ---
+        let rawData = localStorage.getItem('govotto_user_data');
+        let datosUsuario = rawData ? JSON.parse(rawData) : {};
+
+        let nivel = datosUsuario.nivel || 1;
+        let xp = datosUsuario.xp || 2500;
+        let perfilCrudo = datosUsuario.perfil || "osado"; // Prueba: "osado", "lider", "analitico"
+        let nombre = datosUsuario.nombre || "Javier";
+        let activeColor = datosUsuario.color || "#FF0044";
+        let ubicacionCity = datosUsuario.ubicacion ? datosUsuario.ubicacion.city : "BOGOTÁ, COLOMBIA";
+
+        // EL ALMA (Multiplicador de Velocidad según Perfil + Veredicto)
+        const semanticMap = {
+            "lider": { 
+                title: "ARQUITECTO DE REDES", 
+                speedMult: 0.5, ringSpeed: "15s",
+                verdict: "Tu instinto gravita hacia el control y la estructura. No buscas cruzar puentes, prefieres construirlos. <span class='verdict-highlight'>Eres un nodo de anclaje para otros.</span> Un perfil de alta fiabilidad para sistemas colaborativos y liderazgo de capital." 
+            },
+            "osado": { 
+                title: "PIONERO DE FRONTERAS", 
+                speedMult: 2.0, ringSpeed: "4s",
+                verdict: "Tu pulso delata aversión a la estática. Prefieres quemar el puente si eso acelera la conquista. <span class='verdict-highlight'>El riesgo no te paraliza, te alimenta.</span> Eres un acelerador de capital, un activo de alto voltaje para el ecosistema."
+            },
+            "analitico": { 
+                title: "GUARDIÁN DE CÓDIGO", 
+                speedMult: 0.3, ringSpeed: "20s",
+                verdict: "Tu instinto es la preservación. Calculas la fricción antes de dar el paso. Donde otros ven apuestas, tú ves algoritmos. <span class='verdict-highlight'>Tu valor radica en la paciencia.</span> Eres el cimiento inquebrantable de cualquier economía."
+            },
+            "social": { 
+                title: "SINCRONIZADOR", 
+                speedMult: 1.0, ringSpeed: "8s",
+                verdict: "Tu valor se multiplica en el reflejo de los demás. Tienes una sensibilidad aguda a la mirada externa. <span class='verdict-highlight'>Eres un catalizador de tendencias.</span> Un perfil altamente codiciado para el ecosistema de consumo y redes."
             }
         };
-        let activeColor = datosUsuario.color || "#00ffcc";
 
-        // --- MOTORES ---
+        let activeProfile = perfilCrudo.toLowerCase();
+        if(!semanticMap[activeProfile]) activeProfile = "lider"; 
+        let coreConfig = semanticMap[activeProfile];
+
+        // --- MOTORES AUDIO ---
         let audioCtx;
-        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function initAudio() { 
+            try { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+        }
 
+        // --- EL MOTOR MATEMÁTICO ORIGINAL RECUPERADO ---
         const bgCanvas = document.getElementById('dante-fractal-bg');
         const bgCtx = bgCanvas.getContext('2d');
+        const coreCanvas = document.getElementById('dante-core-canvas');
+        const coreCtx = coreCanvas.getContext('2d');
         const miniCanvas = document.getElementById('mini-dante-canvas');
         const miniCtx = miniCanvas.getContext('2d');
-        let bgParticles = [], miniParticles = [];
+        
+        let qParticles = [], dParticles = [], miniParticles = [];
 
         function init() {
             document.documentElement.style.setProperty('--primary', activeColor);
+            document.documentElement.style.setProperty('--ring-speed', coreConfig.ringSpeed);
             document.getElementById('fx-flash').style.backgroundColor = activeColor;
             
             bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
-            miniCanvas.width = 120; miniCanvas.height = 120;
+            miniCanvas.width = 65; miniCanvas.height = 65;
 
-            for(let i=0; i<60; i++) bgParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*300+50, s: Math.random()*1.5, v: 0.005 });
-            for(let i=0; i<30; i++) miniParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*20+5, v: 0.05 });
+            // 1. Partículas de Fondo (Espiral Áurea expansiva original del Index)
+            for(let i=0; i<100; i++) qParticles.push({
+                x: bgCanvas.width/2, y: bgCanvas.height/2,
+                s: Math.random()*1.5, v: (Math.random()*0.5 + 0.1) * coreConfig.speedMult, 
+                angle: i * 137.5 * (Math.PI / 180), dist: 0
+            });
 
-            buildSoulGlyph();
+            // 2. Núcleo Dante Original (200 Partículas)
+            for(let i=0; i<200; i++) dParticles.push({
+                a: Math.random()*Math.PI*2, r: Math.random()*50 + 5, 
+                s: Math.random()*2, v: (Math.random()*0.04 + 0.01) * coreConfig.speedMult
+            });
+
+            // 3. Mini Avatar
+            for(let i=0; i<30; i++) miniParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*20+5, v: 0.03 });
+
             populateData();
 
             setTimeout(() => { 
                 document.getElementById('fx-flash').style.opacity = '0';
                 initAudio();
                 startDecryption();
-            }, 600);
+            }, 500);
 
             animate();
         }
 
-        // --- EL GLIFO DEL ALMA (GEOMETRÍA SAGRADA) ---
-        function buildSoulGlyph() {
-            const perfil = datosUsuario.perfil || "";
-            let svgContent = "";
-            const cx = 100, cy = 100;
-
-            // Dependiendo del perfil, la geometría cambia.
-            if (perfil.includes("DEPREDADOR")) {
-                // Triángulos agresivos
-                svgContent = `
-                    <polygon points="100,20 180,160 20,160" stroke-width="4" class="glyph-spin"/>
-                    <polygon points="100,180 20,40 180,40" stroke-width="2" class="glyph-spin-reverse" opacity="0.5"/>
-                    <circle cx="${cx}" cy="${cy}" r="15" fill="currentColor"/>
-                `;
-            } else if (perfil.includes("ARQUITECTO")) {
-                // Cuadrados perfectos
-                svgContent = `
-                    <rect x="40" y="40" width="120" height="120" stroke-width="4" class="glyph-spin"/>
-                    <rect x="60" y="60" width="80" height="80" stroke-width="2" class="glyph-spin-reverse"/>
-                    <circle cx="${cx}" cy="${cy}" r="10" fill="currentColor"/>
-                `;
-            } else if (perfil.includes("FANTASMA")) {
-                // Círculos tenues
-                svgContent = `
-                    <circle cx="${cx}" cy="${cy}" r="70" stroke-width="2" stroke-dasharray="10 20" class="glyph-spin"/>
-                    <circle cx="${cx}" cy="${cy}" r="40" stroke-width="1" class="glyph-spin-reverse"/>
-                `;
-            } else if (perfil.includes("ANOMALÍA")) {
-                // Polígono irregular Glitch
-                svgContent = `
-                    <polygon points="100,10 190,80 150,190 50,190 10,80" stroke-width="4" stroke-dasharray="20 40" class="glyph-spin"/>
-                    <path d="M 50,50 L 150,150 M 150,50 L 50,150" stroke-width="2" class="glyph-spin-reverse"/>
-                    <circle cx="${cx}" cy="${cy}" r="20" fill="currentColor"/>
-                `;
-            } else {
-                // Oro / Mercenario / Base
-                svgContent = `
-                    <polygon points="100,10 180,50 180,150 100,190 20,150 20,50" stroke-width="3" class="glyph-spin"/>
-                    <circle cx="${cx}" cy="${cy}" r="45" stroke-width="2" stroke-dasharray="5 15" class="glyph-spin-reverse"/>
-                    <circle cx="${cx}" cy="${cy}" r="8" fill="currentColor"/>
-                `;
-            }
-            document.getElementById('dynamic-glyph').innerHTML = svgContent;
-        }
-
-        // --- PREPARACIÓN DE DATOS ---
         function populateData() {
-            document.getElementById('lvl-val').innerText = datosUsuario.nivel;
-            document.getElementById('nav-gold').innerText = `$${(datosUsuario.xp * 12).toLocaleString()}`;
-            
-            document.getElementById('profile-title').setAttribute('data-final', datosUsuario.perfil || "NEUTRO");
-            document.getElementById('name-val').setAttribute('data-final', datosUsuario.nombre || "DESCONOCIDO");
-            if(datosUsuario.ubicacion) document.getElementById('location-val').setAttribute('data-final', datosUsuario.ubicacion.city);
-            document.getElementById('itochi-val').setAttribute('data-final', Math.floor(datosUsuario.xp/10));
-
-            // Inyectar matriz extraída
-            const matrix = document.getElementById('extracted-data-matrix');
-            if (datosUsuario.datosExtraidos) {
-                for (const [key, value] of Object.entries(datosUsuario.datosExtraidos)) {
-                    let cleanKey = key.replace('_', ' ');
-                    matrix.innerHTML += `
-                        <div class="data-row">
-                            <span class="data-label">${cleanKey}</span>
-                            <span class="data-value decodable" data-final="${value}">***</span>
-                        </div>
-                    `;
-                }
-            }
+            document.getElementById('lvl-val').innerText = nivel;
+            document.getElementById('nav-gold').innerText = `$${xp.toLocaleString()}`;
+            document.getElementById('profile-title').setAttribute('data-final', coreConfig.title);
+            document.getElementById('name-val').setAttribute('data-final', nombre);
+            document.getElementById('location-val').setAttribute('data-final', ubicacionCity);
+            document.getElementById('itochi-val').setAttribute('data-final', xp);
         }
 
-        // --- EFECTO HACKER (DESENCRIPTACIÓN) ---
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+        
         function startDecryption() {
             const elements = document.querySelectorAll('[data-final]');
+            let decryptionsFinished = 0;
             
             elements.forEach((el, index) => {
                 const finalStr = el.getAttribute('data-final');
                 let iterations = 0;
-                const maxIterations = 15 + (index * 5); // Cascada
+                const maxIterations = 20 + (index * 8); 
                 
+                if(el.classList.contains('data-value') || el.id === 'profile-title') {
+                    el.style.textShadow = `0 0 15px ${activeColor}`;
+                }
+
                 const interval = setInterval(() => {
                     if(!audioCtx) initAudio();
-                    if(iterations % 3 === 0) playBip(); // Sonido tecleo
+                    if(iterations % 4 === 0) { playBip(); if(iterations < maxIterations - 5) vibrate(10); }
                     
                     let randomStr = finalStr.split('').map((char, i) => {
                         if(char === ' ') return ' ';
@@ -306,27 +300,59 @@
                     if (iterations >= maxIterations) {
                         clearInterval(interval);
                         el.innerText = finalStr;
-                        if(index === elements.length -1) {
-                            document.getElementById('sync-status').innerText = "ADN TOTALMENTE EXPUESTO";
+                        decryptionsFinished++;
+                        
+                        if(decryptionsFinished === elements.length) {
+                            document.getElementById('sync-status').innerText = "ADN EXPUESTO";
                             document.getElementById('sync-status').style.color = activeColor;
                             playLockSound();
-                            if(navigator.vibrate) navigator.vibrate([50, 100]);
+                            vibrate([50, 100]);
+                            setTimeout(typeVerdict, 500); 
                         }
                     }
                 }, 40);
             });
         }
 
-        // --- SONIDOS ---
-        function playBip() {
+        function typeVerdict() {
+            const el = document.getElementById('verdict-text');
+            const textHTML = coreConfig.verdict;
+            el.innerHTML = "";
+            let isTag = false;
+            let currentHTML = "";
+            let i = 0;
+
+            function type() {
+                if (i < textHTML.length) {
+                    let char = textHTML.charAt(i);
+                    currentHTML += char;
+                    el.innerHTML = currentHTML + (i % 2 === 0 ? "_" : ""); 
+                    
+                    if (char === '<') isTag = true;
+                    if (char === '>') isTag = false;
+                    
+                    if (!isTag && char !== ' ') {
+                        if(i % 3 === 0) playBip(800); 
+                    }
+                    
+                    i++;
+                    setTimeout(type, isTag ? 0 : 25); 
+                } else {
+                    el.innerHTML = currentHTML; 
+                }
+            }
+            type();
+        }
+
+        function playBip(freqBase = 1500) {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.connect(g); g.connect(audioCtx.destination);
-            osc.type = 'square'; osc.frequency.value = 800 + Math.random()*400;
-            g.gain.setValueAtTime(0.02, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            osc.type = 'square'; osc.frequency.value = freqBase + Math.random()*500; 
+            g.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.03);
         }
 
         function playLockSound() {
@@ -334,51 +360,74 @@
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.connect(g); g.connect(audioCtx.destination);
-            osc.type = 'sine'; osc.frequency.value = 200;
-            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
-            g.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            osc.type = 'sine'; osc.frequency.value = 400;
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.6);
+            g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
 
         let scrollTimeout;
-        function playScrollSound() {
+        function handleScroll() {
+            const scrollY = document.getElementById('scroll-engine').scrollTop;
+            document.getElementById('dante-fractal-bg').style.transform = `translateY(${scrollY * 0.3}px)`;
             if(scrollTimeout) return;
-            playBip();
+            playBip(2000);
             scrollTimeout = setTimeout(() => scrollTimeout = null, 100);
         }
 
         function triggerGlitch() {
-            vibrate(30);
-            const glyph = document.querySelector('.soul-glyph');
-            glyph.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px) scale(1.1)`;
-            glyph.style.filter = "drop-shadow(0 0 30px white)";
+            vibrate([30, 20]);
+            const container = document.getElementById('dante-entity');
+            container.style.transform = `scale(1.2) translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
+            container.style.filter = "drop-shadow(0 0 40px white)";
+            playBip(3000);
             setTimeout(() => {
-                glyph.style.transform = "none";
-                glyph.style.filter = `drop-shadow(0 0 15px ${activeColor})`;
+                container.style.transform = "scale(1.15)";
+                container.style.filter = "none";
             }, 100);
         }
 
-        // --- ANIMACIÓN FONDOS ---
+        // --- ANIMACIÓN EXACTA DEL INDEX/ORÁCULO ---
         function animate() {
-            bgCtx.fillStyle = 'rgba(0,0,0,0.15)'; bgCtx.fillRect(0,0,bgCanvas.width, bgCanvas.height);
-            bgParticles.forEach(p => {
-                p.a += p.v;
-                let x = bgCanvas.width/2 + Math.cos(p.a) * p.r;
-                let y = bgCanvas.height/2 + Math.sin(p.a) * p.r;
-                bgCtx.beginPath(); bgCtx.arc(x,y,p.s,0,Math.PI*2);
-                bgCtx.fillStyle = activeColor; bgCtx.fill();
+            bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+            qParticles.forEach(p => {
+                p.dist += p.v;
+                let x = bgCanvas.width/2 + Math.cos(p.angle) * p.dist;
+                let y = bgCanvas.height/2 + Math.sin(p.angle) * p.dist;
+                if(x < 0 || x > bgCanvas.width || y < 0 || y > bgCanvas.height) p.dist = 0;
+                
+                bgCtx.beginPath(); bgCtx.arc(x, y, p.s, 0, Math.PI*2);
+                bgCtx.fillStyle = activeColor; bgCtx.globalAlpha = 0.15; bgCtx.fill();
             });
 
-            miniCtx.clearRect(0,0,120,120);
+            miniCtx.clearRect(0,0,miniCanvas.width, miniCanvas.height);
             miniParticles.forEach(p => {
                 p.a += p.v;
-                let x = 60 + Math.cos(p.a) * p.r;
-                let y = 60 + Math.sin(p.a) * p.r;
-                miniCtx.beginPath(); miniCtx.arc(x,y,1.5,0,Math.PI*2);
-                miniCtx.fillStyle = '#444'; // Color apagado porque no estamos en el mapa
+                let x = miniCanvas.width/2 + Math.cos(p.a) * p.r;
+                let y = miniCanvas.height/2 + Math.sin(p.a) * p.r;
+                miniCtx.beginPath(); miniCtx.arc(x,y,1,0,Math.PI*2);
+                miniCtx.fillStyle = '#666'; 
                 miniCtx.fill();
             });
+
+            coreCtx.clearRect(0,0,300,300);
+            dParticles.forEach(p => {
+                p.a += p.v;
+                // Escala de Madurez (x1.4 para que se vea que comió)
+                let matureScale = 1.4; 
+                let breath = Math.sin(Date.now()*0.002) * (8 * coreConfig.speedMult) * matureScale;
+                
+                let x = 150 + Math.cos(p.a) * (p.r * matureScale + breath);
+                let y = 150 + Math.sin(p.a) * (p.r * matureScale + breath);
+                
+                coreCtx.beginPath(); coreCtx.arc(x, y, p.s * 1.2, 0, Math.PI*2);
+                coreCtx.fillStyle = activeColor; 
+                coreCtx.shadowBlur = 15; 
+                coreCtx.shadowColor = activeColor; 
+                coreCtx.fill();
+            });
+
             requestAnimationFrame(animate);
         }
 
