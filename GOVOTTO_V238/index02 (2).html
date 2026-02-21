@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DANTE PROTOCOL | GoVotto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --accent: #00ffff;
+            --bg: #000;
+            --phi: 1.618; /* La Proporción Áurea */
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+            --nebula: rgba(0, 255, 204, 0.08);
+            --rune-speed: 8s; /* Número Fibonacci (8) */
+        }
+
+        body { 
+            background: var(--bg); color: white; margin: 0; font-family: 'Outfit', sans-serif; 
+            overflow: hidden; height: 100vh; user-select: none; 
+            -webkit-tap-highlight-color: transparent; touch-action: none; 
+            transition: background 1.5s ease;
+        } 
+
+        /* --- 1. CAPA GÉNESIS --- */
+        #boot-screen { position: fixed; inset: 0; z-index: 99999; background: #030303; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #genesis-canvas { position: absolute; inset: 0; z-index: 1; }
+        #genesis-flash { position: fixed; inset: 0; z-index: 100000; background: white; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
+        /* --- 2. EL CUERPO DANTE --- */
+        #main-app { opacity: 0; transition: opacity 2s ease, transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); position: relative; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
+        #quantum-canvas { position: absolute; inset: 0; z-index: 1; mix-blend-mode: screen; opacity: 0.6; }
+        
+        .tactical-glow { 
+            position: absolute; inset: 0; z-index: 2; pointer-events: none; 
+            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), var(--nebula), transparent 70%); 
+        }
+
+        /* --- 3. DANTE: GEOMETRÍA SAGRADA --- */
+        .dante-container { position: relative; width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; perspective: 1000px; transition: all 0.5s ease; cursor: pointer; }
+        #dante-core-canvas { position: absolute; z-index: 5; filter: blur(0.5px); }
+        
+        .orbital-ring { 
+            position: absolute; border: 1px solid var(--primary); border-radius: 50%; 
+            opacity: 0.15; transform-style: preserve-3d; pointer-events: none;
+            transition: border-color 1s ease;
+        }
+        /* Tamaños basados en Proporción Áurea */
+        .ring-1 { width: 258px; height: 258px; animation: orbit var(--rune-speed) linear infinite; border-top-width: 3px; }
+        .ring-2 { width: 418px; height: 418px; animation: orbit calc(var(--rune-speed) * var(--phi)) linear infinite reverse; opacity: 0.05; }
+        
+        @keyframes orbit { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
+
+        /* --- 4. HUD --- */
+        .master-hud {
+            position: relative; z-index: 100; padding: 40px 25px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+            backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* --- 5. NAVEGACIÓN RUNAS --- */
+        .nav-nodes { position: absolute; bottom: 45px; width: 100%; display: flex; justify-content: center; gap: 35px; z-index: 100; }
+        .node-btn {
+            width: 58px; height: 58px; border-radius: 50%; background: rgba(10,10,10,0.8);
+            border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;
+            color: #444; backdrop-filter: blur(12px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .node-btn.active { color: var(--primary); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 204, 0.2); transform: scale(1.1); }
+        
+        .rune-svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+        .node-btn.active .rune-spin { animation: runeSpin 13s linear infinite; transform-origin: center; } /* 13 es Fibonacci */
+        .node-btn.active .rune-pulse { animation: runePulse 5s ease-in-out infinite; } /* 5 es Fibonacci */
+
+        @keyframes runeSpin { 100% { transform: rotate(360deg); } }
+        @keyframes runePulse { 0%, 100% { stroke-width: 2px; opacity: 0.5; } 50% { stroke-width: 4px; opacity: 1; } }
+
+        #portal-flash { position: fixed; inset: 0; z-index: 100001; background: var(--primary); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+        .hyperspace-active #dante-entity { transform: scale(12); filter: blur(10px) brightness(2); opacity: 0; }
+    </style>
+</head>
+<body>
+
+    <div id="portal-flash"></div>
+    <div id="genesis-flash"></div>
+
+    <div id="boot-screen">
+        <canvas id="genesis-canvas"></canvas>
+        <div class="relative z-10 flex flex-col items-center">
+            <div id="genesis-logo" class="flex items-center text-5xl font-black italic tracking-tighter mb-10 opacity-0 transition-all duration-1000 scale-75">
+                <span class="text-white">GO</span><span class="text-[#00ffcc]" id="logo-accent">VOTTO</span>
+            </div>
+            <div class="w-56 h-[1px] bg-zinc-900 rounded-full overflow-hidden mb-4">
+                <div id="genesis-bar" class="h-full bg-[#00ffcc] w-0 transition-all duration-300"></div>
+            </div>
+            <p id="genesis-status" class="font-mono text-[8px] text-zinc-600 tracking-[0.4em] uppercase mb-10">Calculando Proporción Áurea...</p>
+            <button id="genesis-btn" class="hidden px-12 py-4 border border-[#00ffcc] text-[#00ffcc] font-black text-[10px] tracking-[0.5em] rounded-full hover:bg-[#00ffcc] hover:text-black transition-all" onclick="igniteSingularity()">INICIAR IGNICIÓN</button>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <canvas id="quantum-canvas"></canvas>
+        <div class="tactical-glow"></div>
+
+        <header class="master-hud">
+            <div class="hud-info">
+                <h2 class="text-[8px] tracking-[0.6em] text-zinc-500 uppercase font-bold" id="user-rank">SINCRO_ESTABLE</h2>
+                <div class="text-xl font-black italic">GO<span style="color: var(--primary);">VOTTO</span></div>
+            </div>
+            <div class="text-right">
+                <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Capital_Asimilado</p>
+                <div id="hud-balance" class="text-lg font-black text-white font-mono">$0</div>
+            </div>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center justify-center relative">
+            <div class="dante-container" id="dante-entity" onclick="pulseCore()">
+                <div class="orbital-ring ring-1"></div>
+                <div class="orbital-ring ring-2"></div>
+                <canvas id="dante-core-canvas"></canvas>
+            </div>
+            
+            <div class="mt-16 text-center px-12">
+                <p id="seria-msg" class="text-[10px] font-mono tracking-[0.4em] opacity-30 uppercase" style="color: var(--primary);">Espiral de Fibonacci Detectada</p>
+            </div>
+        </main>
+
+        <nav class="nav-nodes">
+            <div class="node-btn" onclick="window.location.href='boveda.html'">
+                <svg class="rune-svg" viewBox="0 0 100 100">
+                    <polygon points="50,15 85,35 85,65 50,85 15,65 15,35" stroke-width="6"/>
+                    <circle cx="50" cy="50" r="4" fill="currentColor"/>
+                </svg>
+            </div>
+            
+            <div class="node-btn active" onclick="jumpToMap()">
+                <svg class="rune-svg" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" stroke-dasharray="10 15" class="rune-spin"/>
+                    <circle cx="50" cy="50" r="12" stroke-width="4" class="rune-pulse"/>
+                </svg>
+            </div>
+            
+            <div class="node-btn" onclick="window.location.href='perfil.html'">
+                <svg class="rune-svg" viewBox="0 0 100 100">
+                    <path d="M 30,15 C 30,50 70,50 70,85" stroke-width="5"/>
+                    <path d="M 70,15 C 70,50 30,50 30,85" stroke-width="5"/>
+                    <circle cx="50" cy="50" r="5" fill="currentColor"/>
+                </svg>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, nombre: "Javier", perfil: "", color: "#00ffcc" };
+        let primaryColor = datosUsuario.color || "#00ffcc";
+        let speedMult = 1;
+
+        const gCanvas = document.getElementById('genesis-canvas');
+        const gCtx = gCanvas.getContext('2d');
+        let gParticles = [], gProgress = 0;
+
+        function initGenesis() {
+            gCanvas.width = window.innerWidth; gCanvas.height = window.innerHeight;
+            for(let i=0; i<150; i++) gParticles.push({ x: Math.random()*gCanvas.width, y: Math.random()*gCanvas.height, s: Math.random()*2, vx: (Math.random()-0.5), vy: (Math.random()-0.5) });
+            animateGenesis();
+            simulateLoading();
+        }
+
+        function animateGenesis() {
+            gCtx.fillStyle = 'rgba(3,3,3,0.2)'; gCtx.fillRect(0,0,gCanvas.width, gCanvas.height);
+            gParticles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0 || p.x>gCanvas.width) p.vx*=-1; if(p.y<0 || p.y>gCanvas.height) p.vy*=-1;
+                gCtx.beginPath(); gCtx.arc(p.x, p.y, p.s, 0, Math.PI*2);
+                gCtx.fillStyle = primaryColor; gCtx.fill();
+            });
+            requestAnimationFrame(animateGenesis);
+        }
+
+        function simulateLoading() {
+            const bar = document.getElementById('genesis-bar');
+            const logo = document.getElementById('genesis-logo');
+            const timer = setInterval(() => {
+                gProgress += Math.random()*3;
+                if(gProgress > 100) gProgress = 100;
+                bar.style.width = gProgress + "%";
+                if(gProgress > 20) logo.classList.add('opacity-100', 'scale-100');
+                if(gProgress >= 100) { 
+                    clearInterval(timer); 
+                    document.getElementById('genesis-status').innerText = "Matemática Sincronizada"; 
+                    document.getElementById('genesis-btn').classList.remove('hidden'); 
+                }
+            }, 60);
+        }
+
+        function igniteSingularity() {
+            const flash = document.getElementById('genesis-flash');
+            vibrate([50, 30, 200]);
+            flash.style.opacity = '1';
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+                flash.style.opacity = '0';
+                document.getElementById('main-app').style.opacity = '1';
+                startDanteEcosystem();
+            }, 400);
+        }
+
+        const qCanvas = document.getElementById('quantum-canvas');
+        const qCtx = qCanvas.getContext('2d');
+        const dCanvas = document.getElementById('dante-core-canvas');
+        const dCtx = dCanvas.getContext('2d');
+        let qParticles = [], dParticles = [];
+
+        function startDanteEcosystem() {
+            const perfil = datosUsuario.perfil || "";
+            primaryColor = datosUsuario.color || "#00ffcc";
+            
+            // Lógica de Metabolismo de Arquetipos
+            if (perfil.includes("DEPREDADOR")) { speedMult = 3; document.documentElement.style.setProperty('--rune-speed', '3s'); }
+            else if (perfil.includes("ARQUITECTO")) { speedMult = 0.5; document.documentElement.style.setProperty('--rune-speed', '15s'); }
+            else if (perfil.includes("FANTASMA")) { speedMult = 0.3; document.getElementById('main-app').style.opacity = "0.5"; }
+
+            document.documentElement.style.setProperty('--primary', primaryColor);
+            document.getElementById('user-rank').innerText = perfil || `SINCRO_NIVEL_${datosUsuario.nivel}`;
+            
+            const cop = datosUsuario.xp * 12;
+            document.getElementById('hud-balance').innerText = `$${cop.toLocaleString()}`;
+
+            qCanvas.width = window.innerWidth; qCanvas.height = window.innerHeight;
+            dCanvas.width = 320; dCanvas.height = 320;
+            
+            // Partículas siguiendo la Espiral Áurea (Golden Angle: 137.5 grados)
+            for(let i=0; i<100; i++) qParticles.push({
+                x: qCanvas.width/2, y: qCanvas.height/2,
+                s: Math.random()*1.5, v: (Math.random()*0.5 + 0.1) * speedMult, 
+                angle: i * 137.5 * (Math.PI / 180), dist: 0
+            });
+
+            for(let i=0; i<200; i++) dParticles.push({
+                a: Math.random()*Math.PI*2, r: Math.random()*50 + 5, 
+                s: Math.random()*2, v: (Math.random()*0.04 + 0.01) * speedMult
+            });
+
+            animateApp();
+        }
+
+        function animateApp() {
+            qCtx.clearRect(0,0,qCanvas.width,qCanvas.height);
+            qParticles.forEach(p => {
+                p.dist += p.v;
+                let x = qCanvas.width/2 + Math.cos(p.angle) * p.dist;
+                let y = qCanvas.height/2 + Math.sin(p.angle) * p.dist;
+                if(x < 0 || x > qCanvas.width || y < 0 || y > qCanvas.height) p.dist = 0;
+                
+                qCtx.beginPath(); qCtx.arc(x, y, p.s, 0, Math.PI*2);
+                qCtx.fillStyle = primaryColor; qCtx.globalAlpha = 0.15; qCtx.fill();
+            });
+            
+            dCtx.clearRect(0,0,320,320);
+            dParticles.forEach(p => {
+                p.a += p.v;
+                let breath = Math.sin(Date.now()*0.002) * (8 * speedMult);
+                let x = 160 + Math.cos(p.a) * (p.r + breath);
+                let y = 160 + Math.sin(p.a) * (p.r + breath);
+                dCtx.beginPath(); dCtx.arc(x, y, p.s, 0, Math.PI*2);
+                dCtx.fillStyle = primaryColor; dCtx.shadowBlur = 15; dCtx.shadowColor = primaryColor; dCtx.fill();
+            });
+            requestAnimationFrame(animateApp);
+        }
+
+        function jumpToMap() {
+            document.getElementById('main-app').classList.add('hyperspace-active');
+            document.getElementById('portal-flash').style.opacity = '1';
+            vibrate([30, 60]);
+            setTimeout(() => { window.location.href = 'mapa.html'; }, 600);
+        }
+
+        function pulseCore() {
+            vibrate(20);
+            const msg = document.getElementById('seria-msg');
+            msg.innerText = "SINCRO_INTERACTIVA"; msg.style.opacity = 1;
+            setTimeout(() => msg.style.opacity = 0.3, 1000);
+        }
+
+        const handleMove = (e) => {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            if(x && y) {
+                document.documentElement.style.setProperty('--mouse-x', x + 'px');
+                document.documentElement.style.setProperty('--mouse-y', y + 'px');
+            }
+        };
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+        function vibrate(ms) { if(navigator.vibrate) navigator.vibrate(ms); }
+
+        window.onload = () => {
+            if (new URLSearchParams(window.location.search).get('skipIntro') === 'true') {
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('main-app').style.opacity = '1';
+                startDanteEcosystem();
+            } else { initGenesis(); }
+        };
+    </script>
+</body>
+</html>
