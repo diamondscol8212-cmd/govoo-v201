@@ -150,7 +150,15 @@
     </div>
 
     <script>
-        let primaryColor = "#00ffcc";
+       // --- 1. PROTOCOLO DE PURGA TOTAL (ELIMINAR AL TERMINAR PRUEBAS) ---
+    // Si entras a: index.html?purga=true se borrará todo en ese celular.
+    if (window.location.search.includes('purga=true')) {
+        localStorage.clear();
+        // Limpia la URL para que no se quede reiniciando
+        window.history.replaceState({}, document.title, window.location.pathname);
+        console.log("MEMORIA PURGADA");
+    }
+       let primaryColor = "#00ffcc";
         let audioCtx;
         let ignitionOsc, ignitionGain;
         
