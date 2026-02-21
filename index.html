@@ -5,304 +5,410 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DANTE PROTOCOL | GoVotto</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@500;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00ffcc;
-            --accent: #00ffff;
-            --bg: #000;
-            --phi: 1.618; /* La Proporción Áurea */
-            --mouse-x: 50%;
-            --mouse-y: 50%;
-            --nebula: rgba(0, 255, 204, 0.08);
-            --rune-speed: 8s; /* Número Fibonacci (8) */
+            --bg: #010202;
+            --phi: 1.618;
+            --rune-speed: 8s;
         }
 
         body { 
             background: var(--bg); color: white; margin: 0; font-family: 'Outfit', sans-serif; 
             overflow: hidden; height: 100vh; user-select: none; 
             -webkit-tap-highlight-color: transparent; touch-action: none; 
-            transition: background 1.5s ease;
         } 
 
         /* --- 1. CAPA GÉNESIS --- */
         #boot-screen { position: fixed; inset: 0; z-index: 99999; background: #030303; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #genesis-canvas { position: absolute; inset: 0; z-index: 1; }
-        #genesis-flash { position: fixed; inset: 0; z-index: 100000; background: white; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        #genesis-canvas { position: absolute; inset: 0; z-index: 1; opacity: 0.3; }
+        
+        .extraction-target { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        .target-label { font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 800; letter-spacing: 0.4em; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,255,204,0.5); }
+        .target-reward { font-family: 'JetBrains Mono'; font-size: 16px; font-weight: 900; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 30px; transition: color 0.1s, transform 0.1s; text-align: center; min-width: 280px; }
 
-        /* --- 2. EL CUERPO DANTE --- */
-        #main-app { opacity: 0; transition: opacity 2s ease, transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); position: relative; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
+        .ignition-zone { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        .reticle { position: absolute; inset: 0; border: 1px solid rgba(0, 255, 204, 0.2); border-radius: 50%; transition: all 0.2s ease; }
+        .reticle::before, .reticle::after { content: ''; position: absolute; background: var(--primary); opacity: 0.5; }
+        .reticle::before { top: -5px; bottom: -5px; left: 49px; width: 1px; } 
+        .reticle::after { left: -5px; right: -5px; top: 49px; height: 1px; } 
+
+        /* HUELLA TÁCTICA */
+        .fingerprint-ghost { position: absolute; width: 40px; height: 40px; opacity: 0.15; transition: all 0.3s ease; pointer-events: none; z-index: 5; }
+        .ignition-zone:active .fingerprint-ghost { opacity: 1; filter: drop-shadow(0 0 10px var(--primary)); animation: scanLine 1.5s infinite linear; }
+        @keyframes scanLine { 0% { clip-path: inset(100% 0 0 0); } 50% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 100% 0); } }
+
+        .core-pulse { width: 12px; height: 12px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 15px var(--primary); animation: heartBeat 2s ease-in-out infinite; z-index: 6;}
+        @keyframes heartBeat { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.5); opacity: 1; } }
+
+        .pressure-ring { position: absolute; inset: -10px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--primary); opacity: 0; transform: rotate(0deg); transition: opacity 0.3s; }
+        
+        /* INSTRUCCIÓN EXPLÍCITA */
+        .human-instruction { font-family: 'JetBrains Mono'; font-size: 8px; color: var(--primary); tracking: 0.2em; text-transform: uppercase; margin-top: 10px; opacity: 0.7; animation: pulseText 1.5s infinite; transition: opacity 0.3s; }
+        @keyframes pulseText { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.9; } }
+
+        #genesis-flash { position: fixed; inset: 0; z-index: 100000; background: white; opacity: 0; pointer-events: none; transition: opacity 0.2s cubic-bezier(0.1, 1, 0.1, 1); }
+
+        /* --- 2. EL LOBBY DANTE --- */
+        #main-app { opacity: 0; transition: opacity 1.5s ease; position: relative; height: 100vh; display: flex; flex-direction: column; z-index: 10; pointer-events: none; }
+        #main-app.active-lobby { pointer-events: auto; }
         #quantum-canvas { position: absolute; inset: 0; z-index: 1; mix-blend-mode: screen; opacity: 0.6; }
-        
-        .tactical-glow { 
-            position: absolute; inset: 0; z-index: 2; pointer-events: none; 
-            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), var(--nebula), transparent 70%); 
-        }
 
-        /* --- 3. DANTE: GEOMETRÍA SAGRADA --- */
-        .dante-container { position: relative; width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; perspective: 1000px; transition: all 0.5s ease; cursor: pointer; }
-        #dante-core-canvas { position: absolute; z-index: 5; filter: blur(0.5px); }
+        /* --- 3. DANTE --- */
+        .dante-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; perspective: 1000px; margin-top: 4vh; transition: transform 1s ease; z-index: 5;}
+        #dante-core-canvas { position: absolute; z-index: 5; filter: drop-shadow(0 0 15px var(--primary)); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         
-        .orbital-ring { 
-            position: absolute; border: 1px solid var(--primary); border-radius: 50%; 
-            opacity: 0.15; transform-style: preserve-3d; pointer-events: none;
-            transition: border-color 1s ease;
-        }
-        /* Tamaños basados en Proporción Áurea */
-        .ring-1 { width: 258px; height: 258px; animation: orbit var(--rune-speed) linear infinite; border-top-width: 3px; }
-        .ring-2 { width: 418px; height: 418px; animation: orbit calc(var(--rune-speed) * var(--phi)) linear infinite reverse; opacity: 0.05; }
-        
+        .orbital-ring { position: absolute; border: 1px solid var(--primary); border-radius: 50%; opacity: 0.25; transform-style: preserve-3d; pointer-events: none; transition: animation-duration 1s; }
+        .ring-1 { width: 220px; height: 220px; animation: orbit var(--rune-speed) linear infinite; border-top-width: 3px; }
+        .ring-2 { width: 340px; height: 340px; animation: orbit calc(var(--rune-speed) * var(--phi)) linear infinite reverse; opacity: 0.1; }
         @keyframes orbit { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
 
-        /* --- 4. HUD --- */
-        .master-hud {
-            position: relative; z-index: 100; padding: 40px 25px 20px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
-            backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        /* --- 5. NAVEGACIÓN RUNAS --- */
-        .nav-nodes { position: absolute; bottom: 45px; width: 100%; display: flex; justify-content: center; gap: 35px; z-index: 100; }
-        .node-btn {
-            width: 58px; height: 58px; border-radius: 50%; background: rgba(10,10,10,0.8);
-            border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;
-            color: #444; backdrop-filter: blur(12px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .node-btn.active { color: var(--primary); border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 255, 204, 0.2); transform: scale(1.1); }
+        /* --- 4. MANIFIESTO Y ACCIÓN --- */
+        .manifesto-wrapper { width: 85%; max-width: 400px; margin: 3vh auto 0; position: relative; z-index: 20; display: flex; flex-direction: column; align-items: center;}
         
-        .rune-svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-        .node-btn.active .rune-spin { animation: runeSpin 13s linear infinite; transform-origin: center; } /* 13 es Fibonacci */
-        .node-btn.active .rune-pulse { animation: runePulse 5s ease-in-out infinite; } /* 5 es Fibonacci */
+        .manifesto-box {
+            width: 100%; background: rgba(5,5,5,0.8); border: 1px solid rgba(0,255,204,0.1);
+            border-left: 3px solid var(--primary); padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            opacity: 0; transform: translateY(20px); transition: all 0.8s ease; cursor: pointer;
+        }
+        .manifesto-box.visible { opacity: 1; transform: translateY(0); }
+        
+        .manifesto-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.6; color: #aaa; text-align: left; }
+        .manifesto-text span { color: var(--primary); font-weight: bold; }
+        .cursor-blink { display: inline-block; width: 6px; height: 10px; background: var(--primary); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 4px;}
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        @keyframes runeSpin { 100% { transform: rotate(360deg); } }
-        @keyframes runePulse { 0%, 100% { stroke-width: 2px; opacity: 0.5; } 50% { stroke-width: 4px; opacity: 1; } }
+        /* Botón Táctico Fuera de Dante */
+        .action-gateway {
+            margin-top: 20px; padding: 12px 0; width: 100%; text-align: center;
+            font-family: 'JetBrains Mono'; font-size: 12px; font-weight: 900; letter-spacing: 0.3em;
+            color: black; background: var(--primary); border: 1px solid var(--primary);
+            box-shadow: 0 0 20px rgba(0,255,204,0.4); border-radius: 4px;
+            cursor: pointer; opacity: 0; transform: translateY(10px); pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .action-gateway.ready { opacity: 1; transform: translateY(0); pointer-events: auto; animation: pulseGlow 2s infinite alternate; }
+        .action-gateway:active { transform: scale(0.95); }
+        @keyframes pulseGlow { from { box-shadow: 0 0 15px rgba(0,255,204,0.4); } to { box-shadow: 0 0 35px rgba(0,255,204,0.8); } }
 
-        #portal-flash { position: fixed; inset: 0; z-index: 100001; background: var(--primary); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
-        .hyperspace-active #dante-entity { transform: scale(12); filter: blur(10px) brightness(2); opacity: 0; }
     </style>
 </head>
 <body>
 
-    <div id="portal-flash"></div>
     <div id="genesis-flash"></div>
 
     <div id="boot-screen">
         <canvas id="genesis-canvas"></canvas>
         <div class="relative z-10 flex flex-col items-center">
-            <div id="genesis-logo" class="flex items-center text-5xl font-black italic tracking-tighter mb-10 opacity-0 transition-all duration-1000 scale-75">
-                <span class="text-white">GO</span><span class="text-[#00ffcc]" id="logo-accent">VOTTO</span>
+            
+            <div id="genesis-logo" class="flex flex-col items-center mb-16">
+                <div class="text-4xl font-black italic tracking-tighter text-white">GO<span class="text-[#00ffcc]">VOTTO</span></div>
             </div>
-            <div class="w-56 h-[1px] bg-zinc-900 rounded-full overflow-hidden mb-4">
-                <div id="genesis-bar" class="h-full bg-[#00ffcc] w-0 transition-all duration-300"></div>
+
+            <div class="extraction-target">
+                <div class="target-label" id="target-label">ESTABLECER IDENTIDAD</div>
+                <div class="target-reward" id="reward-text">[ SUJETO NO CLASIFICADO ]</div>
+                
+                <div class="ignition-zone" id="ignition-pad" onmousedown="startIgnition()" onmouseup="stopIgnition()" onmouseleave="stopIgnition()" ontouchstart="startIgnition()" ontouchend="stopIgnition()">
+                    <div class="reticle" id="reticle"></div>
+                    <svg class="fingerprint-ghost" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10"></path><path d="M5 12c0-3.87 3.13-7 7-7s7 3.13 7 7"></path>
+                        <path d="M8.21 13.89A5.98 5.98 0 0 1 8 12c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .69-.12 1.35-.34 1.96"></path>
+                        <path d="M11 14a1 1 0 0 1-1-1v-1a2 2 0 1 1 4 0v1a1 1 0 0 1-1 1h-2z"></path>
+                    </svg>
+                    <div class="core-pulse" id="c-pulse"></div>
+                    <div class="pressure-ring" id="p-ring"></div>
+                </div>
             </div>
-            <p id="genesis-status" class="font-mono text-[8px] text-zinc-600 tracking-[0.4em] uppercase mb-10">Calculando Proporción Áurea...</p>
-            <button id="genesis-btn" class="hidden px-12 py-4 border border-[#00ffcc] text-[#00ffcc] font-black text-[10px] tracking-[0.5em] rounded-full hover:bg-[#00ffcc] hover:text-black transition-all" onclick="igniteSingularity()">INICIAR IGNICIÓN</button>
+            
+            <div class="font-mono text-[8px] text-zinc-600 tracking-[0.3em] uppercase mt-8 h-4" id="genesis-status">Sistema en Reposo</div>
+            <div class="human-instruction" id="human-hint">>> MANTÉN PRESIONADO PARA INGRESAR <<</div>
         </div>
     </div>
 
     <div id="main-app">
         <canvas id="quantum-canvas"></canvas>
-        <div class="tactical-glow"></div>
 
-        <header class="master-hud">
-            <div class="hud-info">
-                <h2 class="text-[8px] tracking-[0.6em] text-zinc-500 uppercase font-bold" id="user-rank">SINCRO_ESTABLE</h2>
-                <div class="text-xl font-black italic">GO<span style="color: var(--primary);">VOTTO</span></div>
-            </div>
-            <div class="text-right">
-                <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Capital_Asimilado</p>
-                <div id="hud-balance" class="text-lg font-black text-white font-mono">$0</div>
-            </div>
-        </header>
-
-        <main class="flex-1 flex flex-col items-center justify-center relative">
-            <div class="dante-container" id="dante-entity" onclick="pulseCore()">
-                <div class="orbital-ring ring-1"></div>
-                <div class="orbital-ring ring-2"></div>
+        <main class="flex-1 flex flex-col items-center relative">
+            
+            <div class="dante-container" id="dante-entity">
+                <div class="orbital-ring ring-1" id="r1"></div>
+                <div class="orbital-ring ring-2" id="r2"></div>
                 <canvas id="dante-core-canvas"></canvas>
             </div>
             
-            <div class="mt-16 text-center px-12">
-                <p id="seria-msg" class="text-[10px] font-mono tracking-[0.4em] opacity-30 uppercase" style="color: var(--primary);">Espiral de Fibonacci Detectada</p>
+            <div class="manifesto-wrapper">
+                <div class="manifesto-box" id="manifesto-box" onclick="skipTyping()">
+                    <div class="manifesto-text" id="manifesto-content"><span class="cursor-blink"></span></div>
+                </div>
+                <div class="action-gateway" id="cta-btn" onclick="jumpToPath()">[ ABRIR EL CAMINO ]</div>
             </div>
-        </main>
 
-        <nav class="nav-nodes">
-            <div class="node-btn" onclick="window.location.href='boveda.html'">
-                <svg class="rune-svg" viewBox="0 0 100 100">
-                    <polygon points="50,15 85,35 85,65 50,85 15,65 15,35" stroke-width="6"/>
-                    <circle cx="50" cy="50" r="4" fill="currentColor"/>
-                </svg>
-            </div>
-            
-            <div class="node-btn active" onclick="jumpToMap()">
-                <svg class="rune-svg" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke-dasharray="10 15" class="rune-spin"/>
-                    <circle cx="50" cy="50" r="12" stroke-width="4" class="rune-pulse"/>
-                </svg>
-            </div>
-            
-            <div class="node-btn" onclick="window.location.href='perfil.html'">
-                <svg class="rune-svg" viewBox="0 0 100 100">
-                    <path d="M 30,15 C 30,50 70,50 70,85" stroke-width="5"/>
-                    <path d="M 70,15 C 70,50 30,50 30,85" stroke-width="5"/>
-                    <circle cx="50" cy="50" r="5" fill="currentColor"/>
-                </svg>
-            </div>
-        </nav>
+        </main>
     </div>
 
     <script>
-        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, nombre: "Javier", perfil: "", color: "#00ffcc" };
-        let primaryColor = datosUsuario.color || "#00ffcc";
-        let speedMult = 1;
-
-        const gCanvas = document.getElementById('genesis-canvas');
-        const gCtx = gCanvas.getContext('2d');
-        let gParticles = [], gProgress = 0;
-
-        function initGenesis() {
-            gCanvas.width = window.innerWidth; gCanvas.height = window.innerHeight;
-            for(let i=0; i<150; i++) gParticles.push({ x: Math.random()*gCanvas.width, y: Math.random()*gCanvas.height, s: Math.random()*2, vx: (Math.random()-0.5), vy: (Math.random()-0.5) });
-            animateGenesis();
-            simulateLoading();
+        let primaryColor = "#00ffcc";
+        let audioCtx;
+        let ignitionOsc, ignitionGain;
+        
+        function initAudio() { 
+            try { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
         }
 
-        function animateGenesis() {
-            gCtx.fillStyle = 'rgba(3,3,3,0.2)'; gCtx.fillRect(0,0,gCanvas.width, gCanvas.height);
-            gParticles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if(p.x<0 || p.x>gCanvas.width) p.vx*=-1; if(p.y<0 || p.y>gCanvas.height) p.vy*=-1;
-                gCtx.beginPath(); gCtx.arc(p.x, p.y, p.s, 0, Math.PI*2);
-                gCtx.fillStyle = primaryColor; gCtx.fill();
-            });
-            requestAnimationFrame(animateGenesis);
+        // --- LÓGICA DE IGNICIÓN ---
+        let pressTimer = null; let pressProgress = 0; let isPressing = false;
+        
+        const pad = document.getElementById('ignition-pad');
+        const pRing = document.getElementById('p-ring');
+        const reticle = document.getElementById('reticle');
+        const cPulse = document.getElementById('c-pulse');
+        const rewardText = document.getElementById('reward-text');
+        const gStatus = document.getElementById('genesis-status');
+        const targetLabel = document.getElementById('target-label');
+        const hint = document.getElementById('human-hint');
+        
+        const matrixChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789¥§‡¶@#$%&*+!?";
+        const baseText = "[ SUJETO NO CLASIFICADO ]";
+
+        function startIgnition() {
+            if(pressProgress >= 100) return;
+            initAudio(); isPressing = true;
+            
+            hint.style.opacity = '0'; // Oculta la instrucción al tocar
+            pad.style.transform = 'scale(0.85)';
+            reticle.style.borderColor = primaryColor;
+            reticle.style.transform = 'scale(1.1) rotate(45deg)';
+            cPulse.style.animation = 'none'; cPulse.style.transform = 'scale(2)';
+            pRing.style.opacity = '1';
+            targetLabel.innerText = "CALIBRANDO VALOR DEL NODO"; rewardText.style.color = primaryColor;
+            
+            if(audioCtx) {
+                ignitionOsc = audioCtx.createOscillator(); ignitionGain = audioCtx.createGain();
+                ignitionOsc.connect(ignitionGain); ignitionGain.connect(audioCtx.destination);
+                ignitionOsc.type = 'sawtooth'; ignitionOsc.frequency.value = 30; 
+                ignitionGain.gain.value = 0.05; ignitionOsc.start();
+            }
+
+            pressTimer = setInterval(() => {
+                pressProgress += 2; 
+                pRing.style.transform = `rotate(${pressProgress * 5}deg)`;
+                pRing.style.borderTopWidth = `${3 + (pressProgress/8)}px`;
+                
+                let scrambled = Array.from({length: baseText.length}, () => matrixChars[Math.floor(Math.random() * matrixChars.length)]).join('');
+                rewardText.innerText = scrambled;
+                rewardText.style.transform = `scale(${1 + (pressProgress * 0.001)})`;
+                rewardText.style.textShadow = `0 0 ${pressProgress/4}px ${primaryColor}`;
+
+                if(ignitionOsc) ignitionOsc.frequency.value = 30 + (pressProgress * 1.5);
+                if(pressProgress % 10 === 0) vibrate(10 + pressProgress/2); 
+
+                if(pressProgress < 30) gStatus.innerText = "Extrayendo Datos...";
+                else if(pressProgress < 70) gStatus.innerText = "Generando Sincronía...";
+                else gStatus.innerText = "ALERTA: Ruptura de Matriz";
+
+                if (pressProgress >= 100) executeIgnition();
+            }, 50);
         }
 
-        function simulateLoading() {
-            const bar = document.getElementById('genesis-bar');
-            const logo = document.getElementById('genesis-logo');
-            const timer = setInterval(() => {
-                gProgress += Math.random()*3;
-                if(gProgress > 100) gProgress = 100;
-                bar.style.width = gProgress + "%";
-                if(gProgress > 20) logo.classList.add('opacity-100', 'scale-100');
-                if(gProgress >= 100) { 
-                    clearInterval(timer); 
-                    document.getElementById('genesis-status').innerText = "Matemática Sincronizada"; 
-                    document.getElementById('genesis-btn').classList.remove('hidden'); 
-                }
-            }, 60);
+        function stopIgnition() {
+            if(pressProgress >= 100 || !isPressing) return;
+            isPressing = false; clearInterval(pressTimer);
+            hint.style.opacity = '0.7'; // Regresa la instrucción
+            
+            if(audioCtx && ignitionGain) {
+                ignitionOsc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.3);
+                ignitionGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                setTimeout(() => ignitionOsc.stop(), 300);
+            }
+            vibrate([50, 100]); 
+
+            pressProgress = 0; pad.style.transform = 'scale(1)';
+            reticle.style.borderColor = 'rgba(0, 255, 204, 0.2)'; reticle.style.transform = 'scale(1) rotate(0deg)';
+            cPulse.style.animation = 'heartBeat 2s ease-in-out infinite'; cPulse.style.transform = 'scale(1)';
+            pRing.style.opacity = '0'; pRing.style.transform = 'rotate(0deg)';
+            
+            targetLabel.innerText = "ESTABLECER IDENTIDAD"; rewardText.innerText = baseText;
+            rewardText.style.color = 'rgba(255,255,255,0.5)'; rewardText.style.transform = 'scale(1)'; rewardText.style.textShadow = 'none';
+            gStatus.innerText = "Conexión Perdida. Reanude Presión.";
+            gParticles.forEach(p => p.v = p.vBase); 
         }
 
-        function igniteSingularity() {
+        function executeIgnition() {
+            clearInterval(pressTimer);
+            if(ignitionOsc) {
+                ignitionOsc.frequency.value = 800; ignitionOsc.type = 'sine';
+                ignitionGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                setTimeout(() => ignitionOsc.stop(), 500);
+            }
+            vibrate([100, 50, 200]);
+            
+            targetLabel.innerText = "ACCESO AUTORIZADO"; targetLabel.style.color = 'white';
+            rewardText.innerText = "SINCRO INICIAL LISTA"; rewardText.style.color = primaryColor; rewardText.style.textShadow = `0 0 20px ${primaryColor}`;
+            
             const flash = document.getElementById('genesis-flash');
-            vibrate([50, 30, 200]);
-            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '1'; }, 300);
+            
             setTimeout(() => {
                 document.getElementById('boot-screen').style.display = 'none';
                 flash.style.opacity = '0';
-                document.getElementById('main-app').style.opacity = '1';
+                
+                const mainApp = document.getElementById('main-app');
+                mainApp.style.opacity = '1'; mainApp.classList.add('active-lobby'); 
+                
                 startDanteEcosystem();
-            }, 400);
+                setTimeout(startManifesto, 600); 
+            }, 600);
         }
 
-        const qCanvas = document.getElementById('quantum-canvas');
-        const qCtx = qCanvas.getContext('2d');
-        const dCanvas = document.getElementById('dante-core-canvas');
-        const dCtx = dCanvas.getContext('2d');
-        let qParticles = [], dParticles = [];
+        // --- MOTORES CANVAS (Dante) ---
+        const gCanvas = document.getElementById('genesis-canvas'); const gCtx = gCanvas.getContext('2d');
+        const qCanvas = document.getElementById('quantum-canvas'); const qCtx = qCanvas.getContext('2d');
+        const dCanvas = document.getElementById('dante-core-canvas'); const dCtx = dCanvas.getContext('2d');
+        let gParticles = [], qParticles = [], dParticles = [];
+
+        function initGenesis() {
+            gCanvas.width = window.innerWidth; gCanvas.height = window.innerHeight;
+            for(let i=0; i<150; i++) gParticles.push({ angle: i * 137.5 * (Math.PI / 180), r: Math.sqrt(i) * 5, s: Math.random()*1.5, vBase: 0.01, v: 0.01 });
+            animateGenesis();
+        }
+
+        function animateGenesis() {
+            gCtx.clearRect(0,0,gCanvas.width, gCanvas.height);
+            if(isPressing) gParticles.forEach(p => p.v = p.vBase + (pressProgress * 0.001));
+            gParticles.forEach(p => {
+                p.angle += p.v;
+                let x = (gCanvas.width/2) + Math.cos(p.angle) * p.r; let y = (gCanvas.height/2) + Math.sin(p.angle) * p.r;
+                gCtx.beginPath(); gCtx.arc(x, y, p.s, 0, Math.PI*2); gCtx.fillStyle = '#444'; gCtx.fill();
+            });
+            if(document.getElementById('boot-screen').style.display !== 'none') requestAnimationFrame(animateGenesis);
+        }
 
         function startDanteEcosystem() {
-            const perfil = datosUsuario.perfil || "";
-            primaryColor = datosUsuario.color || "#00ffcc";
-            
-            // Lógica de Metabolismo de Arquetipos
-            if (perfil.includes("DEPREDADOR")) { speedMult = 3; document.documentElement.style.setProperty('--rune-speed', '3s'); }
-            else if (perfil.includes("ARQUITECTO")) { speedMult = 0.5; document.documentElement.style.setProperty('--rune-speed', '15s'); }
-            else if (perfil.includes("FANTASMA")) { speedMult = 0.3; document.getElementById('main-app').style.opacity = "0.5"; }
-
-            document.documentElement.style.setProperty('--primary', primaryColor);
-            document.getElementById('user-rank').innerText = perfil || `SINCRO_NIVEL_${datosUsuario.nivel}`;
-            
-            const cop = datosUsuario.xp * 12;
-            document.getElementById('hud-balance').innerText = `$${cop.toLocaleString()}`;
-
-            qCanvas.width = window.innerWidth; qCanvas.height = window.innerHeight;
-            dCanvas.width = 320; dCanvas.height = 320;
-            
-            // Partículas siguiendo la Espiral Áurea (Golden Angle: 137.5 grados)
-            for(let i=0; i<100; i++) qParticles.push({
-                x: qCanvas.width/2, y: qCanvas.height/2,
-                s: Math.random()*1.5, v: (Math.random()*0.5 + 0.1) * speedMult, 
-                angle: i * 137.5 * (Math.PI / 180), dist: 0
-            });
-
-            for(let i=0; i<200; i++) dParticles.push({
-                a: Math.random()*Math.PI*2, r: Math.random()*50 + 5, 
-                s: Math.random()*2, v: (Math.random()*0.04 + 0.01) * speedMult
-            });
-
+            qCanvas.width = window.innerWidth; qCanvas.height = window.innerHeight; dCanvas.width = 300; dCanvas.height = 300;
+            for(let i=0; i<100; i++) qParticles.push({ x: qCanvas.width/2, y: qCanvas.height/2, s: Math.random()*1.5, v: (Math.random()*0.5 + 0.1), angle: i * 137.5 * (Math.PI / 180), dist: 0 });
+            for(let i=0; i<200; i++) dParticles.push({ a: Math.random()*Math.PI*2, r: Math.random()*45 + 5, s: Math.random()*2, v: (Math.random()*0.04 + 0.01) });
             animateApp();
         }
 
         function animateApp() {
             qCtx.clearRect(0,0,qCanvas.width,qCanvas.height);
             qParticles.forEach(p => {
-                p.dist += p.v;
-                let x = qCanvas.width/2 + Math.cos(p.angle) * p.dist;
-                let y = qCanvas.height/2 + Math.sin(p.angle) * p.dist;
+                p.dist += p.v; let x = qCanvas.width/2 + Math.cos(p.angle) * p.dist; let y = qCanvas.height/2 + Math.sin(p.angle) * p.dist;
                 if(x < 0 || x > qCanvas.width || y < 0 || y > qCanvas.height) p.dist = 0;
-                
-                qCtx.beginPath(); qCtx.arc(x, y, p.s, 0, Math.PI*2);
-                qCtx.fillStyle = primaryColor; qCtx.globalAlpha = 0.15; qCtx.fill();
+                qCtx.beginPath(); qCtx.arc(x, y, p.s, 0, Math.PI*2); qCtx.fillStyle = primaryColor; qCtx.globalAlpha = 0.15; qCtx.fill();
             });
             
-            dCtx.clearRect(0,0,320,320);
+            dCtx.clearRect(0,0,300,300);
             dParticles.forEach(p => {
-                p.a += p.v;
-                let breath = Math.sin(Date.now()*0.002) * (8 * speedMult);
-                let x = 160 + Math.cos(p.a) * (p.r + breath);
-                let y = 160 + Math.sin(p.a) * (p.r + breath);
-                dCtx.beginPath(); dCtx.arc(x, y, p.s, 0, Math.PI*2);
-                dCtx.fillStyle = primaryColor; dCtx.shadowBlur = 15; dCtx.shadowColor = primaryColor; dCtx.fill();
+                p.a += p.v; let breath = Math.sin(Date.now()*0.002) * 6; 
+                let x = 150 + Math.cos(p.a) * (p.r + breath); let y = 150 + Math.sin(p.a) * (p.r + breath);
+                dCtx.beginPath(); dCtx.arc(x, y, p.s, 0, Math.PI*2); dCtx.fillStyle = primaryColor; dCtx.shadowBlur = 15; dCtx.shadowColor = primaryColor; dCtx.fill();
             });
             requestAnimationFrame(animateApp);
         }
 
-        function jumpToMap() {
-            document.getElementById('main-app').classList.add('hyperspace-active');
-            document.getElementById('portal-flash').style.opacity = '1';
-            vibrate([30, 60]);
-            setTimeout(() => { window.location.href = 'mapa.html'; }, 600);
+        // --- MANIFIESTO FORENSE ---
+        let isTyping = false; let typeTimeout;
+        const getTimeStr = () => { const d = new Date(); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} HRS`; };
+        
+        const fullManifestoHTML = `
+            > ANÁLISIS FORENSE DEL NODO.<br>
+            > SINCRONIZACIÓN TEMPORAL: <span>${getTimeStr()}</span>.<br>
+            > ESTADO CUÁNTICO: <span>ESTABLE</span>.<br><br>
+            Identidad encriptada confirmada.<br>
+            Soy <span>Dante</span>. Tu protocolo de sincronía.<br>
+            La primera matriz donde tu identidad se convierte en capital.<br>
+        `;
+
+        function playBip() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.type = 'square'; osc.frequency.value = 2500 + Math.random()*500; 
+            g.gain.setValueAtTime(0.005, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.02);
         }
 
-        function pulseCore() {
-            vibrate(20);
-            const msg = document.getElementById('seria-msg');
-            msg.innerText = "SINCRO_INTERACTIVA"; msg.style.opacity = 1;
-            setTimeout(() => msg.style.opacity = 0.3, 1000);
+        // Bass Drop para el clic final
+        function playBassDrop() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.8);
+            g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.8);
         }
 
-        const handleMove = (e) => {
-            const x = e.clientX || (e.touches && e.touches[0].clientX);
-            const y = e.clientY || (e.touches && e.touches[0].clientY);
-            if(x && y) {
-                document.documentElement.style.setProperty('--mouse-x', x + 'px');
-                document.documentElement.style.setProperty('--mouse-y', y + 'px');
+        function startManifesto() {
+            const box = document.getElementById('manifesto-box'); box.classList.add('visible');
+            const target = document.getElementById('manifesto-content'); target.innerHTML = '<span class="cursor-blink"></span>';
+            
+            isTyping = true; let currentHTML = ""; let i = 0;
+            function typeChar() {
+                if(!isTyping) return;
+                if (i < fullManifestoHTML.length) {
+                    let char = fullManifestoHTML.charAt(i); currentHTML += char; target.innerHTML = currentHTML + '<span class="cursor-blink"></span>';
+                    if (char === '<') {
+                        while(fullManifestoHTML.charAt(i) !== '>') { i++; currentHTML += fullManifestoHTML.charAt(i); }
+                        target.innerHTML = currentHTML + '<span class="cursor-blink"></span>';
+                    } else if (char !== ' ' && char !== '\n') { if(i % 2 === 0) playBip(); }
+                    i++; typeTimeout = setTimeout(typeChar, 30);
+                } else finishManifesto();
             }
-        };
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove);
-        function vibrate(ms) { if(navigator.vibrate) navigator.vibrate(ms); }
+            typeChar();
+        }
 
+        function skipTyping() {
+            if(!isTyping) return;
+            isTyping = false; clearTimeout(typeTimeout);
+            document.getElementById('manifesto-content').innerHTML = fullManifestoHTML + '<span class="cursor-blink"></span>';
+            finishManifesto();
+        }
+
+        function finishManifesto() {
+            isTyping = false;
+            document.documentElement.style.setProperty('--rune-speed', '3s');
+            document.getElementById('r1').style.borderWidth = '4px';
+            document.getElementById('cta-btn').classList.add('ready'); // Revela el botón ancho abajo
+            vibrate([50, 50, 50]);
+        }
+
+        // EL CLÍMAX DEL SALTO AL CAMINO
+        function jumpToPath() {
+            vibrate([200, 50, 300]);
+            playBassDrop();
+            
+            // Reacción física del botón
+            document.getElementById('cta-btn').style.background = "white";
+            document.getElementById('cta-btn').style.color = "black";
+            
+            // Implosión de Dante y desvanecimiento de la app
+            const core = document.getElementById('dante-core-canvas');
+            core.style.transform = 'scale(0.1) rotate(180deg)';
+            core.style.filter = 'drop-shadow(0 0 100px white)';
+            
+            setTimeout(() => { document.getElementById('main-app').style.opacity = '0'; }, 300);
+            setTimeout(() => { window.location.href = 'mapa.html'; }, 900);
+        }
+
+        function vibrate(ms) { if(navigator.vibrate) navigator.vibrate(ms); }
+        
         window.onload = () => {
             if (new URLSearchParams(window.location.search).get('skipIntro') === 'true') {
                 document.getElementById('boot-screen').style.display = 'none';
                 document.getElementById('main-app').style.opacity = '1';
+                document.getElementById('main-app').classList.add('active-lobby');
                 startDanteEcosystem();
-            } else { initGenesis(); }
+                setTimeout(startManifesto, 200);
+            } else { 
+                initGenesis(); 
+            }
         };
     </script>
 </body>

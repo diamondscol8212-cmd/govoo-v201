@@ -298,8 +298,19 @@
     }
 
     function exit() {
-        let data = JSON.parse(localStorage.getItem('govotto_user_data')) || { xp: 0 };
-        data.xp += (capital / 10);
+        // 1. Traemos la memoria actual
+        let data = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0 };
+        
+        // 2. Calculamos el Arquetipo final ganador
+        let dominant = Object.keys(personality).reduce((a, b) => personality[a] > personality[b] ? a : b);
+        let colors = { lider: "#00ffcc", social: "#a200ff", analitico: "#D4AF37", osado: "#FF0044" };
+        
+        // 3. Inyectamos la identidad, el color y el dinero
+        data.perfil = dominant.toUpperCase(); // Ejem: "LIDER", "OSADO"
+        data.color = colors[dominant];
+        data.xp += (capital / 10); // Lógica de conversión a ITO/COP
+
+        // 4. Sellamos la memoria y disparamos al mapa
         localStorage.setItem('govotto_user_data', JSON.stringify(data));
         window.location.href = 'mapa.html?skipIntro=true';
     }

@@ -10,7 +10,7 @@
     <style>
         :root { 
             --gold: #D4AF37; 
-            --primary: #00ffcc; /* Color base, será sobreescrito por el perfil */
+            --primary: #00ffcc; 
             --bg: #010202; 
         }
         body { 
@@ -19,10 +19,10 @@
             transition: background-color 1s ease;
         }
         
-        canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.6; }
+        canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.6; pointer-events: none; }
 
         /* --- UI HUD --- */
-        .hud-vault { position: relative; z-index: 100; padding: 40px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .hud-vault { position: relative; z-index: 100; padding: 40px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
         .vault-tag { font-family: 'JetBrains Mono'; font-size: 8px; color: var(--primary); letter-spacing: 0.5em; text-transform: uppercase; transition: color 1s; }
 
         /* --- EL HIPERCUBO 3D --- */
@@ -39,7 +39,6 @@
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--primary);
             display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);
             box-shadow: inset 0 0 30px rgba(0,0,0,1), 0 0 20px rgba(0,0,0,0.5);
-            transition: border-color 1s, box-shadow 1s, background 1s;
         }
         .front  { transform: translateZ(70px); }
         .back   { transform: rotateY(180deg) translateZ(70px); }
@@ -48,10 +47,9 @@
         .top    { transform: rotateX(90deg) translateZ(70px); }
         .bottom { transform: rotateX(-90deg) translateZ(70px); }
 
-        .hypercube.unlocking { animation-duration: 1s; }
+        .hypercube.unlocking { animation-duration: 1.5s; transform: scale(1.2); }
         .hypercube.unlocked .face { 
-            border-color: var(--gold); 
-            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--gold); background: rgba(212, 175, 55, 0.1);
             box-shadow: 0 0 50px rgba(212, 175, 55, 0.4), inset 0 0 20px var(--gold);
         }
 
@@ -60,45 +58,32 @@
             to { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
         }
 
-        /* --- BOTÓN DE EXTRACCIÓN BIOMÉTRICA --- */
+        /* --- BOTÓN DE EXTRACCIÓN (Z-INDEX 9999) --- */
         .extraction-footer {
             position: fixed; bottom: 50px; width: 100%; display: flex; flex-direction: column;
-            align-items: center; z-index: 100; padding: 0 40px;
+            align-items: center; z-index: 9999; padding: 0 40px; pointer-events: none;
         }
         .press-zone {
-            width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--primary);
+            width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--primary);
             display: flex; align-items: center; justify-content: center;
-            background: rgba(0, 0, 0, 0.5); color: var(--primary);
+            background: rgba(0, 0, 0, 0.8); color: var(--primary);
             transition: 0.3s; pointer-events: auto; position: relative;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8); cursor: pointer; touch-action: none;
         }
-        .press-zone:active, .press-zone.scanning { transform: scale(0.9); border-color: #fff; color: #fff; }
+        .press-zone.scanning { transform: scale(0.9); border-color: #fff; color: #fff; box-shadow: 0 0 50px var(--primary); }
 
-        #extract-progress {
-            position: absolute; width: 110px; height: 110px; pointer-events: none;
-            transform: rotate(-90deg);
-        }
-        #progress-circle {
-            stroke: var(--primary); stroke-dasharray: 314; stroke-dashoffset: 314; /* 2*pi*r (r=50) */
-            transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
-        }
+        #extract-progress { position: absolute; width: 120px; height: 120px; pointer-events: none; transform: rotate(-90deg); }
+        #progress-circle { stroke: var(--primary); stroke-dasharray: 314; stroke-dashoffset: 314; transition: stroke-dashoffset 0.1s linear; fill: none; }
 
-        /* --- REVELACIÓN DE SALDO (ALQUIMIA) --- */
+        /* --- REVELACIÓN DE SALDO --- */
         #balance-reveal {
-            position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,25,5,0.95), #000);
+            position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,25,5,0.98), #000);
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 200; backdrop-filter: blur(30px); opacity: 0; transition: opacity 1s;
+            z-index: 10000; backdrop-filter: blur(30px); opacity: 0; transition: opacity 1s;
         }
+        .val-cop { font-size: 4.5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 40px rgba(212, 175, 55, 0.4); }
 
-        .currency-block { margin-bottom: 20px; text-align: center; }
-        .currency-label { font-family: 'JetBrains Mono'; font-size: 10px; color: #aaa; letter-spacing: 0.3em; text-transform: uppercase; }
-        
-        .val-cop { font-size: 5rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 40px rgba(212, 175, 55, 0.4); tracking-tighter: -2px; }
-        .val-crypto { font-size: 1.5rem; font-family: 'JetBrains Mono'; color: #fff; opacity: 0.8; }
-        .val-itochi { font-size: 1.2rem; font-family: 'JetBrains Mono'; color: var(--primary); font-weight: bold; margin-top: 5px; }
-
-        /* Efecto Flash Dorado */
-        #gold-flash { position: fixed; inset: 0; z-index: 9999; background: var(--gold); opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        #gold-flash { position: fixed; inset: 0; z-index: 20000; background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     </style>
 </head>
 <body>
@@ -113,76 +98,53 @@
         </div>
         <div class="text-right">
             <p class="vault-tag">Afinidad_Mercado</p>
-            <p id="market-value" class="text-xl font-bold text-white font-mono opacity-50">ANALIZANDO...</p>
+            <p id="market-value" class="text-xl font-bold text-white font-mono opacity-50">ESTABLE</p>
         </div>
     </div>
 
     <div class="vault-scene">
         <div class="hypercube" id="cube">
             <div class="face front"><i class="fas fa-lock opacity-30 text-5xl" id="lock-icon"></i></div>
-            <div class="face back"></div>
-            <div class="face right"></div>
-            <div class="face left"></div>
-            <div class="face top"></div>
+            <div class="face back"></div><div class="face right"></div>
+            <div class="face left"></div><div class="face top"></div>
             <div class="face bottom"></div>
         </div>
     </div>
 
     <div class="extraction-footer" id="footer-control">
         <p class="text-[9px] font-mono tracking-[0.4em] text-zinc-500 mb-6 uppercase" id="scan-text">Mantener para Identificar</p>
-        <div class="press-zone" id="press-trigger" onmousedown="startExtraction()" ontouchstart="startExtraction(event)" onmouseup="stopExtraction()" ontouchend="stopExtraction()">
-            <svg id="extract-progress"><circle id="progress-circle" r="50" cx="55" cy="55" fill="transparent" stroke-width="3"></circle></svg>
-            <i class="fas fa-fingerprint text-3xl"></i>
+        <div class="press-zone" id="press-trigger">
+            <svg id="extract-progress"><circle id="progress-circle" r="50" cx="60" cy="60" stroke-width="3"></circle></svg>
+            <i class="fas fa-fingerprint text-4xl"></i>
         </div>
     </div>
 
     <div id="balance-reveal">
-        <div class="currency-block mt-10">
-            <p class="currency-label">CAPITAL SINCRONIZADO (COP)</p>
+        <div class="text-center mb-10">
+            <p class="font-mono text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Capital Sincronizado</p>
             <h2 class="val-cop italic" id="val-cop">$0</h2>
         </div>
-        
-        <div class="currency-block border-t border-zinc-800 pt-6 w-3/4 max-w-sm">
-            <p class="currency-label">ACTIVO EXTERNO (BTC)</p>
-            <h3 class="val-crypto" id="val-btc">₿ 0.00000000</h3>
-        </div>
-
-        <div class="currency-block border-t border-zinc-800 pt-6 w-3/4 max-w-sm mb-12">
-            <p class="currency-label">NÚCLEO ECOSISTEMA</p>
-            <h3 class="val-itochi" id="val-itochi">0 ITOCHI</h3>
-        </div>
-
-        <button class="px-12 py-5 bg-[#D4AF37] text-black font-black text-[11px] tracking-[0.5em] uppercase hover:bg-white transition-colors rounded-lg shadow-[0_0_30px_rgba(212,175,55,0.3)]" onclick="window.location.href='mapa.html'">
-            Asimilar y Salir
+        <button class="px-12 py-5 bg-[#D4AF37] text-black font-black text-[11px] tracking-[0.5em] uppercase rounded-lg" onclick="finalExit()">
+            Sincronizar y Volver al Mapa
         </button>
     </div>
 
     <script>
-        // --- 1. LECTURA DEL ECOSISTEMA (ADN) ---
-        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, perfil: "DESCONOCIDO", ubicacion: null };
-        let baseColor = "#00ffcc";
-
-        // Ajustar la bóveda al perfil del usuario antes de abrir
-        if (datosUsuario.perfil.includes("DEPREDADOR")) baseColor = "#FF0044";
-        else if (datosUsuario.perfil.includes("ARQUITECTO")) baseColor = "#00ffff";
-        
-        document.documentElement.style.setProperty('--primary', baseColor);
+        let datosUsuario = JSON.parse(localStorage.getItem('govotto_user_data')) || { nivel: 1, xp: 0, perfil: "DESCONOCIDO" };
+        let activeColor = datosUsuario.color || "#00ffcc";
+        document.documentElement.style.setProperty('--primary', activeColor);
         document.getElementById('profile-tag').innerText = `PERFIL: ${datosUsuario.perfil}`;
 
-        // --- 2. MOTOR GRÁFICO (Partículas) ---
+        // --- MOTOR GRÁFICO ---
         const canvas = document.getElementById('vault-canvas');
         const ctx = canvas.getContext('2d');
-        let particles = [];
-        let isGolden = false; // Estado post-extracción
+        let particles = [], isGolden = false;
 
         function init() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            for(let i=0; i<80; i++) particles.push({
-                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
-                s: Math.random()*2 + 0.5, v: Math.random()*0.5 + 0.1, o: Math.random()
-            });
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            for(let i=0; i<60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2, v: Math.random()*0.5 + 0.1 });
             animate();
+            setupEvents();
         }
 
         function animate() {
@@ -190,151 +152,85 @@
             particles.forEach(p => {
                 p.y -= p.v; if(p.y < 0) p.y = canvas.height;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
-                // Si ya extrajo, las partículas son doradas, si no, del color del perfil
-                ctx.fillStyle = isGolden ? `rgba(212, 175, 55, ${p.o})` : `${baseColor}${Math.floor(p.o * 255).toString(16).padStart(2, '0')}`;
+                ctx.fillStyle = isGolden ? "#D4AF37" : activeColor;
                 ctx.fill();
             });
             requestAnimationFrame(animate);
         }
 
-        // --- 3. MOTOR DE AUDIO (Escáner de Alta Tensión) ---
-        let audioCtx, scanOsc, scanGain, holdTimer;
-        let progress = 0;
+        // --- LÓGICA DE EXTRACCIÓN ---
+        let audioCtx, scanOsc, holdTimer, progress = 0;
 
-        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function setupEvents() {
+            const btn = document.getElementById('press-trigger');
+            const start = (e) => { e.preventDefault(); startExtraction(); };
+            const end = () => stopExtraction();
 
-        function playScanSound() {
-            if(!audioCtx) return;
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('touchstart', start);
+            window.addEventListener('mouseup', end);
+            window.addEventListener('touchend', end);
+        }
+
+        function startExtraction() {
+            if (progress >= 100) return;
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+
             scanOsc = audioCtx.createOscillator();
-            scanGain = audioCtx.createGain();
-            scanOsc.connect(scanGain); scanGain.connect(audioCtx.destination);
-            
-            scanOsc.type = 'sawtooth';
-            scanOsc.frequency.setValueAtTime(200, audioCtx.currentTime);
-            // Sube la frecuencia agresivamente mientras mantiene presionado (3 segundos)
-            scanOsc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 3);
-            
-            scanGain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            scanOsc.start();
-        }
+            let gain = audioCtx.createGain();
+            scanOsc.connect(gain); gain.connect(audioCtx.destination);
+            scanOsc.type = 'sawtooth'; scanOsc.frequency.value = 100;
+            scanOsc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 3);
+            gain.gain.value = 0.1; scanOsc.start();
 
-        function stopScanSound() {
-            if(scanOsc && scanGain) {
-                scanGain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                setTimeout(() => scanOsc.stop(), 100);
-            }
-        }
-
-        function playGoldExplosion() {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.5);
-            
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
-            
-            osc.start(); osc.stop(audioCtx.currentTime + 2);
-        }
-
-        // --- 4. LÓGICA DE EXTRACCIÓN Y ALQUIMIA ---
-        function startExtraction(e) {
-            if (e && e.type === 'touchstart') e.preventDefault();
-            
-            initAudio();
-            playScanSound();
-            if(navigator.vibrate) navigator.vibrate([30, 30, 30]);
-
-            const trigger = document.getElementById('press-trigger');
-            const cube = document.getElementById('cube');
-            trigger.classList.add('scanning');
-            document.getElementById('scan-text').innerText = "DESCIFRANDO CÓDIGO...";
-            
-            // El cubo gira como loco
-            cube.classList.add('unlocking');
+            document.getElementById('press-trigger').classList.add('scanning');
+            document.getElementById('cube').classList.add('unlocking');
+            document.getElementById('scan-text').innerText = "IDENTIFICANDO ADN...";
 
             holdTimer = setInterval(() => {
-                progress += 1.5; // Aproximadamente 2.5 segundos para llenar
-                const offset = 314 - (progress / 100 * 314);
-                document.getElementById('progress-circle').style.strokeDashoffset = offset;
-                
-                if(navigator.vibrate && progress % 10 === 0) navigator.vibrate(15);
-                
-                // Efecto de color de transición al oro
-                if (progress > 70) document.getElementById('progress-circle').style.stroke = "var(--gold)";
-
-                if (progress >= 100) {
-                    clearInterval(holdTimer);
-                    triggerTransmutation();
-                }
-            }, 30);
+                progress += 1.5;
+                document.getElementById('progress-circle').style.strokeDashoffset = 314 - (progress/100*314);
+                if(navigator.vibrate) navigator.vibrate(10);
+                if(progress >= 100) { clearInterval(holdTimer); triggerSuccess(); }
+            }, 40);
         }
 
         function stopExtraction() {
-            if (progress >= 100) return; // Si ya terminó, no interrumpir
-            clearInterval(holdTimer);
-            progress = 0;
-            stopScanSound();
-            
-            document.getElementById('progress-circle').style.strokeDashoffset = 314;
-            document.getElementById('progress-circle').style.stroke = "var(--primary)";
+            if(progress >= 100) return;
+            clearInterval(holdTimer); progress = 0;
+            if(scanOsc) { scanOsc.stop(); scanOsc = null; }
             document.getElementById('press-trigger').classList.remove('scanning');
             document.getElementById('cube').classList.remove('unlocking');
+            document.getElementById('progress-circle').style.strokeDashoffset = 314;
             document.getElementById('scan-text').innerText = "MANTENER PARA IDENTIFICAR";
         }
 
-        // EL CLÍMAX: Transmutación del perfil en Oro
-        function triggerTransmutation() {
-            stopScanSound();
-            playGoldExplosion();
-            if(navigator.vibrate) navigator.vibrate([100, 50, 400]);
-
-            // Flash Dorado
-            const flash = document.getElementById('gold-flash');
-            flash.style.opacity = '1';
-
-            // Ocultar UI anterior
-            document.getElementById('hud-top').style.display = 'none';
-            document.getElementById('footer-control').style.display = 'none';
-            
-            // Transformar el cubo y las partículas
+        function triggerSuccess() {
+            if(scanOsc) scanOsc.stop();
             isGolden = true;
-            const cube = document.getElementById('cube');
-            cube.classList.remove('unlocking');
-            cube.classList.add('unlocked');
-            document.getElementById('lock-icon').className = "fas fa-gem opacity-80 text-6xl text-[#D4AF37]";
-
+            document.getElementById('gold-flash').style.opacity = '1';
+            document.getElementById('cube').classList.add('unlocked');
+            document.getElementById('lock-icon').className = "fas fa-check-circle text-gold";
+            
             setTimeout(() => {
-                flash.style.opacity = '0';
-                revealEconomy();
-            }, 600);
+                document.getElementById('gold-flash').style.opacity = '0';
+                revealData();
+            }, 300);
         }
 
-        function revealEconomy() {
-            // Algoritmo Matemático de GoVotto
-            const xpBase = datosUsuario.xp || 1500; // Por si entra sin datos
-            const copValue = xpBase * 12; // 1 XP = 12 COP
-            const btcValue = (copValue / 250000000).toFixed(8); // Cálculo simulado BTC
-            const itochiValue = Math.floor(xpBase / 10); // 10 XP = 1 ITOCHI
+        function revealData() {
+            document.getElementById('hud-top').style.opacity = '0';
+            document.getElementById('footer-control').style.opacity = '0';
+            document.getElementById('val-cop').innerText = `$${(datosUsuario.xp * 12).toLocaleString()}`;
+            const rev = document.getElementById('balance-reveal');
+            rev.style.display = 'flex'; setTimeout(() => rev.style.opacity = '1', 100);
+        }
 
-            document.getElementById('val-cop').innerText = `$${copValue.toLocaleString('es-CO')}`;
-            document.getElementById('val-btc').innerText = `₿ ${btcValue}`;
-            document.getElementById('val-itochi').innerText = `${itochiValue} ITOCHI`;
-
-            const revealScreen = document.getElementById('balance-reveal');
-            revealScreen.style.display = 'flex';
-            
-            // Animación de aparición suave
-            setTimeout(() => { revealScreen.style.opacity = '1'; }, 100);
-
-            // Guardar estado de riqueza
-            datosUsuario.capital = copValue;
-            datosUsuario.itochi = itochiValue;
+        function finalExit() {
             datosUsuario.goldState = true;
             localStorage.setItem('govotto_user_data', JSON.stringify(datosUsuario));
+            window.location.href = 'mapa.html?skipIntro=true';
         }
 
         window.onload = init;
